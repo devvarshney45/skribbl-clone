@@ -60,7 +60,7 @@ interface GameContextType {
   sendChat: (text: string) => void;
   undo: () => void;
   clearCanvas: () => void;
-  updateSettings: (settings: { rounds?: number; drawTime?: number }) => void;
+  updateSettings: (settings: { rounds?: number; drawTime?: number; isPublic?: boolean }) => void;
   resetGame: () => void;
 }
 
@@ -250,6 +250,16 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.on('settings_updated', ({ settings }) => {
       setTotalRounds(settings.rounds);
       setDrawTime(settings.drawTime);
+      if (settings.isPublic !== undefined) setIsPublic(settings.isPublic);
+    });
+
+    socket.on('game_reset', () => {
+      setPhase('waiting');
+      setWinner(null);
+      setWord('');
+      setWordHints([]);
+      // We keep messages but you could clear them if you want
+      setMessages(prev => [...prev.slice(-49), { author: 'SYSTEM', text: 'Studio session reset. Prepare for the next round!', type: 'system' }]);
     });
 
     socket.on('chat_message', (data) => {
@@ -352,16 +362,12 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('canvas_clear', { roomCode });
   };
 
-  const updateSettings = (settings: { rounds?: number; drawTime?: number }) => {
+  const updateSettings = (settings: { rounds?: number; drawTime?: number; isPublic?: boolean }) => {
     socket.emit('update_settings', { roomCode, settings });
   };
 
   const resetGame = () => {
-    setPhase('waiting');
-    setWinner(null);
-    setWord('');
-    setWordHints([]);
-    setMessages([]);
+    socket.emit('reset_game', { roomCode });
   };
 
   const currentPlayerIsDrawer = playerId === currentDrawerId;

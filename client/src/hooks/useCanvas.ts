@@ -9,8 +9,9 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
   const socket = useSocket();
   const { roomCode, color, size, currentDrawerId, playerId } = useGame();
   
-  // History for undo
-  const history = useRef<ImageData[]>([]);
+  // History for sync and resize — mirrors server's currentStrokes
+  const strokes = useRef<any[]>([]);
+  const currentStroke = useRef<any>(null);
   const isDrawing = useRef(false);
 
   // ---------------------------------------------------------------------------
@@ -21,15 +22,28 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
   }, [canvasRef]);
 
   // ---------------------------------------------------------------------------
-  // Canvas Helper: Save state to history for undo
+  // Redraw all strokes from buffer
   // ---------------------------------------------------------------------------
-  const saveToHistory = useCallback(() => {
+  const redraw = useCallback(() => {
     const ctx = getCtx();
     const canvas = canvasRef.current;
-    if (ctx && canvas) {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      history.current = [...history.current.slice(-19), imageData]; // Keep last 20 strokes
-    }
+    if (!ctx || !canvas) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    strokes.current.forEach((stroke) => {
+      ctx.beginPath();
+      ctx.moveTo(stroke.x, stroke.y);
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.size || stroke.brushSize || 5;
+
+      if (stroke.points && stroke.points.length > 0) {
+        stroke.points.forEach((pt: any) => {
+          ctx.lineTo(pt.x, pt.y);
+        });
+      }
+      ctx.stroke();
+    });
   }, [getCtx, canvasRef]);
 
   // ---------------------------------------------------------------------------
@@ -48,9 +62,6 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
   // ---------------------------------------------------------------------------
   const startDrawing = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!socket) return;
-    
-    // Save current state before new stroke
-    saveToHistory();
     
     isDrawing.current = true;
     const ctx = getCtx();
@@ -75,8 +86,18 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
     ctx.strokeStyle = color;
     ctx.lineWidth = size;
 
+    // Record locally
+    currentStroke.current = {
+      type: 'start',
+      x, y,
+      color,
+      size,
+      points: []
+    };
+    strokes.current.push(currentStroke.current);
+
     socket.emit('draw_start', { roomCode, x, y, color, size });
-  }, [socket, roomCode, color, size, getCtx, canvasRef, saveToHistory]);
+  }, [socket, roomCode, color, size, getCtx, canvasRef]);
 
   const draw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!isDrawing.current || !socket || !canvasRef.current) return;
@@ -101,12 +122,18 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
     ctx.lineTo(x, y);
     ctx.stroke();
 
+    // Record locally
+    if (currentStroke.current) {
+        currentStroke.current.points.push({ x, y });
+    }
+
     socket.emit('draw_move', { roomCode, x, y });
   }, [socket, roomCode, getCtx, canvasRef]);
 
   const endDrawing = useCallback(() => {
     if (!isDrawing.current || !socket) return;
     isDrawing.current = false;
+    currentStroke.current = null;
     socket.emit('draw_end', { roomCode });
   }, [socket, roomCode]);
 
@@ -128,43 +155,38 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
         ctx.moveTo(data.x, data.y);
         ctx.strokeStyle = data.color;
         ctx.lineWidth = data.size;
+
+        // Sync to local buffer
+        currentStroke.current = {
+            type: 'start',
+            x: data.x, y: data.y,
+            color: data.color,
+            size: data.size,
+            points: []
+        };
+        strokes.current.push(currentStroke.current);
       } else if (data.type === 'move') {
         ctx.lineTo(data.x, data.y);
         ctx.stroke();
+
+        if (currentStroke.current) {
+            currentStroke.current.points.push({ x: data.x, y: data.y });
+        }
+      } else if (data.type === 'end') {
+          currentStroke.current = null;
       }
     });
 
     socket.on('canvas_cleared', () => {
-      const ctx = getCtx();
-      const canvas = canvasRef.current;
-      if (ctx && canvas) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
+      strokes.current = [];
+      currentStroke.current = null;
+      redraw();
     });
 
     socket.on('canvas_replay', (data) => {
-       const ctx = getCtx();
-       const canvas = canvasRef.current;
-       if (!ctx || !canvas) return;
-
-       // Quickly wipe
-       ctx.clearRect(0, 0, canvas.width, canvas.height);
-       
-       // Loop and redraw all strokes
-       data.strokes.forEach((stroke: any) => {
-         if (stroke.type === 'start') {
-           ctx.beginPath();
-           ctx.moveTo(stroke.x, stroke.y);
-           ctx.strokeStyle = stroke.color;
-           ctx.lineWidth = stroke.size || 5; 
-         } else if (stroke.type === 'move') {
-           // Move arrays
-           stroke.points.forEach((pt: any) => {
-             ctx.lineTo(pt.x, pt.y);
-           });
-           ctx.stroke();
-         }
-       });
+       strokes.current = data.strokes || [];
+       currentStroke.current = null;
+       redraw();
     });
 
     return () => {
@@ -174,5 +196,5 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
     };
   }, [socket, playerId, getCtx, canvasRef]);
 
-  return { initCanvas, startDrawing, draw, endDrawing };
+  return { initCanvas, redraw, startDrawing, draw, endDrawing };
 }

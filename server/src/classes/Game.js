@@ -9,10 +9,11 @@
 const { pool } = require('../db/database');
 
 class Game {
-  constructor({ roomId, settings, players, io }) {
+  constructor({ roomId, settings, players, io, onRoundStart }) {
     this.roomId = roomId;          // which room this game belongs to
     this.io = io;                  // Socket.IO server instance (for broadcasting)
     this.settings = settings;      // { rounds, drawTime, wordCount, hints }
+    this.onRoundStart = onRoundStart; // Callback to clear server room state
 
     // All players in turn order (array of Player objects)
     this.players = players;
@@ -71,6 +72,12 @@ class Game {
     for (const player of this.players) {
       player.resetRound();
     }
+
+    // Clear server strokes and notify clients
+    if (this.onRoundStart) {
+      this.onRoundStart();
+    }
+    this.io.to(this.roomId).emit('canvas_cleared');
 
     // Figure out who is drawing this turn
     const drawer = this.players[this.currentDrawerIndex];

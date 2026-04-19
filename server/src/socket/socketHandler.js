@@ -310,6 +310,10 @@ function setupSocketHandler(io) {
           settings: room.settings,
           players: room.getPlayers(),
           io,
+          onRoundStart: () => {
+            room.currentStrokes = [];
+            room._currentStroke = null;
+          }
         });
 
         games.set(room.id, game);
@@ -339,6 +343,11 @@ function setupSocketHandler(io) {
         room.settings = { ...room.settings, ...settings };
 
         // Update DB
+        if (settings.isPublic !== undefined) {
+          room.isPublic = settings.isPublic;
+          await pool.query('UPDATE rooms SET is_public = $1 WHERE id = $2', [room.isPublic, room.id]);
+        }
+        
         await pool.query('UPDATE rooms SET settings = $1 WHERE id = $2', [
           JSON.stringify(room.settings),
           room.id,
@@ -350,6 +359,39 @@ function setupSocketHandler(io) {
         io.to(room.id).emit('settings_updated', { settings: room.settings });
       } catch (error) {
         console.error('[Socket Error] update_settings:', error);
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // reset_game
+    // Only the host can trigger this. Resets room status and game instance.
+    // -------------------------------------------------------------------------
+    socket.on('reset_game', async ({ roomCode }) => {
+      try {
+        const room = rooms.get(roomCode?.toUpperCase());
+        if (!room) return;
+
+        const player = room.getPlayerBySocketId(socket.id);
+        if (!player || !player.isHost) {
+          socket.emit('error', { message: 'Only the host can reset the game.' });
+          return;
+        }
+
+        // Reset room status
+        room.status = 'waiting';
+        room.currentStrokes = [];
+        room._currentStroke = null;
+        await pool.query("UPDATE rooms SET status = 'waiting' WHERE id = $1", [room.id]);
+
+        // Clean up game instance
+        games.delete(room.id);
+
+        console.log(`[Socket] Game reset in room ${room.code}`);
+
+        // Notify everyone to go back to lobby
+        io.to(room.id).emit('game_reset');
+      } catch (error) {
+        console.error('[Socket Error] reset_game:', error);
       }
     });
 
@@ -408,6 +450,7 @@ function setupSocketHandler(io) {
         x: data.x, y: data.y,
         color: data.color,
         size: data.size,
+        playerId: socket.data.playerId,
       });
     });
 
@@ -429,6 +472,7 @@ function setupSocketHandler(io) {
         type: 'move',
         x: data.x,
         y: data.y,
+        playerId: socket.data.playerId,
       });
     });
 

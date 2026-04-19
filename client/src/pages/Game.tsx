@@ -1,6 +1,5 @@
 // Game.tsx
-// Redesigned with a "Senior Level" highly-polished game board.
-// Orchestrates the Canvas, Chat, Scoreboard, and top-bar info in a premium layout.
+// Orchestrates the high-end "Studio Edition" game board.
 
 import React from 'react';
 import { useGame } from '../context/GameContext';
@@ -21,30 +20,28 @@ const Game: React.FC = () => {
     totalRounds,
     currentDrawerId,
     playerId,
-    word
+    word,
+    drawTime
   } = useGame();
 
   const isMyTurn = playerId === currentDrawerId && phase === 'drawing';
 
-  // ---------------------------------------------------------------------------
-  // Helper: Format labels for the word blanks (e.g. "_ _ a _ _")
-  // ---------------------------------------------------------------------------
   const renderWordDisplay = () => {
     if (isMyTurn || phase === 'roundEnd') {
       return (
-        <span className="text-3xl font-black tracking-[0.2em] uppercase text-indigo-400 drop-shadow-sm">
-          {word || "WAITING..." }
+        <span className="text-4xl font-black tracking-[0.25em] uppercase text-indigo-400 drop-shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+          {word || "CURATING..." }
         </span>
       );
     }
 
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         {wordHints.map((char, i) => (
           <div 
             key={i} 
-            className={`w-9 h-12 flex items-center justify-center border-b-4 text-3xl font-black uppercase transition-all duration-500 ${
-              char === ' ' ? 'border-transparent mx-2' : 'border-slate-800 text-white animate-fade-in'
+            className={`w-10 h-14 flex items-center justify-center border-b-4 text-4xl font-black uppercase transition-all duration-700 ${
+              char === ' ' ? 'border-transparent mx-3' : 'border-slate-800 text-white/90 animate-fade-in'
             }`}
           >
             {char !== '_' ? char : ''}
@@ -55,103 +52,114 @@ const Game: React.FC = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-screen bg-[#03040b] bg-mesh text-white overflow-hidden flex flex-col relative">
-      {/* Top Navigation / Status Bar */}
-      <header className="h-20 flex items-center justify-between px-8 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20">
-        <div className="flex items-center gap-10">
+    <div className="h-[100dvh] w-screen bg-[#03040b] bg-mesh text-white overflow-hidden flex flex-col relative font-sans">
+      {/* Dynamic Background Orbs */}
+      <div className="absolute top-0 left-1/4 w-[50%] h-[20%] bg-indigo-600/5 blur-[120px] rounded-full pointer-events-none" />
+
+      {/* Header: Session Intelligence */}
+      <header className="h-24 flex items-center justify-between px-10 bg-black/40 backdrop-blur-2xl border-b border-white/5 z-30 shadow-2xl">
+        <div className="flex items-center gap-12">
           <div className="flex flex-col">
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none mb-1.5">Session Progress</span>
-            <div className="text-2xl font-black tracking-tighter">
-              {round} <span className="text-xs text-slate-700 mx-1">/</span> <span className="text-slate-500">{totalRounds}</span>
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2 pl-0.5">Session Roster</span>
+            <div className="text-3xl font-black tracking-tighter tabular-nums flex items-baseline gap-1.5">
+              {round} <span className="text-[10px] text-slate-700 font-bold uppercase tracking-widest italic">of</span> <span className="text-slate-500">{totalRounds}</span>
             </div>
           </div>
           
-          <div className="h-10 w-px bg-white/5" />
+          <div className="h-12 w-px bg-white/5" />
           
           <div className="flex flex-col">
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none mb-1.5">Game Clock</span>
-            <div className={`text-2xl font-mono font-black tabular-nums ${timeLeft < 15 ? 'text-rose-500 animate-pulse' : 'text-indigo-400'}`}>
-              {timeLeft}<span className="text-xs ml-0.5">S</span>
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2 pl-0.5">Chronometer</span>
+            <div className={`text-3xl font-mono font-black tabular-nums tracking-tight ${timeLeft < 15 ? 'text-rose-500 animate-pulse' : 'text-indigo-400'}`}>
+              {timeLeft}<span className="text-[10px] ml-1 font-black text-slate-700 uppercase">Sec</span>
             </div>
           </div>
         </div>
 
-        {/* Word Display (Center) */}
-        <div className="hidden md:flex items-center justify-center flex-grow">
-          <div className="glass px-10 py-3 rounded-2xl border-white/5 shadow-inner">
+        {/* Word Centerpiece */}
+        <div className="hidden md:flex items-center justify-center flex-grow mx-8">
+          <div className="glass px-12 py-4 rounded-[2rem] border-white/5 shadow-3xl transform transition-all hover:scale-105">
             {renderWordDisplay()}
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="text-right flex flex-col hidden lg:flex">
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Studio Code</span>
-            <span className="font-mono font-bold text-slate-300 tracking-widest">{roomCode}</span>
+        <div className="flex items-center gap-8">
+          <div className="text-right hidden xl:flex flex-col">
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-1.5">Studio Link</span>
+            <span className="font-mono font-black text-slate-300 tracking-[0.2em] text-xs px-3 py-1 bg-white/5 rounded-lg border border-white/5">{roomCode}</span>
           </div>
-          <div className="w-11 h-11 glass border-white/10 rounded-2xl flex items-center justify-center shadow-lg cursor-pointer hover:bg-white/10 transition-all hover:scale-105 active:scale-95">
+          <button className="w-12 h-12 glass border-white/10 rounded-2xl flex items-center justify-center shadow-xl transition-all hover:bg-white/10 hover:-translate-y-1 active:scale-90">
             <span className="text-xl">⚙️</span>
-          </div>
+          </button>
         </div>
       </header>
 
-      {/* Main Game Layout */}
-      <main className="flex-grow p-3 lg:p-6 xl:p-8 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden h-[calc(100vh-5rem)]">
+      {/* Main Studio Floor */}
+      <main className="flex-grow p-4 lg:p-8 flex flex-col lg:flex-row gap-6 lg:gap-8 overflow-hidden relative z-20">
         
-        {/* Left Sidebar: Scoreboard */}
-        <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1 h-32 lg:h-full animate-fade-in relative z-10 transition-all duration-300 hidden lg:block">
+        {/* Left: Global Rankings */}
+        <aside className="w-full lg:w-80 flex-shrink-0 order-2 lg:order-1 h-32 lg:h-full animate-fade-in relative z-10 hidden xl:block">
           <Scoreboard />
         </aside>
 
-        {/* Center Section: Canvas & Controls */}
-        <section className="flex-grow flex flex-col order-1 lg:order-2 h-[55%] lg:h-full gap-4 relative z-0">
+        {/* Center: The Canvas Exhibition */}
+        <section className="flex-grow flex flex-col order-1 lg:order-2 h-[60%] lg:h-full gap-6 relative z-0">
           <div className="flex-grow flex items-center justify-center relative">
-            <div className="w-full h-full glass rounded-[2.5rem] p-4 border-white/10 shadow-2xl relative overflow-hidden flex flex-col min-h-[350px]">
-              {/* Dynamic progress timer bar */}
-              <div className="absolute top-0 left-0 w-full h-[3px] bg-white/5 overflow-hidden">
+            <div className="w-full h-full glass rounded-[3rem] p-5 border-white/5 shadow-[0_40px_100px_-30px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col group transition-all hover:border-white/10">
+              
+              {/* Progress Aura (Top Bar) */}
+              <div className="absolute top-0 left-0 w-full h-[4px] bg-white/2 overflow-hidden">
                 <div 
-                  className={`h-full transition-all duration-1000 ease-linear ${
-                    timeLeft < 15 ? 'bg-rose-500' : 'bg-indigo-500'
+                  className={`h-full transition-all duration-1000 ease-linear shadow-[0_0_15px_rgba(99,102,241,0.5)] ${
+                    timeLeft < 15 ? 'bg-rose-500 shadow-rose-500/50' : 'bg-indigo-600 shadow-indigo-600/50'
                   }`}
-                  style={{ width: `${(timeLeft / 80) * 100}%` }}
+                  style={{ width: `${(timeLeft / drawTime) * 100}%` }}
                 />
               </div>
               
-              <div className="flex-grow relative w-full h-full rounded-2xl overflow-hidden bg-white/5">
+              {/* Actual Canvas */}
+              <div className="flex-grow relative w-full h-full rounded-[2rem] overflow-hidden bg-[#0a0a0f]/50 border border-white/5">
                 <Canvas />
               </div>
             </div>
 
-            {/* Floating Toolbar for Drawer */}
+            {/* Float Controls for Active Drawer */}
             {isMyTurn && (
-              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 animate-fade-in">
+              <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-40">
                 <Toolbar />
               </div>
             )}
           </div>
           
-          {/* Subtle instructions / status */}
-          <div className="flex justify-between items-center px-4">
-             <span className="text-[9px] font-black text-slate-700 uppercase tracking-[0.25em]">Precision Canvas v2.4</span>
-             <span className="text-[9px] font-black text-indigo-500/50 uppercase tracking-[0.25em]">
-               {isMyTurn ? "You are the master artist" : "Observe and decode the art"}
-             </span>
+          {/* Metadata Footer */}
+          <div className="flex justify-between items-center px-8 opacity-40">
+             <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em]">Engine v2.4.1 Studio Edit</span>
+             </div>
+             <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black text-indigo-400/80 uppercase tracking-[0.3em] font-mono">
+                  {isMyTurn ? "DIRECTOR MODE ACTIVE" : "SYNCHRONIZING RECEPTORS"}
+                </span>
+                <div className={`w-2 h-2 rounded-full ${isMyTurn ? 'bg-indigo-500 animate-pulse' : 'bg-slate-700'}`} />
+             </div>
           </div>
         </section>
 
-        {/* Right Sidebar: Chat */}
-        <aside className="w-full lg:w-80 flex-shrink-0 order-3 h-[45%] lg:h-full animate-fade-in delay-200">
+        {/* Right: Studio Intercom */}
+        <aside className="w-full lg:w-96 flex-shrink-0 order-3 h-[40%] lg:h-full animate-fade-in delay-200">
           <Chat />
         </aside>
 
       </main>
 
-      {/* Overlays & Modals */}
+      {/* High-Z Overlays */}
       <WordModal />
       <GameOver />
 
-      {/* Mobile-Only Word Display */}
+      {/* Mobile Word Support */}
       {phase !== 'waiting' && phase !== '' && (
-        <div className="md:hidden absolute top-24 left-1/2 -translate-x-1/2 glass px-6 py-2 rounded-full z-30 shadow-2xl border-white/10 animate-fade-in pointer-events-none scale-90">
+        <div className="md:hidden absolute top-28 left-1/2 -translate-x-1/2 glass px-8 py-3 rounded-full z-40 shadow-3xl border-white/10 animate-fade-in pointer-events-none scale-90 border-t-indigo-500/50">
           {renderWordDisplay()}
         </div>
       )}

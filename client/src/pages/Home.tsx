@@ -1,6 +1,6 @@
 // Home.tsx
-// The landing page of the application.
-// Redesigned with a premium "Senior Level" UI/UX.
+// Redesigned with a stunning premium entrance.
+// Features dynamic mesh background, floating elements, and refined typography.
 
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -22,7 +22,7 @@ const Home: React.FC = () => {
 
   const handleCreateRoom = async () => {
     if (!name.trim()) {
-      setError('A true artist needs a name!');
+      setError('A true artist needs a signature name!');
       return;
     }
 
@@ -34,8 +34,8 @@ const Home: React.FC = () => {
         hostName: name,
         isPublic: isPublic,
         settings: {
-          rounds: 1,
-          drawTime: 15,
+          rounds: 3,
+          drawTime: 80,
         },
       });
 
@@ -44,7 +44,7 @@ const Home: React.FC = () => {
       navigate(`/room/${roomCode}`);
     } catch (err: any) {
       console.error('Create room error:', err);
-      setError('Failed to create room. Is the backend server running?');
+      setError('The studio is currently offline. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ const Home: React.FC = () => {
 
   const handleJoinPublic = async () => {
     if (!name.trim()) {
-      setError('Please enter your name first!');
+      setError('Introduce yourself before entering the lounge.');
       return;
     }
 
@@ -66,7 +66,7 @@ const Home: React.FC = () => {
       navigate(`/room/${roomCode}`);
     } catch (err: any) {
       console.error('Join public error:', err);
-      setError(err.response?.data?.error || 'No public studios found. Start one!');
+      setError(err.response?.data?.error || 'No public studios found. Launch your own!');
     } finally {
       setLoading(false);
     }
@@ -74,11 +74,11 @@ const Home: React.FC = () => {
 
   const handleJoinRoom = async () => {
     if (!name.trim()) {
-      setError('Please enter your name first!');
+      setError('Artist identification is required.');
       return;
     }
     if (!code.trim() || code.length < 6) {
-      setError('Enter a valid 6-character room code.');
+      setError('Invalid studio access code.');
       return;
     }
 
@@ -93,13 +93,12 @@ const Home: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Join room error:', err);
-      setError(err.response?.data?.reason || 'Room not found or game already started.');
+      setError(err.response?.data?.reason || 'Studio access denied or not found.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle join-via-URL code pre-fill
   React.useEffect(() => {
     const urlCode = searchParams.get('code');
     if (urlCode && urlCode.length === 6) {
@@ -108,93 +107,101 @@ const Home: React.FC = () => {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-mesh flex flex-col items-center justify-start p-6 py-12 md:py-20 relative overflow-y-auto">
-      {/* Decorative Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse-subtle" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full animate-pulse-subtle" />
+    <div className="min-h-screen bg-mesh flex flex-col items-center justify-start p-6 py-16 md:py-28 relative overflow-y-auto custom-scrollbar">
+      {/* Dynamic Background Decorations */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/10 blur-[150px] rounded-full animate-pulse-subtle pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 blur-[150px] rounded-full animate-pulse-subtle pointer-events-none" />
 
-      {/* Main Content */}
-      <div className="w-full max-w-xl z-10 animate-fade-in">
-        {/* Logo Section */}
-        <div className="text-center mb-10">
-          <div className="inline-block px-4 py-1.5 mb-6 glass rounded-full ring-1 ring-white/10">
-            <span className="text-[10px] font-black tracking-[0.2em] text-indigo-400 uppercase">
-              Multiplayer Drawing Experience
+      {/* Main Content Card */}
+      <div className="w-full max-w-2xl z-10 animate-fade-in relative">
+        
+        {/* Logo / Header Section */}
+        <div className="text-center mb-16 px-4">
+          <div className="inline-flex items-center gap-2.5 px-5 py-2 mb-8 glass rounded-full ring-1 ring-white/10 shadow-xl">
+            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+            <span className="text-[10px] font-black tracking-[0.4em] text-indigo-400 uppercase">
+              The Premier Artistic Lounge
             </span>
           </div>
-          <h1 className="text-7xl font-black tracking-tighter italic text-gradient mb-2">
-            SKRIBBL
+          <h1 className="text-8xl font-black tracking-tighter italic mb-4 leading-none">
+            <span className="text-white">SKRIBBL</span>
+            <span className="text-indigo-600 opacity-50">.</span>
+            <span className="text-slate-800">IO</span>
           </h1>
-          <p className="text-slate-400 font-medium tracking-wide">
-            The ultimate platform to <span className="text-white">draw</span>, <span className="text-white">guess</span>, and <span className="text-white">laugh</span>.
+          <p className="max-w-md mx-auto text-slate-500 font-bold tracking-tight text-sm uppercase leading-relaxed">
+            Where <span className="text-slate-300">visionaries</span> collide. Redefining the boundaries of <span className="text-slate-300">multiplayer art</span>.
           </p>
         </div>
 
-        {/* Action Card */}
-        <div className="glass p-10 rounded-3xl relative overflow-hidden group">
-          {/* Subtle line decoration */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+        {/* Entrance Interface */}
+        <div className="glass p-12 rounded-[3.5rem] relative overflow-hidden shadow-3xl group border-white/5 transition-all hover:border-white/10">
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-indigo-600 to-transparent" />
           
           {error && (
-            <div className="mb-8 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm flex items-center gap-3 animate-fade-in">
-              <span className="text-lg">⚠️</span>
+            <div className="mb-10 p-5 bg-rose-950/20 border border-rose-500/20 text-rose-400 rounded-3xl text-xs font-black tracking-widest flex items-center gap-4 animate-fade-in uppercase">
+              <span className="bg-rose-500 text-white rounded-lg p-1">⚠️</span>
               {error}
             </div>
           )}
 
-          <div className="space-y-8">
-            {/* Name Input */}
-            <div className="relative group">
-              <label className="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-3 ml-1">
-                Artist Name
+          <div className="space-y-12">
+            {/* Signature Input */}
+            <div className="relative">
+              <label className="block text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 ml-2">
+                Your Artistic Alias
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <input
                   type="text"
-                  placeholder="MasterArtist_99"
+                  placeholder="The_Masterpiece_99"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all font-medium text-lg placeholder:text-slate-600"
+                  className="w-full bg-white/2 border border-white/5 rounded-[2rem] px-8 py-5 outline-none focus:ring-2 focus:ring-indigo-600/30 focus:border-indigo-600/40 transition-all font-bold text-xl placeholder:text-slate-700 text-white"
                   maxLength={16}
                 />
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors">
-                  🎨
+                <div className="absolute right-8 top-1/2 -translate-y-1/2 text-2xl opacity-40 group-focus-within:opacity-100 transition-opacity">
+                  🖋️
                 </div>
               </div>
             </div>
 
-            {/* Visibility Toggle */}
+            {/* Visibility Dashboard */}
             <div className="flex items-center justify-between px-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                Studio Visibility
-              </span>
-              <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-1">
+                  Studio mode
+                </span>
+                <span className="text-[9px] font-bold text-slate-700 uppercase italic">Control access to your exhibition</span>
+              </div>
+              <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5">
                 <button
                   onClick={() => setIsPublic(true)}
-                  className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${isPublic ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`px-6 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${isPublic ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                   PUBLIC
                 </button>
                 <button
                   onClick={() => setIsPublic(false)}
-                  className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${!isPublic ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`px-6 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${!isPublic ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                   PRIVATE
                 </button>
               </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-              {/* Create Button */}
+            <div className="flex flex-col gap-5 pt-4">
+              {/* Primary Action */}
               <button
                 onClick={handleCreateRoom}
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-5 rounded-2xl font-black text-sm tracking-widest shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 overflow-hidden group/btn"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-6 rounded-[2rem] font-black text-sm tracking-[0.3em] shadow-3xl shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-4 overflow-hidden relative group/btn"
               >
-                {loading ? 'INITIALIZING...' : (
+                {loading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
                   <>
-                    CREATE NEW STUDIO
-                    <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
+                    CREATE NEW EXHIBITION
+                    <span className="group-hover/btn:translate-x-1.5 transition-transform duration-300">➔</span>
                   </>
                 )}
               </button>
@@ -202,31 +209,31 @@ const Home: React.FC = () => {
               <button
                 onClick={handleJoinPublic}
                 disabled={loading}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-4 rounded-2xl font-black text-[10px] tracking-widest transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-5 rounded-[2rem] font-black text-[10px] tracking-[0.4em] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 uppercase shadow-lg shadow-black/20"
               >
-                {loading ? 'SEARCHING...' : '✨ JOIN PUBLIC LOUNGE'}
+                {loading ? 'ANALYZING NETWORK' : '⚡ Enter Random Hall'}
               </button>
 
-              <div className="flex items-center gap-4 py-2">
+              <div className="flex items-center gap-6 py-4">
                 <div className="flex-grow h-px bg-white/5" />
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">or Join Existing</span>
+                <span className="text-[10px] font-black text-slate-700 uppercase tracking-[0.4em]">Secure Access</span>
                 <div className="flex-grow h-px bg-white/5" />
               </div>
 
-              {/* Join Section */}
-              <div className="grid grid-cols-3 gap-3">
+              {/* Join Interface */}
+              <div className="grid grid-cols-4 gap-4">
                 <input
                   type="text"
-                  placeholder="CODE"
+                  placeholder="ENTER ACCESS CODE"
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  className="col-span-2 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-brand-accent/50 transition-all font-mono font-bold tracking-widest text-center"
+                  className="col-span-3 bg-white/2 border border-white/5 rounded-3xl px-8 py-5 outline-none focus:ring-2 focus:ring-indigo-600/30 transition-all font-mono font-black tracking-[0.4em] text-center text-sm text-indigo-400 placeholder:text-slate-800 placeholder:tracking-widest"
                   maxLength={6}
                 />
                 <button
                   onClick={handleJoinRoom}
                   disabled={loading}
-                  className="bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl font-black text-xs tracking-widest transition-all active:scale-[0.98] disabled:opacity-50"
+                  className="bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-3xl font-black text-[10px] tracking-widest transition-all active:scale-[0.98] disabled:opacity-50 shadow-xl shadow-black/40"
                 >
                   JOIN
                 </button>
@@ -235,29 +242,31 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Studio Guide / How to Play */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in delay-300">
+        {/* Feature Icons */}
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-in delay-500">
           {[
-            { title: 'DRAW', desc: 'Pick a word and sketch it on the canvas for others to decode.', icon: '✏️' },
-            { title: 'GUESS', desc: 'Type your guesses in the chat. Speed earns higher points!', icon: '🧠' },
-            { title: 'DOMINATE', desc: 'The most accurate artist at the end of all rounds wins.', icon: '🏆' }
-          ].map((step, i) => (
-            <div key={i} className="glass p-6 rounded-2xl border-white/5 flex flex-col items-center text-center group hover:bg-white/10 transition-all">
-              <span className="text-3xl mb-4 group-hover:scale-110 transition-transform">{step.icon}</span>
-              <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-2">{step.title}</h3>
-              <p className="text-[10px] text-slate-500 font-bold leading-relaxed">{step.desc}</p>
+            { title: 'EXPRESS', desc: 'Transform concepts into vivid imagery with precision tools.', icon: '🎨' },
+            { title: 'DECODE', desc: 'Harness intuition to decrypt the evolving canvas.', icon: '⚛️' },
+            { title: 'CONQUER', desc: 'Climb the ranks and claim your artistic legacy.', icon: '💠' }
+          ].map((feat, i) => (
+            <div key={i} className="glass p-8 rounded-[2rem] border-white/5 flex flex-col items-center text-center group hover:scale-[1.05] transition-all duration-500">
+              <span className="text-4xl mb-6 group-hover:rotate-12 transition-transform">{feat.icon}</span>
+              <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-3">{feat.title}</h3>
+              <p className="text-[10px] text-slate-600 font-bold uppercase leading-relaxed tracking-wider">{feat.desc}</p>
             </div>
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="mt-20 mb-12 text-center">
-          <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.3em]">
-            Precision Drawing &bull; Real Time Sync &bull; Competitive Fun
+        {/* Studio Footer */}
+        <div className="mt-24 mb-16 text-center opacity-30">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.5em] mb-4">
+            Encrypted Sync &bull; Neural UI &bull; Studio Edition 2024
           </p>
-          <p className="text-[8px] font-bold text-slate-800 uppercase tracking-[0.4em] mt-4">
-            Built for Master Artists &bull; 2024 Studio Edition
-          </p>
+          <div className="flex items-center justify-center gap-6">
+             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+          </div>
         </div>
       </div>
     </div>
