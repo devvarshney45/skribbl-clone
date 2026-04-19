@@ -43,7 +43,7 @@ const Room: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] h-[100dvh] w-screen bg-mesh-pro flex flex-col font-sans relative overflow-hidden selection:bg-brand-primary/30">
+    <div className="min-h-[100dvh] w-screen bg-mesh-pro flex flex-col font-sans relative overflow-x-hidden overflow-y-auto selection:bg-brand-primary/30">
       
       {/* 1. Global Background Animation */}
       <SketchBackground />
@@ -79,7 +79,7 @@ const Room: React.FC = () => {
       </header>
 
       {/* 3. Main Dashboard Layout */}
-      <main className="flex-grow flex flex-col lg:flex-row p-4 md:p-6 lg:p-8 z-10 gap-6 min-h-0 overflow-hidden">
+      <main className="flex-grow flex flex-col lg:flex-row p-4 md:p-6 lg:p-8 z-10 gap-6">
           
           {/* A. Hero Center (Matching Engine) */}
           <section className="flex-grow flex flex-col items-center justify-center relative min-h-0 animate-fade-in order-2 lg:order-1">

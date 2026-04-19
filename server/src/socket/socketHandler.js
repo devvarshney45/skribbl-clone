@@ -490,8 +490,17 @@ function setupSocketHandler(io) {
 
         console.log(`[Socket] Game reset in room ${room.code}`);
 
+        // Reset player readiness for the lobby
+        room.getPlayers().forEach(p => {
+          p.isReady = p.isHost;
+          p.hasGuessedCorrectly = false;
+        });
+        
         // Notify everyone to go back to lobby
         io.to(room.id).emit('game_reset');
+        
+        // Broadcast updated player states so the UI lobby Start button unlocks for the host
+        broadcastPlayerList(io, room);
       } catch (error) {
         console.error('[Socket Error] reset_game:', error);
       }

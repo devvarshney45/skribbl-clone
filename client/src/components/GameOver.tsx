@@ -16,8 +16,9 @@ const GameOver: React.FC = () => {
   const isHost = me?.isHost || false;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-bg-main/98 backdrop-blur-2xl animate-fade-in overflow-hidden h-[100dvh]">
-      <div className="w-full max-w-5xl text-center relative z-10 py-10">
+    <div className="fixed inset-0 z-[100] bg-bg-main/98 backdrop-blur-2xl animate-fade-in overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <div className="min-h-full w-full flex flex-col items-center justify-center p-4 md:p-8">
+        <div className="w-full max-w-5xl text-center relative z-10 py-10 md:py-16">
         
         {/* Pro Header */}
         <div className="mb-12 md:mb-16 animate-slide-up">
@@ -95,6 +96,7 @@ const GameOver: React.FC = () => {
             LEAVE ROOM
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
