@@ -1,5 +1,4 @@
-// GameOver.tsx
-// Final Transformation: Podium Exhibition.
+// GameOver.tsx — Mobile-first podium screen
 
 import React from 'react';
 import { useGame } from '../context/GameContext';
@@ -11,92 +10,90 @@ const GameOver: React.FC = () => {
 
   if (phase !== 'gameOver') return null;
 
-  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
-  const me = players.find(p => p.id === playerId);
-  const isHost = me?.isHost || false;
+  const sorted = [...players].sort((a, b) => b.score - a.score);
+  const isHost = players.find(p => p.id === playerId)?.isHost || false;
+
+  const medals = ['🥇', '🥈', '🥉'];
+  const podiumColors = [
+    'border-yellow-500/30 bg-yellow-500/5 shadow-yellow-500/10',
+    'border-slate-400/30 bg-slate-400/5 shadow-slate-400/10',
+    'border-orange-600/30 bg-orange-600/5 shadow-orange-600/10',
+  ];
 
   return (
-    <div className="fixed inset-0 z-[100] bg-bg-main/98 backdrop-blur-2xl animate-fade-in overflow-y-auto overflow-x-hidden custom-scrollbar">
-      <div className="min-h-full w-full flex flex-col items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-5xl text-center relative z-10 py-10 md:py-16">
-        
-        {/* Pro Header */}
-        <div className="mb-12 md:mb-16 animate-slide-up">
-          <div className="inline-flex items-center gap-3 px-6 py-2 mb-8 panel rounded-full border border-white/10 opacity-80">
-            <span className="w-2 h-2 bg-brand-accent rounded-full animate-pulse shadow-[0_0_10px_rgba(251,113,133,0.5)]" />
-            <span className="text-[10px] font-black tracking-[0.4em] text-brand-accent uppercase">
-               Final Results
-            </span>
+    <div className="fixed inset-0 z-[100] overflow-y-auto overflow-x-hidden bg-bg-main/97 backdrop-blur-2xl animate-fade-in">
+      <div className="min-h-full w-full flex flex-col items-center px-4 py-8 sm:py-12">
+
+        {/* Header */}
+        <div className="text-center mb-8 sm:mb-12 animate-slide-up w-full">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-full mb-4">
+            <span className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-pulse" />
+            <span className="text-[9px] font-black tracking-[0.4em] text-rose-400 uppercase">Final Results</span>
           </div>
-          <h1 className="text-5xl md:text-7xl lg:text-[7rem] font-black italic text-gradient-pro tracking-tighter leading-none mb-4">
-             GAME <span className="opacity-20 text-slate-500">OVER</span>
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black italic tracking-tighter leading-none text-white">
+            GAME <span className="text-white/15">OVER</span>
           </h1>
-          <p className="text-slate-600 font-black uppercase text-[10px] tracking-[0.5em] mt-6">Scores Calculated • Thanks for playing!</p>
+          <p className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em] mt-3">
+            Scores Calculated • Thanks for playing!
+          </p>
         </div>
 
-        {/* Tactical Podium */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 items-end px-4 md:px-8 max-w-5xl mx-auto animate-pop-in">
-            {/* 2nd Place */}
-            {sortedPlayers[1] && (
-                <div className="order-2 md:order-1 panel p-8 md:p-10 rounded-[2.5rem] border-white/5 relative group transition-all hover:bg-bg-panel/60 h-fit">
-                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 italic">Runner Up</div>
-                    <div className="text-xl md:text-2xl font-black text-white/95 mb-4 px-2 max-w-[150px] md:max-w-[180px] mx-auto overflow-hidden text-ellipsis whitespace-nowrap italic">{sortedPlayers[1].name}</div>
-                    <div className="inline-block bg-white/5 px-6 py-2 rounded-full text-[10px] font-mono font-black text-brand-secondary">{sortedPlayers[1].score} PTS</div>
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 panel-card w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl ring-4 ring-bg-main bg-bg-card">🥈</div>
-                </div>
-            )}
-
-            {/* Winner */}
-            {winner && (
-                <div className="order-1 md:order-2 panel p-10 md:p-14 rounded-[3.5rem] border-brand-highlight/20 relative shadow-3xl bg-bg-panel/80 scale-100 md:scale-105 animate-pop-in overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-brand-highlight/10 to-transparent pointer-events-none" />
-                    <div className="text-[10px] font-black text-brand-highlight uppercase tracking-[0.5em] mb-6 animate-pulse">Winner</div>
-                    <div className="text-3xl md:text-5xl font-black text-white mb-8 drop-shadow-2xl italic px-4 max-w-[200px] md:max-w-[280px] mx-auto overflow-hidden text-ellipsis whitespace-nowrap">{winner.name}</div>
-                    
-                    <div className="inline-flex items-center gap-4 bg-brand-highlight/10 border border-brand-highlight/20 px-8 py-4 rounded-[2.5rem]">
-                        <span className="text-2xl font-black text-white italic">{winner.score}</span>
-                        <span className="text-[10px] font-black text-brand-highlight uppercase tracking-widest">Points</span>
-                    </div>
-
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-brand-highlight w-16 h-16 rounded-[1.75rem] flex items-center justify-center text-3xl shadow-[0_0_40px_rgba(251,191,36,0.4)] ring-8 ring-bg-main btn-game">🥇</div>
-                </div>
-            )}
-
-            {/* 3rd Place */}
-            {sortedPlayers[2] && (
-                <div className="order-3 panel p-8 md:p-10 rounded-[2.5rem] border-white/5 relative group transition-all hover:bg-bg-panel/60 h-fit">
-                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 italic">3rd Place</div>
-                    <div className="text-xl md:text-2xl font-black text-white/95 mb-4 px-2 max-w-[150px] md:max-w-[180px] mx-auto overflow-hidden text-ellipsis whitespace-nowrap italic">{sortedPlayers[2].name}</div>
-                    <div className="inline-block bg-white/5 px-6 py-2 rounded-full text-[10px] font-mono font-black text-brand-secondary">{sortedPlayers[2].score} PTS</div>
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 panel-card w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl ring-4 ring-bg-main bg-bg-card">🥉</div>
-                </div>
-            )}
-        </div>
-
-        {/* Global Controls */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-10 relative z-[110] animate-slide-up">
-          {isHost ? (
-              <button
-                onClick={resetGame}
-                className="bg-brand-primary hover:bg-brand-primary/90 text-white px-16 py-6 rounded-[2.5rem] font-black text-sm tracking-[0.4em] btn-game shadow-tactile-heavy transition-all active:scale-95 group/btn"
-              >
-                PLAY AGAIN ➔
-              </button>
-          ) : (
-              <div className="panel px-10 py-5 rounded-[2rem] border-white/10 flex items-center gap-4">
-                  <div className="w-2 h-2 bg-brand-secondary rounded-full animate-pulse shadow-[0_0_10px_rgba(45,212,191,0.5)]" />
-                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic tracking-[0.4em]">Waiting for Host to restart...</span>
+        {/* Podium — stacked on mobile, side-by-side on desktop */}
+        <div className="w-full max-w-2xl space-y-3 sm:space-y-4 mb-8 sm:mb-12 animate-pop-in">
+          {sorted.slice(0, 5).map((p, i) => (
+            <div
+              key={p.id}
+              className={`relative flex items-center gap-4 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border ${podiumColors[i] || 'border-white/5 bg-white/2'} shadow-lg transition-all`}
+            >
+              {/* Rank medal */}
+              <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-2xl sm:text-3xl">
+                {medals[i] || <span className="text-base font-black text-slate-600">#{i + 1}</span>}
               </div>
+
+              {/* Name + score */}
+              <div className="flex-1 min-w-0">
+                <p className={`font-black italic truncate ${i === 0 ? 'text-xl sm:text-2xl text-white' : 'text-base sm:text-lg text-white/80'}`}>
+                  {p.name}
+                  {p.id === playerId && <span className="text-[10px] ml-2 text-brand-secondary font-black not-italic">(You)</span>}
+                </p>
+                {i === 0 && (
+                  <p className="text-[9px] font-black text-yellow-500/70 uppercase tracking-widest">Winner</p>
+                )}
+              </div>
+
+              {/* Score */}
+              <div className={`shrink-0 px-4 py-2 rounded-xl font-mono font-black ${
+                i === 0 ? 'bg-yellow-500/10 text-yellow-400 text-base' : 'bg-white/5 text-slate-400 text-sm'
+              }`}>
+                {p.score} <span className="text-[9px]">pts</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full max-w-md animate-slide-up">
+          {isHost ? (
+            <button
+              onClick={resetGame}
+              className="w-full sm:w-auto flex-1 bg-brand-primary hover:bg-brand-primary/90 text-white px-8 py-4 rounded-2xl font-black text-sm tracking-[0.3em] active:scale-95 transition-all shadow-xl shadow-brand-primary/20"
+            >
+              PLAY AGAIN ➔
+            </button>
+          ) : (
+            <div className="w-full sm:w-auto flex-1 flex items-center justify-center gap-3 py-4 px-6 bg-white/3 rounded-2xl border border-white/5">
+              <span className="w-2 h-2 bg-brand-secondary rounded-full animate-pulse" />
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Waiting for host to restart…</span>
+            </div>
           )}
-          
           <button
             onClick={() => { sessionStorage.clear(); navigate('/'); window.location.reload(); }}
-            className="text-slate-700 hover:text-slate-400 px-10 py-5 font-black text-[10px] tracking-[0.5em] transition-all uppercase italic"
+            className="w-full sm:w-auto px-8 py-4 rounded-2xl font-black text-[10px] tracking-[0.4em] text-slate-600 hover:text-slate-300 transition-all uppercase border border-white/5 hover:border-white/10"
           >
-            LEAVE ROOM
+            LEAVE
           </button>
         </div>
-      </div>
+
       </div>
     </div>
   );
