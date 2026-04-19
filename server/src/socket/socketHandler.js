@@ -86,8 +86,9 @@ function setupSocketHandler(io) {
         room.addPlayer(player);
         rooms.set(room.code, room);
 
-        // Join the Socket.IO room channel
+        // Join the Socket.IO room channel and personal ID room
         socket.join(room.id);
+        socket.join(`user_${player.id}`);
 
         // Store player info on the socket for easy lookup on disconnect
         socket.data.playerId = player.id;
@@ -198,6 +199,7 @@ function setupSocketHandler(io) {
 
         room.addPlayer(player);
         socket.join(room.id);
+        socket.join(`user_${player.id}`);
         socket.data.playerId = player.id;
         socket.data.roomCode = room.code;
         socket.data.roomId   = room.id;
@@ -255,6 +257,7 @@ function setupSocketHandler(io) {
 
         availableRoom.addPlayer(player);
         socket.join(availableRoom.id);
+        socket.join(`user_${player.id}`);
         socket.data.playerId = player.id;
         socket.data.roomCode = availableRoom.code;
         socket.data.roomId   = availableRoom.id;
@@ -296,6 +299,7 @@ function setupSocketHandler(io) {
         // Update socket ID and mapping
         player.socketId = socket.id;
         socket.join(room.id);
+        socket.join(`user_${player.id}`);
         socket.data.playerId = player.id;
         socket.data.roomCode = room.code;
         socket.data.roomId   = room.id;

@@ -113,9 +113,7 @@ class Game {
 
       // RELIABILITY FIX: Use the latest socket ID from the player object 
       // which is updated on every reconnection/join.
-      const activeSocketId = drawer.socketId;
-
-      this.io.to(activeSocketId).emit('word_options', {
+      this.io.to(`user_${drawer.id}`).emit('word_options', {
         words: this.wordOptions,
         round: this.currentRound,
         totalRounds: this.totalRounds,
