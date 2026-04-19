@@ -6,7 +6,16 @@ import React from 'react';
 import { useGame } from '../context/GameContext';
 
 const Room: React.FC = () => {
-  const { roomCode, players, playerId, settings, updateSettings, startGame, isPublic } = useGame();
+  const { 
+    roomCode, 
+    players, 
+    playerId, 
+    totalRounds,
+    drawTime,
+    updateSettings, 
+    startGame,
+    isPublic,
+  } = useGame();
 
   const me = players.find((p) => p.id === playerId);
   const isHost = me?.isHost || false;
@@ -15,7 +24,12 @@ const Room: React.FC = () => {
 
   const handleSettingChange = (key: string, value: any) => {
     if (!isHost) return;
-    updateSettings({ ...settings, [key]: value });
+    // The updateSettings in context expects the whole object
+    updateSettings({ 
+      rounds: key === 'rounds' ? value : totalRounds,
+      drawTime: key === 'drawTime' ? value : drawTime,
+      isPublic: key === 'isPublic' ? value : isPublic 
+    });
   };
 
   const copyCode = () => {
@@ -61,7 +75,7 @@ const Room: React.FC = () => {
                                 {p.name[0].toUpperCase()}
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-xs font-black text-white/90 truncate max-w-[120px]">{p.name} {p.id === playerId && '(You)'}</span>
+                                <span className="text-xs font-black text-white/95 truncate max-w-[120px]">{p.name} {p.id === playerId && '(You)'}</span>
                                 <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">{p.isHost ? 'Session Host' : 'Contributor'}</span>
                             </div>
                         </div>
@@ -77,7 +91,7 @@ const Room: React.FC = () => {
         <section className="lg:col-span-4 flex flex-col gap-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
             <div className="panel flex-grow p-8 rounded-[3rem] flex flex-col items-center justify-center text-center relative overflow-hidden group">
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-40 h-1 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-secondary transition-all" style={{ width: `${(readyCount / players.length) * 100}%` }} />
+                    <div className="h-full bg-brand-secondary transition-all" style={{ width: `${(readyCount / Math.max(1, players.length)) * 100}%` }} />
                 </div>
                 
                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-10">Neural Trigger</h3>
@@ -115,14 +129,14 @@ const Room: React.FC = () => {
                    <div className="space-y-4">
                       <div className="flex items-center justify-between px-1">
                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Rotations</span>
-                         <span className="text-2xl font-black text-brand-secondary font-mono">{settings.rounds}</span>
+                         <span className="text-2xl font-black text-brand-secondary font-mono">{totalRounds}</span>
                       </div>
                       <div className="flex items-center gap-4">
-                         <button onClick={() => handleSettingChange('rounds', Math.max(1, settings.rounds-1))} className="w-10 h-10 panel-card rounded-xl flex items-center justify-center hover:bg-white/5 active:scale-95 text-lg">−</button>
+                         <button onClick={() => handleSettingChange('rounds', Math.max(1, totalRounds-1))} className="w-10 h-10 panel-card rounded-xl flex items-center justify-center hover:bg-white/5 active:scale-95 text-lg">−</button>
                          <div className="flex-grow h-1.5 bg-bg-main rounded-full overflow-hidden relative">
-                            <div className="absolute left-0 top-0 h-full bg-brand-primary" style={{ width: `${(settings.rounds / 10) * 100}%` }} />
+                            <div className="absolute left-0 top-0 h-full bg-brand-primary" style={{ width: `${(totalRounds / 10) * 100}%` }} />
                          </div>
-                         <button onClick={() => handleSettingChange('rounds', Math.min(10, settings.rounds+1))} className="w-10 h-10 panel-card rounded-xl flex items-center justify-center hover:bg-white/5 active:scale-95 text-lg">+</button>
+                         <button onClick={() => handleSettingChange('rounds', Math.min(10, totalRounds+1))} className="w-10 h-10 panel-card rounded-xl flex items-center justify-center hover:bg-white/5 active:scale-95 text-lg">+</button>
                       </div>
                    </div>
 
@@ -130,14 +144,14 @@ const Room: React.FC = () => {
                    <div className="space-y-4">
                       <div className="flex items-center justify-between px-1">
                          <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Inspiration Window</span>
-                         <span className="text-2xl font-black text-brand-secondary font-mono">{settings.drawTime}s</span>
+                         <span className="text-2xl font-black text-brand-secondary font-mono">{drawTime}s</span>
                       </div>
                       <div className="flex items-center gap-4">
-                         <button onClick={() => handleSettingChange('drawTime', Math.max(30, settings.drawTime-10))} className="w-10 h-10 panel-card rounded-xl flex items-center justify-center hover:bg-white/5 active:scale-95 text-lg">−</button>
+                         <button onClick={() => handleSettingChange('drawTime', Math.max(30, drawTime-10))} className="w-10 h-10 panel-card rounded-xl flex items-center justify-center hover:bg-white/5 active:scale-95 text-lg">−</button>
                          <div className="flex-grow h-1.5 bg-bg-main rounded-full overflow-hidden relative">
-                            <div className="absolute left-0 top-0 h-full bg-brand-primary" style={{ width: `${((settings.drawTime - 30) / 150) * 100}%` }} />
+                            <div className="absolute left-0 top-0 h-full bg-brand-primary" style={{ width: `${((drawTime - 30) / 150) * 100}%` }} />
                          </div>
-                         <button onClick={() => handleSettingChange('drawTime', Math.min(180, settings.drawTime+10))} className="w-10 h-10 panel-card rounded-xl flex items-center justify-center hover:bg-white/5 active:scale-95 text-lg">+</button>
+                         <button onClick={() => handleSettingChange('drawTime', Math.min(180, drawTime+10))} className="w-10 h-10 panel-card rounded-xl flex items-center justify-center hover:bg-white/5 active:scale-95 text-lg">+</button>
                       </div>
                    </div>
                 </div>
