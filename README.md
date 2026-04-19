@@ -16,7 +16,7 @@ A real-time multiplayer drawing and guessing game — a clone of skribbl.io buil
 | Styling | Tailwind CSS (dark theme) |
 | Backend | Node.js + Express |
 | WebSockets | Socket.IO |
-| Database | SQLite via `better-sqlite3` |
+| Database | PostgreSQL via `pg` (Neon) |
 
 ---
 
@@ -28,7 +28,7 @@ skribbl-clone/
 │   └── src/
 │       ├── classes/  ← OOP: Player, Room, Game
 │       ├── routes/   ← REST API
-│       ├── db/       ← SQLite setup + seed
+│       ├── db/       ← PostgreSQL setup + seed
 │       └── socket/   ← All socket events
 └── client/           ← React + TypeScript frontend
     └── src/
@@ -112,12 +112,12 @@ Browser Tab 1 (Drawer)          Browser Tab 2 (Guesser)
        │                                  │
        └──────────────── Express Server ──┘
                               │
-                         SQLite DB
+                         PostgreSQL DB
                     (rooms, players, words)
 ```
 
 - All game logic lives on the **server** in memory (Room, Game, Player classes)
-- SQLite stores persistent data (scores, rooms, word list)
+- PostgreSQL stores persistent data (scores, rooms, word list)
 - Socket.IO handles all real-time communication
 - React context manages frontend state
 
@@ -135,6 +135,22 @@ Browser Tab 1 (Drawer)          Browser Tab 2 (Guesser)
 - ✅ Shareable invite link
 - ✅ Reconnection handling
 - ✅ Game over screen with confetti + leaderboard
+
+## ☁️ Deployment (Render + Neon)
+
+### Backend (Render)
+1. Link your GitHub repo to Render.
+2. Set Build Command: `cd server && npm install`
+3. Set Start Command: `cd server && node src/index.js`
+4. Add Environment Variables:
+   - `DATABASE_URL`: Your actual Neon connection string.
+   - `PORT`: `3001`
+   - `CLIENT_URL`: Your frontend URL.
+   - `NODE_ENV`: `production`
+
+### Frontend (Render/Vercel)
+1. Set Build Command: `cd client && npm install && npm run build`
+2. Set Publish Directory: `client/dist`
 
 ---
 
