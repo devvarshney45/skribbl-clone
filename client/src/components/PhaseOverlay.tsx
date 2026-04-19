@@ -7,7 +7,7 @@ import { useGame } from '../context/GameContext';
 const PhaseOverlay: React.FC = () => {
   const { phase, round, word, currentDrawerId, players, timeLeft } = useGame();
 
-  if (phase !== 'roundEnd' && phase !== 'choosing') return null;
+  if (phase !== 'roundEnd') return null;
 
   const drawer = players.find(p => p.id === currentDrawerId);
 
@@ -33,36 +33,6 @@ const PhaseOverlay: React.FC = () => {
                     <div className="w-1.5 h-1.5 bg-brand-secondary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                     <div className="w-1.5 h-1.5 bg-brand-secondary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
-            </div>
-          </div>
-        )}
-
-        {phase === 'choosing' && (
-          <div className="animate-pop-in space-y-8">
-            <div className="inline-block px-4 py-1.5 bg-brand-secondary/10 border border-brand-secondary/20 text-brand-secondary rounded-full text-[10px] font-black uppercase tracking-[0.4em]">
-               Artist Selection
-            </div>
-
-            <div className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-3xl panel flex items-center justify-center text-4xl mb-6 shadow-2xl border-white/10">
-                    {drawer?.name[0].toUpperCase() || '🎨'}
-                </div>
-                <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter mb-2">
-                    {drawer?.name || "The Artist"}
-                </h2>
-                <div className="flex items-center gap-4 mt-2">
-                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] italic">
-                      is picking a word...
-                   </p>
-                   {/* Live countdown timer for the guessers */}
-                   <span className="text-brand-secondary font-mono font-black text-xl bg-bg-main/50 px-3 py-1 rounded-lg border border-white/5 shadow-inner">
-                      {timeLeft}s
-                   </span>
-                </div>
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   );

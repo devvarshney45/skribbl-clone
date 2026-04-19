@@ -353,11 +353,10 @@ class Game {
     this.currentDrawerIndex++;
 
     if (this.currentDrawerIndex >= this.players.length) {
+      // Entire cycle of players finished drawing once each
       this.currentDrawerIndex = 0;
+      this.currentRound++;
     }
-
-    // Treat 1 Round = 1 Turn for intuitive game length
-    this.currentRound++;
 
     // 2. Check if we've completed the last round
     if (this.currentRound > this.totalRounds) {
