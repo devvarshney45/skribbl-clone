@@ -3,7 +3,7 @@
 // Redesigned with a premium "Senior Level" UI/UX.
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useGame } from '../context/GameContext';
 
@@ -11,6 +11,7 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { createRoom, joinRoom } = useGame();
 
   const [name, setName] = useState('');
@@ -98,8 +99,16 @@ const Home: React.FC = () => {
     }
   };
 
+  // Handle join-via-URL code pre-fill
+  React.useEffect(() => {
+    const urlCode = searchParams.get('code');
+    if (urlCode && urlCode.length === 6) {
+      setCode(urlCode.toUpperCase());
+    }
+  }, [searchParams]);
+
   return (
-    <div className="min-h-screen bg-mesh flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-mesh flex flex-col items-center justify-start p-6 py-12 md:py-20 relative overflow-y-auto">
       {/* Decorative Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse-subtle" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full animate-pulse-subtle" />
@@ -226,10 +235,28 @@ const Home: React.FC = () => {
           </div>
         </div>
 
+        {/* Studio Guide / How to Play */}
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in delay-300">
+          {[
+            { title: 'DRAW', desc: 'Pick a word and sketch it on the canvas for others to decode.', icon: '✏️' },
+            { title: 'GUESS', desc: 'Type your guesses in the chat. Speed earns higher points!', icon: '🧠' },
+            { title: 'DOMINATE', desc: 'The most accurate artist at the end of all rounds wins.', icon: '🏆' }
+          ].map((step, i) => (
+            <div key={i} className="glass p-6 rounded-2xl border-white/5 flex flex-col items-center text-center group hover:bg-white/10 transition-all">
+              <span className="text-3xl mb-4 group-hover:scale-110 transition-transform">{step.icon}</span>
+              <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-2">{step.title}</h3>
+              <p className="text-[10px] text-slate-500 font-bold leading-relaxed">{step.desc}</p>
+            </div>
+          ))}
+        </div>
+
         {/* Footer */}
-        <div className="mt-12 text-center">
+        <div className="mt-20 mb-12 text-center">
           <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.3em]">
             Precision Drawing &bull; Real Time Sync &bull; Competitive Fun
+          </p>
+          <p className="text-[8px] font-bold text-slate-800 uppercase tracking-[0.4em] mt-4">
+            Built for Master Artists &bull; 2024 Studio Edition
           </p>
         </div>
       </div>

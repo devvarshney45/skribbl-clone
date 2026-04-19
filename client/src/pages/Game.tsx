@@ -95,17 +95,17 @@ const Game: React.FC = () => {
       </header>
 
       {/* Main Game Layout */}
-      <main className="flex-grow p-5 lg:p-8 flex flex-col lg:flex-row gap-6 overflow-hidden">
+      <main className="flex-grow p-4 lg:p-8 flex flex-col lg:flex-row gap-6 overflow-y-auto custom-scrollbar">
         
         {/* Left Sidebar: Scoreboard */}
-        <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1 h-1/4 lg:h-auto animate-fade-in">
+        <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1 min-h-[200px] lg:h-auto animate-fade-in">
           <Scoreboard />
         </aside>
 
         {/* Center Section: Canvas & Controls */}
-        <section className="flex-grow flex flex-col order-1 lg:order-2 h-full gap-4 relative">
+        <section className="flex-grow flex flex-col order-1 lg:order-2 min-h-[400px] lg:h-full gap-4 relative">
           <div className="flex-grow flex items-center justify-center relative">
-            <div className="w-full h-full glass rounded-[2.5rem] p-4 border-white/10 shadow-2xl relative overflow-hidden flex flex-col">
+            <div className="w-full h-full glass rounded-[2.5rem] p-4 border-white/10 shadow-2xl relative overflow-hidden flex flex-col min-h-[350px]">
               {/* Dynamic progress timer bar */}
               <div className="absolute top-0 left-0 w-full h-[3px] bg-white/5 overflow-hidden">
                 <div 
@@ -139,7 +139,7 @@ const Game: React.FC = () => {
         </section>
 
         {/* Right Sidebar: Chat */}
-        <aside className="w-full lg:w-80 flex-shrink-0 order-3 h-1/4 lg:h-auto animate-fade-in delay-200">
+        <aside className="w-full lg:w-80 flex-shrink-0 order-3 min-h-[300px] lg:h-auto animate-fade-in delay-200">
           <Chat />
         </aside>
 

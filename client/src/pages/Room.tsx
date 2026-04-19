@@ -32,7 +32,7 @@ const Room: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-mesh p-6 lg:p-12 flex flex-col items-center">
+    <div className="min-h-screen bg-mesh p-6 lg:p-12 flex flex-col items-center justify-start overflow-y-auto custom-scrollbar">
       {/* Header Section */}
       <div className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-end mb-12 gap-8 animate-fade-in">
         <div>

@@ -202,6 +202,11 @@ function setupSocketHandler(io) {
         // Notify everyone else that a new player arrived
         socket.to(room.id).emit('player_joined', { player: player.toJSON() });
 
+        broadcastPlayerList(io, room);
+      } catch (error) {
+        console.error('[Socket Error] join_room:', error);
+        socket.emit('error', { message: 'Failed to join room.' });
+      }
     });
 
     // -------------------------------------------------------------------------
@@ -264,7 +269,7 @@ function setupSocketHandler(io) {
     // Data: { roomCode }
     // -------------------------------------------------------------------------
     socket.on('player_ready', ({ roomCode }) => {
-      const room   = rooms.get(roomCode);
+      const room   = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
       const player = room.getPlayerBySocketId(socket.id);
@@ -281,7 +286,7 @@ function setupSocketHandler(io) {
     // -------------------------------------------------------------------------
     socket.on('start_game', async ({ roomCode }) => {
       try {
-        const room   = rooms.get(roomCode);
+        const room   = rooms.get(roomCode?.toUpperCase());
         if (!room) return;
 
         const player = room.getPlayerBySocketId(socket.id);
@@ -570,7 +575,7 @@ function setupSocketHandler(io) {
         const { playerId, roomCode } = socket.data;
         if (!playerId || !roomCode) return;
 
-        const room = rooms.get(roomCode);
+        const room = rooms.get(roomCode?.toUpperCase());
         if (!room) return;
 
         const player = room.getPlayer(playerId);

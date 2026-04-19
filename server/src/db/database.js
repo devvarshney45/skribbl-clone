@@ -29,6 +29,11 @@ const initDB = async () => {
     )
   `)
 
+  // Ensure is_public column exists (Migration for existing tables)
+  await pool.query(`
+    ALTER TABLE rooms ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT TRUE
+  `)
+
   // players table — stores each player in a room
   await pool.query(`
     CREATE TABLE IF NOT EXISTS players (
