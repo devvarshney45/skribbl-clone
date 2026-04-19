@@ -13,7 +13,7 @@ const Scoreboard: React.FC = () => {
       {/* Header Area */}
       <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/2">
         <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] flex items-center gap-3">
-          Standings
+          Players
           <span className="w-1.5 h-1.5 rounded-full bg-brand-secondary animate-pulse" />
         </h2>
       </div>
@@ -61,7 +61,7 @@ const Scoreboard: React.FC = () => {
                   <div className={`text-[7px] font-black uppercase tracking-widest mt-1 ${
                       isDrawer ? 'text-brand-secondary' : player.hasGuessedCorrectly ? 'text-brand-secondary animate-pulse' : 'text-slate-700'
                   }`}>
-                    {isDrawer ? 'Directing' : player.hasGuessedCorrectly ? 'Decoded' : 'Analyzing'}
+                    {isDrawer ? 'Drawing' : player.hasGuessedCorrectly ? 'Guessed' : 'Guessing'}
                   </div>
                 </div>
               </div>
@@ -76,7 +76,7 @@ const Scoreboard: React.FC = () => {
       </div>
 
       <div className="px-6 py-4 border-t border-white/5 bg-white/1 text-center">
-          <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.4em]">Integrated Lobby • {players.length}/12</span>
+          <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.4em]">Players: {players.length}/12</span>
       </div>
     </div>
   );

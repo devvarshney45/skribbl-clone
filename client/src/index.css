@@ -44,7 +44,7 @@ body {
 
 @media (min-width: 1024px) {
   body {
-    overflow: hidden; /* Strict Vertical Containment for Desktop App feel */
+    /* overflow: hidden; */ /* Removed to allow landing page scroll. Game page uses 100dvh for containment. */
   }
 }
 
@@ -93,16 +93,36 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* Background Mesh - Denser for Atmosphere */
+/* Background Mesh - Premium Animated Edition */
 .bg-mesh-pro {
   background-color: var(--color-bg-main);
   background-image: 
-    radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.1) 0, transparent 40%), 
-    radial-gradient(at 100% 100%, rgba(45, 212, 191, 0.08) 0, transparent 40%),
-    radial-gradient(at 50% 50%, rgba(251, 113, 133, 0.03) 0, transparent 40%);
+    radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0, transparent 40%), 
+    radial-gradient(at 100% 100%, rgba(45, 212, 191, 0.1) 0, transparent 40%),
+    radial-gradient(at 50% 50%, rgba(251, 113, 133, 0.05) 0, transparent 40%);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Animations - Snappier */
+.bg-mesh-pro::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  background-image: url('/bg_premium.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25;
+  filter: blur(40px);
+  animation: bg-pan 30s linear infinite alternate;
+  z-index: -1;
+}
+
+@keyframes bg-pan {
+  from { transform: scale(1) translate(0, 0); }
+  to { transform: scale(1.2) translate(-5%, -5%); }
+}
+
+/* Animations - Snappier & Creative */
 @keyframes popIn {
   0% { opacity: 0; transform: scale(0.95); }
   100% { opacity: 1; transform: scale(1); }
@@ -121,8 +141,48 @@ body {
   animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Logo Sizing */
-.logo-fit {
-  height: clamp(50px, 15vh, 120px);
-  width: auto;
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-30px) rotate(5deg); }
+}
+
+.animate-float {
+  animation: float 10s ease-in-out infinite;
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-20px) rotate(-8deg); }
+}
+
+.animate-float-delayed {
+  animation: float-delayed 12s ease-in-out infinite;
+}
+
+/* Logo Sizing - Fluid */
+.logo-responsive {
+  font-size: clamp(3rem, 15vh, 10rem);
+}
+
+/* Glassmorphism Refinement - High Definition */
+.glass-pro {
+  background: rgba(22, 24, 50, 0.3);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.shadow-tactile-heavy {
+  box-shadow: 
+    0 8px 0 rgba(0, 0, 0, 0.4),
+    0 15px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Scroll Containment */
+.no-scroll {
+  overflow: hidden;
+  height: 100dvh;
 }

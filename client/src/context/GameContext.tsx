@@ -40,7 +40,7 @@ interface GameContextType {
   totalRounds: number;
   winner: Player | null;
   drawTime: number;
-  isPublic: boolean;
+  isPrivate: boolean;
 
   // Status Helpers
   currentPlayerIsDrawer: boolean;
@@ -60,8 +60,9 @@ interface GameContextType {
   sendChat: (text: string) => void;
   undo: () => void;
   clearCanvas: () => void;
-  updateSettings: (settings: { rounds?: number; drawTime?: number; isPublic?: boolean }) => void;
+  updateSettings: (settings: { rounds?: number; drawTime?: number; isPrivate?: boolean }) => void;
   resetGame: () => void;
+  socket: any;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -85,7 +86,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [round, setRound] = useState(1);
   const [totalRounds, setTotalRounds] = useState(3);
   const [drawTime, setDrawTime] = useState(80);
-  const [isPublic, setIsPublic] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [winner, setWinner] = useState<Player | null>(null);
   
   // Brush state
@@ -139,22 +140,26 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!socket) return;
 
     // Room events
-    socket.on('room_created', ({ roomId: rid, roomCode: code, player, settings }) => {
+    socket.on('room_created', ({ roomId: rid, roomCode: code, player, settings, isPrivate: priv }) => {
       setRoomCode(code);
       setPlayerId(player.id);
       setPlayers([player]);
+      setIsPrivate(priv ?? false);
+      setTotalRounds(settings.rounds);
+      setDrawTime(settings.drawTime);
       
-      // Save session
       sessionStorage.setItem('skribbl_player_id', player.id);
       sessionStorage.setItem('skribbl_room_code', code);
       sessionStorage.setItem('skribbl_player_name', player.name);
     });
 
-    socket.on('joined_room', ({ roomId: rid, roomCode: code, player, settings }) => {
+    socket.on('joined_room', ({ roomId: rid, roomCode: code, player, settings, isPrivate: priv }) => {
       setRoomCode(code);
       setPlayerId(player.id);
+      setIsPrivate(priv ?? false);
+      setTotalRounds(settings.rounds);
+      setDrawTime(settings.drawTime);
       
-      // Save session
       sessionStorage.setItem('skribbl_player_id', player.id);
       sessionStorage.setItem('skribbl_room_code', code);
       sessionStorage.setItem('skribbl_player_name', player.name);
@@ -181,16 +186,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setTimeLeft(rest.timeLeft);
       setRound(rest.round);
       setTotalRounds(rest.totalRounds);
-      setIsPublic(rest.settings?.isPublic ?? true);
-      setDrawTime(rest.settings?.drawTime || 80);
-      
+      setIsPrivate(rest.isPrivate ?? false);
       setDrawTime(rest.settings?.drawTime || 80);
       setLoading(false);
       
-      setDrawTime(rest.settings?.drawTime || 80);
-      setLoading(false);
-      
-      // Refresh session storage
       sessionStorage.setItem('skribbl_player_id', player.id);
       sessionStorage.setItem('skribbl_room_code', code);
       sessionStorage.setItem('skribbl_player_name', player.name);
@@ -247,10 +246,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setPlayers(data.leaderboard);
     });
 
-    socket.on('settings_updated', ({ settings }) => {
+    socket.on('settings_updated', ({ settings, isPrivate: priv }) => {
       setTotalRounds(settings.rounds);
       setDrawTime(settings.drawTime);
-      if (settings.isPublic !== undefined) setIsPublic(settings.isPublic);
+      if (priv !== undefined) setIsPrivate(priv);
     });
 
     socket.on('game_reset', () => {
@@ -317,10 +316,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // ---------------------------------------------------------------------------
   // Action Helpers
   // ---------------------------------------------------------------------------
-  const createRoom = (name: string, code: string) => {
+  const createRoom = (name: string, code: string, isPrivate: boolean = false) => {
     setPlayerName(name);
     setPhase('waiting');
-    socket.emit('create_room', { playerName: name, roomCode: code });
+    socket.emit('create_room', { playerName: name, roomCode: code, isPrivate });
   };
 
   const joinRoom = (name: string, code: string) => {
@@ -362,7 +361,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('canvas_clear', { roomCode });
   };
 
-  const updateSettings = (settings: { rounds?: number; drawTime?: number; isPublic?: boolean }) => {
+  const updateSettings = (settings: { rounds?: number; drawTime?: number; isPrivate?: boolean }) => {
     socket.emit('update_settings', { roomCode, settings });
   };
 
@@ -392,7 +391,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         round,
         totalRounds,
         drawTime,
-        isPublic,
+        isPrivate,
         winner,
         currentPlayerIsDrawer,
         joinRoom,
@@ -409,6 +408,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         clearCanvas,
         updateSettings,
         resetGame,
+        socket,
       }}
     >
       {children}

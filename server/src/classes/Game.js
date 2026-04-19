@@ -109,9 +109,11 @@ class Game {
         wordLength: 0, // will update once word is chosen
       });
 
-      // Now tell the drawer which words they can choose from 
-      // (This guarantees the frontend gets the start state BEFORE the option payload)
-      this.io.to(drawer.socketId).emit('word_options', {
+      // RELIABILITY FIX: Use the latest socket ID from the player object 
+      // which is updated on every reconnection/join.
+      const activeSocketId = drawer.socketId;
+
+      this.io.to(activeSocketId).emit('word_options', {
         words: wordOptions,
         round: this.currentRound,
         totalRounds: this.totalRounds,
@@ -330,18 +332,21 @@ class Game {
   // If all rounds are done, calls endGame() instead.
   // ---------------------------------------------------------------------------
   async nextRound() {
-    // Move to the next player in the rotation
-    this.currentDrawerIndex = (this.currentDrawerIndex + 1) % this.players.length;
+    // 1. Check if the current cycle of players is finished
+    this.currentDrawerIndex++;
 
-    // Check if every player has had a turn this round → increment round counter
-    if (this.currentDrawerIndex === 0) {
-      this.currentRound += 1;
+    if (this.currentDrawerIndex >= this.players.length) {
+      // Entire cycle of players finished drawing once each
+      this.currentDrawerIndex = 0;
+      this.currentRound++;
     }
 
-    // All rounds complete → game over
+    // 2. Check if we've completed the last round
     if (this.currentRound > this.totalRounds) {
+      console.log(`[Game] All ${this.totalRounds} rounds completed — ending game.`);
       this.endGame();
     } else {
+      // Start the next person's drawing turn
       await this.startRound();
     }
   }

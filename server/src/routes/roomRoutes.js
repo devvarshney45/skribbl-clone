@@ -28,7 +28,7 @@ function generateRoomCode() {
 // ---------------------------------------------------------------------------
 router.post('/', async (req, res) => {
   try {
-    const { hostName, settings, isPublic = true } = req.body;
+    const { hostName, settings, isPrivate = false } = req.body;
 
     // Validate input
     if (!hostName || hostName.trim() === '') {
@@ -60,13 +60,17 @@ router.post('/', async (req, res) => {
 
     // Insert the new room into PostgreSQL
     await pool.query(`
-      INSERT INTO rooms (id, code, host_id, settings, status, is_public)
+      INSERT INTO rooms (id, code, host_id, settings, status, is_private)
       VALUES ($1, $2, $3, $4, 'waiting', $5)
-    `, [roomId, roomCode, hostId, JSON.stringify(finalSettings), isPublic]);
+    `, [roomId, roomCode, hostId, JSON.stringify(finalSettings), isPrivate]);
 
-    console.log(`[API] Room created — code: ${roomCode}, id: ${roomId}, public: ${isPublic}`);
+    console.log(`[API] Room created — code: ${roomCode}, id: ${roomId}, private: ${isPrivate}`);
 
-    return res.status(201).json({ roomId, roomCode });
+    return res.status(201).json({ 
+      roomId, 
+      roomCode,
+      inviteLink: `${process.env.CLIENT_URL}/?code=${roomCode}`
+    });
   } catch (error) {
     console.error('[API Error] POST /api/rooms:', error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -156,7 +160,34 @@ router.get('/:code/join', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /api/rooms/find/public
+// GET /api/rooms/public
+// Returns list of available public rooms for Quick Join.
+// ---------------------------------------------------------------------------
+router.get('/public', async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT 
+        r.code, 
+        r.settings, 
+        r.is_private,
+        (SELECT COUNT(*) FROM players p WHERE p.room_id = r.id) as player_count,
+        COALESCE(p.name, 'Anonymous') as host_name
+      FROM rooms r
+      LEFT JOIN players p ON p.id = r.host_id
+      WHERE r.status = 'waiting' 
+      AND (SELECT COUNT(*) FROM players p2 WHERE p2.room_id = r.id) > 0
+      ORDER BY player_count DESC
+      LIMIT 20
+    `);
+    res.json({ rooms: rows });
+  } catch (error) {
+    console.error('[API Error] GET /api/rooms/public:', error);
+    res.status(500).json({ error: 'Could not fetch public studios' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/rooms/find/public (DEPRECATED: use /public instead)
 // Logic: Find a room that is waiting, is public, and is not full.
 // ---------------------------------------------------------------------------
 router.get('/find/public', async (req, res) => {
@@ -165,7 +196,7 @@ router.get('/find/public', async (req, res) => {
       SELECT r.code, r.settings, (SELECT COUNT(*) FROM players p WHERE p.room_id = r.id) as player_count
       FROM rooms r
       WHERE r.status = 'waiting' 
-      AND r.is_public = TRUE
+      AND r.is_private = FALSE
       ORDER BY RANDOM()
       LIMIT 1
     `);

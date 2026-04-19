@@ -3,10 +3,11 @@
 // Holds all the players in a Map and exposes helper methods.
 
 class Room {
-  constructor({ id, code, hostId, settings }) {
+  constructor({ id, code, hostId, settings, isPrivate = false }) {
     this.id = id;           // UUID for this room
     this.code = code;        // 6-char code players type to join
     this.hostId = hostId;    // player ID of the host
+    this.isPrivate = isPrivate; // NEW
 
     // Default game settings — can be changed by the host in the lobby
     this.settings = {
@@ -25,6 +26,18 @@ class Room {
 
     // Strokes drawn so far in the current round (used for replay on join)
     this.currentStrokes = [];
+  }
+
+  // ---------------------------------------------------------------------------
+  // isPublicAndAvailable()
+  // Returns true if room is public, not full, and not started
+  // ---------------------------------------------------------------------------
+  isPublicAndAvailable() {
+    return (
+      !this.isPrivate && 
+      this.players.size < this.settings.maxPlayers && 
+      this.status === 'waiting'
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -102,6 +115,7 @@ class Room {
       code: this.code,
       hostId: this.hostId,
       settings: this.settings,
+      isPrivate: this.isPrivate,
       status: this.status,
       players: this.getPlayers().map((p) => p.toJSON()),
     };

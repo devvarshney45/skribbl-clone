@@ -10,8 +10,8 @@ const Toolbar: React.FC = () => {
   if (phase !== 'drawing' || !currentPlayerIsDrawer) return null;
 
   const colors = [
-    '#ffffff', '#000000', '#fb7185', '#fbbf24', '#2dd4bf', 
-    '#6366f1', '#a855f7', '#10b981', '#f43f5e', '#ffffff00'
+    '#ffffff', '#000000', '#64748b', '#ef4444', '#f97316', '#f59e0b', '#10b981',
+    '#06b6d4', '#3b82f6', '#6366f1', '#a855f7', '#ec4899', '#f43f5e', '#ffffff00'
   ];
 
   const sizes = [
@@ -22,23 +22,30 @@ const Toolbar: React.FC = () => {
   ];
 
   return (
-    <div className="panel px-8 py-4 rounded-[1.5rem] md:rounded-[2.5rem] flex items-center gap-10 shadow-3xl bg-bg-panel/60 backdrop-blur-3xl animate-slide-up border-white/10 scale-90 md:scale-100">
+    <div className="panel px-8 py-5 rounded-[2.5rem] flex flex-col md:flex-row items-center gap-8 md:gap-14 shadow-3xl bg-bg-panel/80 backdrop-blur-3xl animate-slide-up border-white/10 scale-90 md:scale-100 mb-6">
       
       {/* Pigments */}
-      <div className="flex flex-col gap-2.5">
-          <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em]">Pigment Palette</span>
-          <div className="grid grid-cols-5 gap-3">
+      <div className="flex flex-col gap-3">
+          <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] text-center md:text-left">Pigment Palette</span>
+          <div className="grid grid-cols-7 gap-2.5">
             {colors.map((c, i) => (
               <button
                 key={i}
                 onClick={() => setBrushConfig({ color: c })}
-                className={`w-7 h-7 rounded-xl transition-all btn-game relative overflow-hidden ${
-                  color === c ? 'ring-2 ring-white ring-offset-4 ring-offset-bg-main scale-110' : 'opacity-90'
+                className={`w-8 h-8 rounded-full transition-all btn-game relative overflow-hidden group/color ${
+                  color === c ? 'ring-4 ring-brand-secondary/40 scale-110' : 'opacity-80 hover:opacity-100 hover:scale-105'
                 }`}
                 style={{ backgroundColor: c === '#ffffff00' ? 'transparent' : c }}
               >
-                  {c === '#ffffff00' && (
-                      <div className="absolute inset-0 bg-[linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_50%,#ccc_50%,#ccc_75%,transparent_75%,transparent)] bg-[length:4px_4px] opacity-20" />
+                  {c === '#ffffff00' ? (
+                      <div className="absolute inset-0 bg-[linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_50%,#ccc_50%,#ccc_75%,transparent_75%,transparent)] bg-[length:4px_4px] opacity-40" />
+                  ) : (
+                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/color:opacity-100 transition-opacity" />
+                  )}
+                  {color === c && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                          <div className={`w-2 h-2 rounded-full ${c === '#ffffff' ? 'bg-black' : 'bg-white'} shadow-sm animate-pop-in`} />
+                      </div>
                   )}
               </button>
             ))}

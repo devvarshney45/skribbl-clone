@@ -1,6 +1,5 @@
 // Game.tsx
-// Master-Level UI: Absolute vertical containment (100dvh).
-// Features specialized scaling for high-interaction pictionary play.
+// Senior-Level UI: Ultra-responsive multiplayer layout with refined mobile behaviors.
 
 import React from 'react';
 import { useGame } from '../context/GameContext';
@@ -10,6 +9,7 @@ import Scoreboard from '../components/Scoreboard';
 import Toolbar from '../components/Toolbar';
 import WordModal from '../components/WordModal';
 import GameOver from '../components/GameOver';
+import PhaseOverlay from '../components/PhaseOverlay';
 
 const Game: React.FC = () => {
   const { 
@@ -23,17 +23,17 @@ const Game: React.FC = () => {
     if (isMyTurn || phase === 'roundEnd') {
       return (
         <span className="text-xl md:text-3xl font-black tracking-[0.2em] uppercase text-brand-secondary drop-shadow-[0_0_10px_rgba(45,212,191,0.2)]">
-          {word || "CURATING..." }
+          {word || "DRAWING..." }
         </span>
       );
     }
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-1 md:gap-2">
         {wordHints.map((char, i) => (
           <div 
             key={i} 
-            className={`w-6 h-8 md:w-9 md:h-11 flex items-center justify-center border-b-2 md:border-b-4 text-lg md:text-2xl font-black uppercase transition-all duration-700 ${
-              char === ' ' ? 'border-transparent mx-2' : 'border-slate-800 text-white/90'
+            className={`w-5 h-7 md:w-9 md:h-11 flex items-center justify-center border-b-2 md:border-b-4 text-sm md:text-2xl font-black uppercase transition-all duration-700 ${
+              char === ' ' ? 'border-transparent mx-1' : 'border-slate-800 text-white/90'
             }`}
           >
             {char !== '_' ? char : ''}
@@ -44,111 +44,148 @@ const Game: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-screen bg-mesh-pro text-white lg:overflow-hidden flex flex-col relative font-sans">
+    <div className="h-[100dvh] w-screen bg-mesh-pro text-white overflow-hidden flex flex-col relative font-sans select-none">
       
-      {/* 1. Pro HUD Header (Compact 8-10vh) */}
-      <header className="h-14 md:h-18 flex items-center justify-between px-6 md:px-10 bg-bg-panel/60 backdrop-blur-xl border-b border-white/5 z-30 shrink-0 shadow-2xl">
-        <div className="flex items-center gap-6 md:gap-10">
+      {/* 1. Header (Compact) */}
+      <header className="h-14 md:h-20 flex items-center justify-between px-4 md:px-10 bg-bg-panel/40 backdrop-blur-2xl border-b border-white/5 z-30 shrink-0 shadow-xl">
+        <div className="flex items-center gap-4 md:gap-10">
           <div className="flex flex-col">
-            <span className="text-[7px] font-black text-slate-500 uppercase tracking-[0.4em] mb-1">Session</span>
-            <div className="text-xl md:text-2xl font-black tracking-tighter tabular-nums leading-none">
-              {round} <span className="text-[10px] text-slate-700 font-bold px-1">/</span> <span className="text-slate-500">{totalRounds}</span>
+            <span className="text-[6px] md:text-[8px] font-black text-slate-500 uppercase tracking-[0.4em] mb-0.5 md:mb-1">Round</span>
+            <div className="text-base md:text-2xl font-black tabular-nums leading-none">
+              {round}<span className="text-[10px] text-slate-700 mx-1">/</span><span className="text-slate-500">{totalRounds}</span>
             </div>
           </div>
           
-          <div className="h-8 w-px bg-white/5" />
+          <div className="h-8 w-[1px] bg-white/5 hidden md:block" />
           
           <div className="flex flex-col">
-            <span className="text-[7px] font-black text-slate-500 uppercase tracking-[0.4em] mb-1">Chronos</span>
-            <div className={`text-xl md:text-2xl font-mono font-black tabular-nums tracking-tighter leading-none ${timeLeft < 15 ? 'text-brand-accent animate-pulse' : 'text-brand-highlight'}`}>
-              {timeLeft}<span className="text-[10px] ml-0.5 font-black text-slate-700 uppercase">S</span>
+            <span className="text-[6px] md:text-[8px] font-black text-slate-500 uppercase tracking-[0.4em] mb-0.5 md:mb-1">Timer</span>
+            <div className={`text-base md:text-2xl font-mono font-black tabular-nums leading-none ${timeLeft < 10 ? 'text-rose-500 animate-pulse' : 'text-brand-secondary'}`}>
+              {timeLeft}<span className="text-[8px] md:text-[10px] ml-0.5 font-black text-slate-700">S</span>
             </div>
           </div>
         </div>
 
-        {/* Word Centerpiece (Desktop) */}
-        <div className="hidden lg:flex items-center justify-center flex-grow mx-8">
+        {/* Word Display (Floating/Center) */}
+        <div className="flex-grow flex justify-center px-4 max-w-[50%] md:max-w-none">
            {renderWordDisplay()}
         </div>
 
-        {/* Room HUD Status */}
-        <div className="flex items-center gap-6">
-          <div className="text-right hidden xl:flex flex-col">
-            <span className="text-[7px] font-black text-slate-500 uppercase tracking-[0.4em] mb-1">Studio Code</span>
-            <span className="font-mono font-black text-brand-secondary tracking-widest text-[9px] px-3 py-1 bg-white/3 rounded border border-white/5">{roomCode}</span>
+        <div className="flex items-center gap-2 md:gap-6">
+          <div className="text-right hidden sm:flex flex-col">
+            <span className="text-[6px] md:text-[8px] font-black text-slate-500 uppercase tracking-[0.4em] mb-1">Code</span>
+            <span className="font-mono font-black text-brand-secondary tracking-widest text-[8px] md:text-[10px]">{roomCode}</span>
           </div>
-          <button className="w-9 h-9 md:w-11 md:h-11 panel-card rounded-xl flex items-center justify-center shadow-lg transition-all hover:bg-white/5 active:scale-95">
-            <span className="text-base">⚙️</span>
-          </button>
+          <div className="w-8 h-8 md:w-11 md:h-11 panel-card rounded-xl flex items-center justify-center border-white/5 opacity-50">
+            <span className="text-xs">⚙️</span>
+          </div>
         </div>
       </header>
 
-      {/* 2. Primary Exhibition Floor (90-92vh) */}
-      <main className="flex-grow p-3 md:p-5 flex flex-col lg:flex-row gap-4 lg:h-full lg:overflow-hidden relative z-20">
+      {/* 2. Main Layout Matrix */}
+      <main className="flex-grow flex flex-col lg:row gap-0 lg:gap-4 lg:p-4 overflow-hidden">
         
-        {/* Left HUD: Artist Stats (Compact) */}
-        <aside className="hidden xl:flex w-64 shrink-0 h-full animate-slide-up" style={{ animationDelay: '100ms' }}>
-          <Scoreboard />
-        </aside>
+        <div className="flex flex-col lg:flex-row flex-grow w-full h-full overflow-hidden gap-0 lg:gap-4">
+          
+          {/* Left HUD (Scoreboard) - Drawer on mobile? */}
+          <aside className="hidden lg:flex w-72 shrink-0 h-full">
+            <Scoreboard />
+          </aside>
 
-        {/* Center HUD: The Exhibition Plane (Maximized) */}
-        <section className="flex-grow flex flex-col h-[50dvh] lg:h-full gap-3 relative z-0 min-w-0 animate-pop-in">
-          <div className="flex-grow flex items-center justify-center relative lg:overflow-hidden">
-            <div className="w-full h-full panel rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 border-white/5 shadow-2xl relative overflow-hidden flex flex-col group transition-all hover:border-white/10">
+          {/* Center (Canvas) */}
+          <section className="flex-grow flex flex-col relative z-0 min-w-0 h-full border-b lg:border-none border-white/5">
+            <div className="flex-grow flex flex-col min-h-0 bg-bg-card/30 backdrop-blur-sm rounded-3xl overflow-hidden border border-white/5 shadow-2xl relative group">
               
-              {/* Dynamic Progress Aura */}
-              <div className="absolute top-0 left-0 w-full h-[3px] bg-white/2 overflow-hidden z-20">
+              {/* Top Bar (Word & Timer) */}
+              <div className="h-16 flex items-center justify-between px-8 bg-black/40 border-b border-white/5 z-20">
+                <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">Secret Transmission</span>
+                    <WordDisplay />
+                </div>
+                
+                <div className="flex items-center gap-6">
+                    <div className="text-right hidden md:block">
+                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest block">Session Pulse</span>
+                        <div className="flex gap-1 mt-1">
+                            {[1,2,3,4,5].map(i => (
+                                <div key={i} className={`w-1 h-3 rounded-full ${i <= 3 ? 'bg-brand-secondary/40' : 'bg-white/5'}`} />
+                            ))}
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/10">
+                        <span className="text-xl">⏱️</span>
+                        <span className={`font-mono font-black text-xl ${timeLeft < 10 ? 'text-rose-500 animate-pulse' : 'text-white'}`}>
+                            {timeLeft}s
+                        </span>
+                    </div>
+                </div>
+              </div>
+
+              {/* Progress Bar (Timer) */}
+              <div className="absolute top-16 left-0 w-full h-0.5 bg-white/5 z-30">
                 <div 
                   className={`h-full transition-all duration-1000 ease-linear ${
-                    timeLeft < 15 ? 'bg-brand-accent shadow-[0_0_15px_rgba(251,113,133,0.4)]' : 'bg-brand-secondary shadow-[0_0_15px_rgba(45,212,191,0.4)]'
+                    timeLeft < 10 ? 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-brand-secondary shadow-[0_0_10px_rgba(45,212,191,0.3)]'
                   }`}
                   style={{ width: `${(timeLeft / Math.max(1, drawTime)) * 100}%` }}
                 />
               </div>
-              
-              {/* Canvas Matrix */}
-              <div className="flex-grow relative w-full h-full rounded-[1.25rem] md:rounded-[1.75rem] overflow-hidden bg-bg-main/80 border border-white/2">
+
+              {/* High-Visibility Timer Watchdog (Appears when time < 10s) */}
+              {timeLeft > 0 && timeLeft < 10 && phase === 'drawing' && (
+                <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 animate-pop-in pointer-events-none">
+                  <div className="px-8 py-3 bg-rose-500/90 backdrop-blur-xl rounded-[2rem] flex items-center gap-6 shadow-3xl shadow-rose-500/30 border border-white/20 scale-125">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-white uppercase tracking-widest italic leading-none">Critical</span>
+                        <span className="text-[12px] font-black text-white uppercase tracking-tighter">Time Low</span>
+                      </div>
+                      <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-rose-500 font-mono font-black text-2xl animate-pulse shadow-xl">
+                         {timeLeft}
+                      </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex-grow relative bg-white/[0.02]">
                 <Canvas />
               </div>
 
-               {/* Integrated Drawing Instruments */}
-               {isMyTurn && (
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 transform scale-90 md:scale-100 animate-slide-up">
-                    <Toolbar />
-                  </div>
-                )}
+              {/* Toolbar (Only for drawer) */}
+              {isMyTurn && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[60] transform scale-90 md:scale-100 origin-bottom hover:scale-105 transition-transform">
+                  <Toolbar />
+                </div>
+              )}
+
+              {/* Status Indicator */}
+              <div className="absolute bottom-4 right-6 pointer-events-none opacity-20 group-hover:opacity-100 transition-opacity">
+                 <span className="text-[8px] font-black text-white uppercase tracking-[0.5em] italic">Encrypted Stream</span>
+              </div>
             </div>
-          </div>
-          
-          {/* Metadata Footer (Tight) */}
-          <div className="flex justify-between items-center px-4 opacity-30 shrink-0">
-             <div className="flex items-center gap-2">
-                <div className="w-1 h-1 rounded-full bg-slate-700" />
-                <span className="text-[7px] font-black text-slate-500 uppercase tracking-[0.5em]">Neural Sync Protocol v2.5.0</span>
-             </div>
-             <span className="text-[7px] font-black text-brand-secondary uppercase tracking-[0.4em] font-mono">
-                {isMyTurn ? "TRANSMISSION: ACTIVE" : "SIGNAL: ENCRYPTED"}
-             </span>
-          </div>
-        </section>
 
-        {/* Right HUD: Intercom (Chat) */}
-        <aside className="w-full lg:w-72 xl:w-80 shrink-0 flex flex-col h-[30dvh] lg:h-full animate-slide-up" style={{ animationDelay: '200ms' }}>
-          <Chat />
-        </aside>
+            {/* Turn Notify (Small) */}
+            <div className="h-8 flex items-center justify-between px-8 bg-black/40 backdrop-blur-md rounded-b-[2rem] border-x border-b border-white/5 shrink-0 mx-4">
+               <span className="text-[7px] font-black text-slate-500 uppercase tracking-[0.5em]">Neural Engine v4.0 Active</span>
+               <div className="flex items-center gap-4">
+                  <span className={`text-[8px] font-black uppercase tracking-[0.3em] flex items-center gap-2 ${isMyTurn ? 'text-brand-secondary animate-pulse' : 'text-slate-500'}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full ${isMyTurn ? 'bg-brand-secondary' : 'bg-slate-700'}`} />
+                      {isMyTurn ? "UPLOADING BRUSH DATA..." : "SYNCING GUESSES..."}
+                  </span>
+               </div>
+            </div>
+          </section>
 
+          {/* Right HUD (Chat) */}
+          <aside className="w-full lg:w-96 h-[40dvh] lg:h-full shrink-0 animate-slide-left" style={{ animationDelay: '200ms' }}>
+            <Chat />
+          </aside>
+        </div>
       </main>
 
-      {/* Protocol Layers (Modals) */}
+      {/* Protocol Layers */}
       <WordModal />
       <GameOver />
-
-      {/* Mobile-Only Word Interface */}
-      {(phase === 'drawing' || phase === 'choosing' || phase === 'roundEnd') && (
-        <div className="lg:hidden absolute top-16 left-1/2 -translate-x-1/2 panel px-6 py-2 rounded-full z-40 shadow-2xl animate-pop-in pointer-events-none border-brand-secondary/20">
-          {renderWordDisplay()}
-        </div>
-      )}
+      <PhaseOverlay />
     </div>
   );
 };

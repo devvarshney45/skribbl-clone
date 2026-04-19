@@ -8,6 +8,14 @@ import './index.css'
 import App from './App.tsx'
 import { GameProvider } from './context/GameContext.tsx'
 
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'lottie-player': any;
+    }
+  }
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <GameProvider>

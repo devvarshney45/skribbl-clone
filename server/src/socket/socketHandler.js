@@ -40,7 +40,7 @@ function setupSocketHandler(io) {
     // Emitted by the host when they land on the lobby page.
     // Data: { playerName, roomCode, settings? }
     // -------------------------------------------------------------------------
-    socket.on('create_room', async ({ playerName, roomCode, settings }) => {
+    socket.on('create_room', async ({ playerName, roomCode, settings, isPrivate }) => {
       try {
         // Look up the room record that was created via the REST API
         const { rows } = await pool.query('SELECT * FROM rooms WHERE code = $1', [roomCode]);
@@ -56,6 +56,7 @@ function setupSocketHandler(io) {
           id: roomRecord.id,
           code: roomRecord.code,
           hostId: null, // will be set to the player's id below
+          isPrivate: isPrivate ?? roomRecord.is_private,
           settings: typeof roomRecord.settings === 'string' ? JSON.parse(roomRecord.settings) : roomRecord.settings,
         });
 
@@ -71,6 +72,9 @@ function setupSocketHandler(io) {
 
         // Set hostId on the room
         room.hostId = player.id;
+        
+        // Update room record in PostgreSQL to link the actual host_id
+        await pool.query('UPDATE rooms SET host_id = $1 WHERE id = $2', [player.id, room.id]);
 
         // Save player to PostgreSQL
         await pool.query(`
@@ -96,6 +100,8 @@ function setupSocketHandler(io) {
           roomCode: room.code,
           player: player.toJSON(),
           settings: room.settings,
+          isPrivate: room.isPrivate,
+          inviteLink: `${process.env.CLIENT_URL}/?code=${room.code}`,
         });
 
         broadcastPlayerList(io, room);
@@ -112,6 +118,10 @@ function setupSocketHandler(io) {
     // -------------------------------------------------------------------------
     socket.on('join_room', async ({ playerName, roomCode }) => {
       try {
+        if (!roomCode || roomCode.length < 6) {
+           socket.emit('error', { message: 'Invalid Room Code.' });
+           return;
+        }
         const room = rooms.get(roomCode?.toUpperCase());
 
         if (!room) {
@@ -197,6 +207,7 @@ function setupSocketHandler(io) {
           roomCode: room.code,
           player: player.toJSON(),
           settings: room.settings,
+          isPrivate: room.isPrivate,
         });
 
         // Notify everyone else that a new player arrived
@@ -206,6 +217,58 @@ function setupSocketHandler(io) {
       } catch (error) {
         console.error('[Socket Error] join_room:', error);
         socket.emit('error', { message: 'Failed to join room.' });
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // quick_join
+    // Emitted by a player looking for ANY available public room.
+    // -------------------------------------------------------------------------
+    socket.on('quick_join', async ({ playerName }) => {
+      try {
+        // 1. Find an available public room in memory first
+        const availableRoom = [...rooms.values()].find(r => r.isPublicAndAvailable());
+
+        if (!availableRoom) {
+          // Tell frontend to create a new public room
+          socket.emit('no_public_room', { 
+            message: 'No active studios found. Creating a new exhibition...' 
+          });
+          return;
+        }
+
+        // 2. Join the found room (reuse join_room logic)
+        console.log(`[DEBUG] quick_join found room code ${availableRoom.code}. Players size before: ${availableRoom.players.size}`);
+        const player = new Player({
+          id: uuidv4(),
+          name: playerName.trim(),
+          socketId: socket.id,
+          roomId: availableRoom.id,
+        });
+
+        await pool.query(`
+          INSERT INTO players (id, name, room_id, score, is_host, socket_id)
+          VALUES ($1, $2, $3, 0, FALSE, $4)
+        `, [player.id, player.name, availableRoom.id, socket.id]);
+
+        availableRoom.addPlayer(player);
+        socket.join(availableRoom.id);
+        socket.data.playerId = player.id;
+        socket.data.roomCode = availableRoom.code;
+
+        socket.emit('joined_room', {
+          roomId: availableRoom.id,
+          roomCode: availableRoom.code,
+          player: player.toJSON(),
+          settings: availableRoom.settings,
+          isPrivate: false
+        });
+
+        socket.to(availableRoom.id).emit('player_joined', { player: player.toJSON() });
+        broadcastPlayerList(io, availableRoom);
+      } catch (error) {
+        console.error('[Socket Error] quick_join:', error);
+        socket.emit('error', { message: 'Failed to find a studio.' });
       }
     });
 
@@ -244,6 +307,7 @@ function setupSocketHandler(io) {
           player: player.toJSON(),
           roomCode: room.code,
           settings: room.settings,
+          isPrivate: room.isPrivate,
           phase: game?.phase || room.status,
           currentDrawerId: game?.getCurrentDrawer()?.id || null,
           wordHints: game?.wordHints || [],
@@ -275,7 +339,8 @@ function setupSocketHandler(io) {
       const player = room.getPlayerBySocketId(socket.id);
       if (!player) return;
 
-      player.isReady = true;
+      // Toggle ready status
+      player.isReady = !player.isReady;
       broadcastPlayerList(io, room);
     });
 
@@ -299,6 +364,12 @@ function setupSocketHandler(io) {
           socket.emit('error', { message: 'Need at least 2 players to start.' });
           return;
         }
+
+        // Reset all players ready state for game start
+        room.getPlayers().forEach(p => p.isReady = false);
+        broadcastPlayerList(io, room);
+
+        io.to(room.id).emit('preparing_game', { message: 'Studio deploying: Preparing your canvas...' });
 
         // Update room status in memory and DB
         room.status = 'playing';
@@ -339,24 +410,31 @@ function setupSocketHandler(io) {
         const player = room.getPlayerBySocketId(socket.id);
         if (!player || !player.isHost) return;
 
-        // Merge and update settings
-        room.settings = { ...room.settings, ...settings };
+        // Extract isPrivate separately — it lives on room, not room.settings
+        const { isPrivate: newIsPrivate, ...gameSettings } = settings;
 
-        // Update DB
-        if (settings.isPublic !== undefined) {
-          room.isPublic = settings.isPublic;
-          await pool.query('UPDATE rooms SET is_public = $1 WHERE id = $2', [room.isPublic, room.id]);
+        // Merge only actual game settings (rounds, drawTime, etc.)
+        if (Object.keys(gameSettings).length > 0) {
+          room.settings = { ...room.settings, ...gameSettings };
+          await pool.query('UPDATE rooms SET settings = $1 WHERE id = $2', [
+            JSON.stringify(room.settings),
+            room.id,
+          ]);
         }
-        
-        await pool.query('UPDATE rooms SET settings = $1 WHERE id = $2', [
-          JSON.stringify(room.settings),
-          room.id,
-        ]);
 
-        console.log(`[Socket] Settings updated in room ${room.code}:`, room.settings);
+        // Handle privacy toggle separately
+        if (newIsPrivate !== undefined) {
+          room.isPrivate = newIsPrivate;
+          await pool.query('UPDATE rooms SET is_private = $1 WHERE id = $2', [room.isPrivate, room.id]);
+        }
 
-        // Broadcast updated settings to everyone in the room
-        io.to(room.id).emit('settings_updated', { settings: room.settings });
+        console.log(`[Socket] Settings updated in room ${room.code}:`, room.settings, `| isPrivate: ${room.isPrivate}`);
+
+        // Broadcast updated settings + privacy to everyone in the room
+        io.to(room.id).emit('settings_updated', { 
+          settings: room.settings,
+          isPrivate: room.isPrivate,
+        });
       } catch (error) {
         console.error('[Socket Error] update_settings:', error);
       }

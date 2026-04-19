@@ -24,14 +24,14 @@ const initDB = async () => {
       host_id VARCHAR(50) NOT NULL,
       settings JSONB NOT NULL DEFAULT '{}',
       status VARCHAR(20) DEFAULT 'waiting',
-      is_public BOOLEAN DEFAULT TRUE,
+      is_private BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
 
-  // Ensure is_public column exists (Migration for existing tables)
+  // Ensure is_private column exists (Migration for existing tables)
   await pool.query(`
-    ALTER TABLE rooms ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT TRUE
+    ALTER TABLE rooms ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE
   `)
 
   // players table — stores each player in a room
