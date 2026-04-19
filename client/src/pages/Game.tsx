@@ -1,7 +1,7 @@
 // Game.tsx
 // Senior-Level UI: Ultra-responsive multiplayer layout with refined mobile behaviors.
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import Canvas from '../components/Canvas';
 import Chat from '../components/Chat';
@@ -16,8 +16,10 @@ const Game: React.FC = () => {
     roomCode, phase, timeLeft, wordHints, round, totalRounds,
     currentDrawerId, playerId, word, drawTime
   } = useGame();
-
   const isMyTurn = playerId === currentDrawerId && (phase === 'drawing' || phase === 'choosing');
+  
+  // Mobile Tab State
+  const [mobileView, setMobileView] = useState<'chat' | 'players'>('chat');
 
   const renderWordDisplay = () => {
     if (isMyTurn || phase === 'roundEnd') {
@@ -87,8 +89,8 @@ const Game: React.FC = () => {
         
         <div className="flex flex-col lg:flex-row flex-grow w-full h-full overflow-hidden gap-0 lg:gap-4">
           
-          {/* Left HUD (Scoreboard) - Drawer on mobile? */}
-          <aside className="hidden lg:flex w-72 shrink-0 h-full">
+          {/* Left HUD (Scoreboard) */}
+          <aside className={`w-full lg:w-72 h-[40dvh] lg:h-full shrink-0 ${mobileView === 'players' ? 'block' : 'hidden'} lg:flex`}>
             <Scoreboard />
           </aside>
 
@@ -173,10 +175,27 @@ const Game: React.FC = () => {
                   </span>
                </div>
             </div>
+            </div>
           </section>
 
+          {/* Mobile Tab Switcher */}
+          <div className="flex lg:hidden items-center justify-center gap-2 p-2 bg-bg-panel/40 backdrop-blur-md border-b border-white/5 shrink-0">
+             <button 
+                onClick={() => setMobileView('chat')}
+                className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mobileView === 'chat' ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'bg-white/5 text-slate-500'}`}
+             >
+                Intercom
+             </button>
+             <button 
+                onClick={() => setMobileView('players')}
+                className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mobileView === 'players' ? 'bg-brand-secondary text-bg-main shadow-lg shadow-brand-secondary/20' : 'bg-white/5 text-slate-500'}`}
+             >
+                Leaderboard
+             </button>
+          </div>
+
           {/* Right HUD (Chat) */}
-          <aside className="w-full lg:w-96 h-[40dvh] lg:h-full shrink-0 animate-slide-left" style={{ animationDelay: '200ms' }}>
+          <aside className={`w-full lg:w-96 h-[40dvh] lg:h-full shrink-0 animate-slide-left ${mobileView === 'chat' ? 'block' : 'hidden'} lg:block`} style={{ animationDelay: '200ms' }}>
             <Chat />
           </aside>
         </div>

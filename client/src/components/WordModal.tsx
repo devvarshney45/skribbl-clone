@@ -33,7 +33,7 @@ const WordModal: React.FC = () => {
              <span className="w-2.5 h-2.5 rounded-full bg-brand-primary animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)]" />
              <span className="text-[11px] font-black tracking-[0.5em] text-white/80 uppercase italic">Initialization Sequence</span>
           </div>
-          <h1 className="text-6xl md:text-9xl font-black italic text-white tracking-tighter mb-6 leading-none uppercase drop-shadow-2xl">
+          <h1 className="text-4xl md:text-6xl lg:text-9xl font-black italic text-white tracking-tighter mb-6 leading-none uppercase drop-shadow-2xl">
             PICK YOUR <span className="text-brand-primary">MUSE</span>
           </h1>
           <p className="text-slate-600 font-bold uppercase text-[10px] tracking-[0.5em] mt-8">Select a word below to begin the transmission</p>
