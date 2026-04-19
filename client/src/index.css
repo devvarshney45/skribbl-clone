@@ -10,12 +10,12 @@
   --font-sans: "Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
   
-  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-  --shadow-3xl: 0 35px 60px -15px rgba(0, 0, 0, 0.6);
+  --shadow-premium: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-3xl: 0 25px 40px -10px rgba(0, 0, 0, 0.5);
 }
 
 :root {
@@ -28,14 +28,16 @@ body {
   background-color: var(--color-bg-deep);
   color: #f8fafc;
   min-height: 100vh;
+  min-height: 100dvh;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  line-height: 1.4;
 }
 
 /* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -51,29 +53,29 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Premium Glassmorphism */
+/* Premium Glassmorphism - Refined for compactness */
 .glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .glass-heavy {
-  background: rgba(3, 4, 11, 0.8);
-  backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(3, 4, 11, 0.85);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-hover {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-hover:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.4);
 }
 
 /* Stunning Gradients */
@@ -86,24 +88,24 @@ body {
 .bg-mesh {
   background-color: var(--color-bg-deep);
   background-image: 
-    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
-    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 40%), 
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.15) 0, transparent 40%), 
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.15) 0, transparent 40%);
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes pulse-subtle {
   0%, 100% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.25; transform: scale(1.05); }
+  50% { opacity: 0.22; transform: scale(1.02); }
 }
 
 .animate-pulse-subtle {
@@ -114,7 +116,12 @@ body {
 .shadow-3xl {
   box-shadow: var(--shadow-3xl);
 }
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+
+/* Fluid Typography Helpers */
+.text-fluid-logo {
+  font-size: clamp(2.5rem, 8vw, 6rem);
+}
+
+.text-fluid-header {
+  font-size: clamp(1.5rem, 4vw, 3rem);
 }

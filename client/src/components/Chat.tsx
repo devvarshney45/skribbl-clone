@@ -1,6 +1,6 @@
 // Chat.tsx
-// Redesigned with a premium "Terminal" aesthetic.
-// Features elegant message balloons, system notifications, and refined input handling.
+// Redesigned for absolute spatial efficiency.
+// Features a high-density message list for sidebars.
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
@@ -19,8 +19,6 @@ const Chat: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
-
-    // Send as guess (GameContext handles if it should be chat or guess)
     sendGuess(inputText);
     setInputText('');
   };
@@ -28,61 +26,43 @@ const Chat: React.FC = () => {
   const isGuesser = phase === 'drawing' && !currentPlayerIsDrawer;
 
   return (
-    <div className="glass h-full rounded-[2.5rem] flex flex-col border-white/5 shadow-3xl overflow-hidden animate-fade-in relative">
-      {/* Background decoration */}
-      <div className="absolute top-0 left-0 w-32 h-32 bg-brand-primary/5 blur-3xl pointer-events-none" />
-      
+    <div className="glass h-full rounded-[1.5rem] md:rounded-[2rem] flex flex-col border-white/5 shadow-2xl overflow-hidden bg-white/1 animate-fade-in relative">
       {/* Header */}
-      <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-white/2">
-        <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-          Studio Comms
-          <span className="text-[9px] bg-white/5 text-slate-500 px-2 py-0.5 rounded-md font-black tracking-tighter">ENCRYPTED</span>
+      <div className="px-5 py-4 border-b border-white/5 bg-white/2">
+        <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center justify-between">
+          Intercom
+          <span className="text-[7px] bg-indigo-600/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/10 tracking-widest uppercase">Direct</span>
         </h2>
       </div>
 
-      {/* Messages List */}
+      {/* Messages List - High Density */}
       <div 
         ref={scrollRef}
-        className="flex-grow overflow-y-auto px-6 py-6 space-y-5 custom-scrollbar"
+        className="flex-grow overflow-y-auto px-4 py-4 space-y-3 custom-scrollbar"
       >
         {messages.map((msg, idx) => {
           if (msg.type === 'system') {
             return (
-              <div key={idx} className="flex justify-center">
-                <div className="bg-white/5 px-5 py-2 rounded-full border border-white/5 text-[10px] font-black text-slate-500 uppercase tracking-widest italic animate-fade-in">
+              <div key={idx} className="flex justify-center py-1">
+                <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.2em] italic">
                    {msg.text}
-                </div>
+                </span>
               </div>
             );
           }
 
           if (msg.type === 'correct') {
             return (
-              <div key={idx} className="flex justify-center animate-fade-in">
-                <div className="bg-indigo-500/10 px-6 py-3 rounded-2xl border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-3">
-                    <span className="text-base">💎</span>
-                    {msg.text}
-                </div>
+              <div key={idx} className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl text-[9px] font-black text-emerald-400 uppercase tracking-widest text-center flex items-center justify-center gap-2 animate-bounce">
+                  <span>⚡</span> {msg.text}
               </div>
             );
           }
 
-          const isSystem = msg.author === 'SYSTEM';
-
           return (
-            <div 
-              key={idx} 
-              className={`flex flex-col animate-fade-in ${isSystem ? 'items-center' : 'items-start'}`}
-            >
-              <div className="flex items-center gap-2 mb-1.5 ml-1">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{msg.author}</span>
-                <span className="w-1 h-1 rounded-full bg-white/10" />
-              </div>
-              <div className={`px-5 py-3 rounded-[1.25rem] text-sm font-bold tracking-tight max-w-[90%] break-words ${
-                msg.type === 'correct' 
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                : 'bg-white/5 text-slate-300 border border-white/5'
-              }`}>
+            <div key={idx} className="flex flex-col items-start max-w-full">
+              <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest ml-1 mb-0.5">{msg.author}</span>
+              <div className="px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-tight bg-white/5 text-slate-300 border border-white/2 break-words max-w-full">
                 {msg.text}
               </div>
             </div>
@@ -90,36 +70,35 @@ const Chat: React.FC = () => {
         })}
 
         {messages.length === 0 && (
-           <div className="h-full flex flex-col items-center justify-center opacity-20 text-center px-10">
-              <span className="text-4xl mb-4">💬</span>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Silence is heavy.<br/>Break the ice.</p>
+           <div className="h-full flex flex-col items-center justify-center opacity-10 text-center px-6">
+              <span className="text-3xl mb-2">📡</span>
+              <p className="text-[8px] font-black uppercase tracking-widest">Awaiting Comms</p>
            </div>
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="p-6 border-t border-white/5 bg-white/2">
+      {/* Input Area - Very compact */}
+      <div className="p-4 border-t border-white/5 bg-white/2">
         {currentPlayerIsDrawer && phase === 'drawing' ? (
-           <div className="bg-white/5 p-4 rounded-2xl flex items-center justify-center gap-3 border border-white/5 grayscale">
-              <span className="text-lg">🤐</span>
-              <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Artists must remain silent</span>
+           <div className="bg-white/3 p-3 rounded-xl flex items-center justify-center gap-3 border border-white/5 opacity-50">
+              <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic">Artist is focused</span>
            </div>
         ) : (
-          <form onSubmit={handleSubmit} className="relative group">
+          <form onSubmit={handleSubmit} className="relative">
             <input
               type="text"
-              placeholder={isGuesser ? "DECODE THE ARTWORK..." : "MODULATE COMMS..."}
+              placeholder={isGuesser ? "DECODE..." : "MESSAGE..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-indigo-600/30 focus:border-indigo-600/40 transition-all font-bold text-sm text-white placeholder:text-slate-700 placeholder:tracking-widest"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-indigo-600/30 transition-all font-bold text-xs text-white placeholder:text-slate-800"
               maxLength={100}
             />
             <button 
                 type="submit"
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-all shadow-lg shadow-indigo-600/20 active:scale-90"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-all shadow-xl shadow-indigo-600/20 active:scale-90"
             >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path d="M5 12h14M12 5l7 7-7 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
             </button>
           </form>

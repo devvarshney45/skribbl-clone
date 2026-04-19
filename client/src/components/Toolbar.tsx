@@ -1,6 +1,6 @@
 // Toolbar.tsx
-// Redesigned with a premium "Glass Floating" aesthetic.
-// Features high-end colors, refined controls, and sleek feedback.
+// Redesigned for spatial economy.
+// Features a high-density kit for the drawing phase.
 
 import React from 'react';
 import { useGame } from '../context/GameContext';
@@ -23,43 +23,39 @@ const Toolbar: React.FC = () => {
   ];
 
   return (
-    <div className="glass px-10 py-5 rounded-[2.5rem] flex items-center gap-10 shadow-3xl border-white/5 animate-fade-in">
+    <div className="glass px-6 py-3 rounded-2xl flex items-center gap-6 shadow-3xl border-white/5 animate-fade-in bg-bg-deep/40 backdrop-blur-3xl scale-90 md:scale-100">
       
-      {/* Color Palette */}
-      <div className="flex flex-col gap-2.5">
-          <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] ml-1 mb-1">Pigments</span>
-          <div className="grid grid-cols-5 gap-3">
+      {/* Pigments */}
+      <div className="flex flex-col gap-1.5 px-1">
+          <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest leading-none">Pigment</span>
+          <div className="grid grid-cols-5 gap-2">
             {colors.map((c) => (
               <button
                 key={c}
                 onClick={() => setBrushConfig({ color: c })}
-                className={`w-7 h-7 rounded-xl transition-all transform hover:scale-125 active:scale-90 relative ${
-                  color === c ? 'ring-2 ring-white ring-offset-4 ring-offset-[#03040b] scale-110' : ''
+                className={`w-5 h-5 md:w-6 md:h-6 rounded-lg transition-all transform hover:scale-110 active:scale-95 ${
+                  color === c ? 'ring-2 ring-white ring-offset-2 ring-offset-bg-deep scale-105' : 'opacity-80'
                 }`}
                 style={{ backgroundColor: c }}
-              >
-                  {color === c && (
-                      <div className="absolute inset-0 flex items-center justify-center text-[10px] text-black mix-blend-difference">●</div>
-                  )}
-              </button>
+              />
             ))}
           </div>
       </div>
 
-      <div className="w-px h-12 bg-white/5" />
+      <div className="w-px h-8 bg-white/5" />
 
-      {/* Brush Architecture */}
-      <div className="flex flex-col gap-2.5">
-          <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] ml-1 mb-1">Thickness</span>
-          <div className="flex items-center gap-2.5">
+      {/* Thickness */}
+      <div className="flex flex-col gap-1.5 px-1">
+          <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest leading-none">Weight</span>
+          <div className="flex items-center gap-1.5">
             {sizes.map((s) => (
               <button
                 key={s.value}
                 onClick={() => setBrushConfig({ size: s.value })}
-                className={`w-10 h-10 rounded-2xl flex items-center justify-center text-[10px] font-black transition-all ${
+                className={`w-7 h-7 md:w-9 md:h-9 rounded-lg flex items-center justify-center text-[9px] font-black transition-all ${
                   size === s.value 
-                  ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/30 ring-1 ring-white/10' 
-                  : 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300'
+                  ? 'bg-indigo-600 text-white shadow-xl ring-1 ring-white/10' 
+                  : 'bg-white/5 text-slate-500 hover:bg-white/10'
                 }`}
               >
                 {s.label}
@@ -68,43 +64,28 @@ const Toolbar: React.FC = () => {
           </div>
       </div>
 
-      <div className="w-px h-12 bg-white/5" />
+      <div className="w-px h-8 bg-white/5" />
 
-      {/* Utility Suite */}
-      <div className="flex flex-col gap-2.5">
-          <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] ml-1 mb-1">Instruments</span>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setBrushConfig({ color: '#ffffff' })}
-              title="White Ink"
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-90 border ${
-                color === '#ffffff' 
-                ? 'bg-indigo-600 text-white border-indigo-500/50 shadow-xl' 
-                : 'bg-white/5 text-slate-500 border-white/5 hover:bg-white/10'
-              }`}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11a7.5 7.5 0 01-2 12H5" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.2 3L12 6.2M18.8 6.6L15.6 9.8" />
-              </svg>
-            </button>
-            
+      {/* Instruments */}
+      <div className="flex flex-col gap-1.5 px-1">
+          <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest leading-none">Action</span>
+          <div className="flex items-center gap-2">
             <button
               onClick={undo}
-              title="Rollback Segment"
-              className="w-11 h-11 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all active:scale-90 border border-white/5 group"
+              title="Undo"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/5"
             >
-              <svg className="w-5 h-5 text-slate-500 group-hover:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3 h-3 md:w-4 md:h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
               </svg>
             </button>
             
             <button
               onClick={clearCanvas}
-              title="Purge Canvas"
-              className="w-11 h-11 rounded-2xl bg-rose-950/20 hover:bg-rose-900/40 flex items-center justify-center transition-all active:scale-90 border border-rose-500/10 group shadow-lg"
+              title="Clear"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 flex items-center justify-center transition-all border border-rose-500/10 group"
             >
-              <svg className="w-5 h-5 text-rose-500 group-hover:text-rose-400 group-hover:rotate-12 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3 h-3 md:w-4 md:h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
