@@ -99,9 +99,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Session Persistence Effect
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    const savedPlayerId = localStorage.getItem('skribbl_player_id');
-    const savedRoomCode = localStorage.getItem('skribbl_room_code');
-    const savedName = localStorage.getItem('skribbl_player_name');
+    const savedPlayerId = sessionStorage.getItem('skribbl_player_id');
+    const savedRoomCode = sessionStorage.getItem('skribbl_room_code');
+    const savedName = sessionStorage.getItem('skribbl_player_name');
 
     if (savedPlayerId && savedRoomCode && savedName) {
       console.log('[GameContext] Found existing session, attempting reconnect...');
@@ -113,6 +113,28 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Auto-Recovery on socket reconnect
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!socket) return;
+    
+    socket.on('connect', () => {
+      const savedPlayerId = sessionStorage.getItem('skribbl_player_id');
+      const savedRoomCode = sessionStorage.getItem('skribbl_room_code');
+      const savedName = sessionStorage.getItem('skribbl_player_name');
+      
+      if (savedPlayerId && savedRoomCode && savedName) {
+        console.log('[Socket] Recovered connection, resyncing session...');
+        socket.emit('reconnect_session', { playerId: savedPlayerId, roomCode: savedRoomCode });
+      }
+    });
+
+    return () => {
+      socket.off('connect');
+    };
+  }, [socket]);
+
   useEffect(() => {
     if (!socket) return;
 
@@ -123,9 +145,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setPlayers([player]);
       
       // Save session
-      localStorage.setItem('skribbl_player_id', player.id);
-      localStorage.setItem('skribbl_room_code', code);
-      localStorage.setItem('skribbl_player_name', player.name);
+      sessionStorage.setItem('skribbl_player_id', player.id);
+      sessionStorage.setItem('skribbl_room_code', code);
+      sessionStorage.setItem('skribbl_player_name', player.name);
     });
 
     socket.on('joined_room', ({ roomId: rid, roomCode: code, player, settings }) => {
@@ -133,9 +155,21 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setPlayerId(player.id);
       
       // Save session
-      localStorage.setItem('skribbl_player_id', player.id);
-      localStorage.setItem('skribbl_room_code', code);
-      localStorage.setItem('skribbl_player_name', player.name);
+      sessionStorage.setItem('skribbl_player_id', player.id);
+      sessionStorage.setItem('skribbl_room_code', code);
+      sessionStorage.setItem('skribbl_player_name', player.name);
+    });
+
+    socket.on('player_list', ({ players: list }) => {
+      setPlayers(list);
+    });
+
+    socket.on('player_joined', ({ player }) => {
+      setMessages(prev => [...prev.slice(-49), { 
+        author: 'SYSTEM', 
+        text: `${player.name} entered the studio.`, 
+        type: 'system' 
+      }]);
     });
 
     socket.on('reconnected', ({ player, roomCode: code, phase: p, ...rest }) => {
@@ -153,15 +187,18 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setDrawTime(rest.settings?.drawTime || 80);
       setLoading(false);
       
+      setDrawTime(rest.settings?.drawTime || 80);
+      setLoading(false);
+      
       // Refresh session storage
-      localStorage.setItem('skribbl_player_id', player.id);
-      localStorage.setItem('skribbl_room_code', code);
-      localStorage.setItem('skribbl_player_name', player.name);
+      sessionStorage.setItem('skribbl_player_id', player.id);
+      sessionStorage.setItem('skribbl_room_code', code);
+      sessionStorage.setItem('skribbl_player_name', player.name);
     });
 
     socket.on('session_expired', ({ message }) => {
       console.warn('[GameContext] Session expired:', message);
-      localStorage.clear();
+      sessionStorage.clear();
       setLoading(false);
       setPhase('waiting');
       setRoomCode('');
@@ -175,7 +212,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setTotalRounds(data.totalRounds);
       setWord('');
       setWordHints([]);
-      setWordOptions([]); // will be set by word_options event for the drawer
       setMessages(prev => [...prev.slice(-49), { author: 'SYSTEM', text: `Round ${data.round} is starting!`, type: 'system' }]);
     });
 
@@ -217,7 +253,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     socket.on('chat_message', (data) => {
-      setMessages(prev => [...prev.slice(-49), { author: data.playerName, text: data.text, type: 'normal' }]);
+      setMessages(prev => [...prev.slice(-49), { author: data.playerName, text: data.text, type: data.type || 'normal' }]);
     });
 
     socket.on('guess_result', (data) => {
@@ -254,6 +290,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       socket.off('room_created');
       socket.off('joined_room');
       socket.off('player_list');
+      socket.off('player_joined');
+      socket.off('chat_message');
+      socket.off('error');
+      socket.off('session_expired');
       socket.off('round_start');
       socket.off('game_state');
       socket.off('timer_update');
@@ -269,11 +309,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // ---------------------------------------------------------------------------
   const createRoom = (name: string, code: string) => {
     setPlayerName(name);
+    setPhase('waiting');
     socket.emit('create_room', { playerName: name, roomCode: code });
   };
 
   const joinRoom = (name: string, code: string) => {
     setPlayerName(name);
+    setPhase('waiting');
     socket.emit('join_room', { playerName: name, roomCode: code });
   };
 

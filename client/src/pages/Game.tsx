@@ -55,7 +55,7 @@ const Game: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#03040b] bg-mesh text-white overflow-hidden flex flex-col">
+    <div className="h-[100dvh] w-screen bg-[#03040b] bg-mesh text-white overflow-hidden flex flex-col relative">
       {/* Top Navigation / Status Bar */}
       <header className="h-20 flex items-center justify-between px-8 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20">
         <div className="flex items-center gap-10">
@@ -95,15 +95,15 @@ const Game: React.FC = () => {
       </header>
 
       {/* Main Game Layout */}
-      <main className="flex-grow p-4 lg:p-8 flex flex-col lg:flex-row gap-6 overflow-y-auto custom-scrollbar">
+      <main className="flex-grow p-3 lg:p-6 xl:p-8 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden h-[calc(100vh-5rem)]">
         
         {/* Left Sidebar: Scoreboard */}
-        <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1 min-h-[200px] lg:h-auto animate-fade-in">
+        <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1 h-32 lg:h-full animate-fade-in relative z-10 transition-all duration-300 hidden lg:block">
           <Scoreboard />
         </aside>
 
         {/* Center Section: Canvas & Controls */}
-        <section className="flex-grow flex flex-col order-1 lg:order-2 min-h-[400px] lg:h-full gap-4 relative">
+        <section className="flex-grow flex flex-col order-1 lg:order-2 h-[55%] lg:h-full gap-4 relative z-0">
           <div className="flex-grow flex items-center justify-center relative">
             <div className="w-full h-full glass rounded-[2.5rem] p-4 border-white/10 shadow-2xl relative overflow-hidden flex flex-col min-h-[350px]">
               {/* Dynamic progress timer bar */}
@@ -139,7 +139,7 @@ const Game: React.FC = () => {
         </section>
 
         {/* Right Sidebar: Chat */}
-        <aside className="w-full lg:w-80 flex-shrink-0 order-3 min-h-[300px] lg:h-auto animate-fade-in delay-200">
+        <aside className="w-full lg:w-80 flex-shrink-0 order-3 h-[45%] lg:h-full animate-fade-in delay-200">
           <Chat />
         </aside>
 
@@ -150,9 +150,11 @@ const Game: React.FC = () => {
       <GameOver />
 
       {/* Mobile-Only Word Display */}
-      <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 glass px-8 py-3 rounded-full z-30 shadow-2xl border-white/10 animate-fade-in">
-        {renderWordDisplay()}
-      </div>
+      {phase !== 'waiting' && phase !== '' && (
+        <div className="md:hidden absolute top-24 left-1/2 -translate-x-1/2 glass px-6 py-2 rounded-full z-30 shadow-2xl border-white/10 animate-fade-in pointer-events-none scale-90">
+          {renderWordDisplay()}
+        </div>
+      )}
     </div>
   );
 };

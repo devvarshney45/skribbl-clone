@@ -34,8 +34,8 @@ const Home: React.FC = () => {
         hostName: name,
         isPublic: isPublic,
         settings: {
-          rounds: 3,
-          drawTime: 80,
+          rounds: 1,
+          drawTime: 15,
         },
       });
 

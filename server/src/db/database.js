@@ -68,6 +68,18 @@ const initDB = async () => {
     )
   `)
 
+  // Auto-seed: guarantee we have drawing words
+  const existing = await pool.query('SELECT COUNT(*) FROM words')
+  if (parseInt(existing.rows[0].count) === 0) {
+    const fallbackWords = [
+      'apple', 'dog', 'painting', 'submarine', 'pizza', 'guitar', 'moon', 'telescope', 'laptop', 'skyscraper'
+    ]
+    for (const word of fallbackWords) {
+      await pool.query('INSERT INTO words (word, category) VALUES ($1, $2)', [word, 'general'])
+    }
+    console.log('✅ Database auto-seeded with standard drawing words.')
+  }
+
   console.log('✅ All PostgreSQL tables created successfully')
 }
 

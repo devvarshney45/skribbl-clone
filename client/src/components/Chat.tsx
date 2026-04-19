@@ -47,9 +47,9 @@ const Chat: React.FC = () => {
             }`}
           >
             {msg.type === 'system' ? (
-              <span className="text-[9px] font-black text-slate-600 bg-white/5 px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/5 text-center leading-loose">
+              <div className="text-[9px] font-black text-slate-600 bg-white/5 px-4 py-1.5 rounded-2xl uppercase tracking-widest border border-white/5 text-center leading-loose break-words whitespace-normal w-full max-w-full">
                 {msg.text}
-              </span>
+              </div>
             ) : msg.type === 'correct' ? (
               <div className="w-full bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl flex items-center gap-3">
                 <span className="text-lg">🎯</span>
@@ -72,7 +72,7 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Input area */}
-      <div className="p-4 bg-black/20">
+      <div className="p-4 bg-black/20 shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"

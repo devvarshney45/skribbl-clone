@@ -407,7 +407,7 @@ function setupSocketHandler(io) {
         type: 'start',
         x: data.x, y: data.y,
         color: data.color,
-        brushSize: data.brushSize,
+        size: data.size,
       });
     });
 

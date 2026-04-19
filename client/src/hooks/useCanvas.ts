@@ -134,7 +134,7 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
       }
     });
 
-    socket.on('canvas_clear', () => {
+    socket.on('canvas_cleared', () => {
       const ctx = getCtx();
       const canvas = canvasRef.current;
       if (ctx && canvas) {
@@ -142,17 +142,35 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
       }
     });
 
-    socket.on('draw_undo', (data) => {
-       // For remote undo, we could implement a full state sync,
-       // but for simplicity we usually rely on local history for drawer only
-       // OR we clear and redraw. Here we just clear if it's a major change.
-       // Actually, for a professional clone, we'd need a more robust undo.
+    socket.on('canvas_replay', (data) => {
+       const ctx = getCtx();
+       const canvas = canvasRef.current;
+       if (!ctx || !canvas) return;
+
+       // Quickly wipe
+       ctx.clearRect(0, 0, canvas.width, canvas.height);
+       
+       // Loop and redraw all strokes
+       data.strokes.forEach((stroke: any) => {
+         if (stroke.type === 'start') {
+           ctx.beginPath();
+           ctx.moveTo(stroke.x, stroke.y);
+           ctx.strokeStyle = stroke.color;
+           ctx.lineWidth = stroke.size || 5; 
+         } else if (stroke.type === 'move') {
+           // Move arrays
+           stroke.points.forEach((pt: any) => {
+             ctx.lineTo(pt.x, pt.y);
+           });
+           ctx.stroke();
+         }
+       });
     });
 
     return () => {
       socket.off('draw_data');
-      socket.off('canvas_clear');
-      socket.off('draw_undo');
+      socket.off('canvas_cleared');
+      socket.off('canvas_replay');
     };
   }, [socket, playerId, getCtx, canvasRef]);
 

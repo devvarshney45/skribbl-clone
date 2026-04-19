@@ -6,7 +6,7 @@ import { useGame } from '../context/GameContext';
 import { useNavigate } from 'react-router-dom';
 
 const GameOver: React.FC = () => {
-  const { phase, leaderboard, winner } = useGame();
+  const { phase, players, winner } = useGame();
   const navigate = useNavigate();
 
   if (phase !== 'gameOver') return null;
@@ -48,7 +48,7 @@ const GameOver: React.FC = () => {
 
         {/* Mini Leaderboard */}
         <div className="space-y-3 mb-12">
-          {leaderboard.slice(0, 5).map((player, index) => (
+          {players.slice(0, 5).map((player: any, index: number) => (
             <div key={player.id} className="flex items-center justify-between px-8 py-3 bg-white/5 rounded-2xl border border-white/5">
               <div className="flex items-center gap-4">
                 <span className="text-xs font-black italic text-slate-600 w-4">#{index + 1}</span>
@@ -61,7 +61,11 @@ const GameOver: React.FC = () => {
 
         {/* Actions */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => {
+             sessionStorage.clear();
+             navigate('/');
+             window.location.reload(); 
+          }}
           className="bg-indigo-600 hover:bg-indigo-500 text-white px-12 py-5 rounded-3xl font-black text-sm tracking-[0.25em] shadow-xl shadow-indigo-600/20 transition-all transform hover:scale-105 active:scale-95"
         >
           RETURN TO HUB

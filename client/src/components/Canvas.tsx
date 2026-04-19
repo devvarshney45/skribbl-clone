@@ -17,18 +17,21 @@ const Canvas: React.FC = () => {
 
   useEffect(() => {
     if (canvasRef.current && containerRef.current) {
-      // Set canvas size to match the container
       const resize = () => {
         if (!containerRef.current || !canvasRef.current) return;
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        canvasRef.current.width = width;
-        canvasRef.current.height = height;
-        initCanvas();
+        const rect = containerRef.current.getBoundingClientRect();
+        
+        // Only trigger redraw / resize if dimensions functionally changed
+        if (canvasRef.current.width !== rect.width || canvasRef.current.height !== rect.height) {
+            canvasRef.current.width = rect.width;
+            canvasRef.current.height = rect.height;
+            initCanvas();
+        }
       };
 
-      resize();
-      window.addEventListener('resize', resize);
-      return () => window.removeEventListener('resize', resize);
+      const observer = new ResizeObserver(resize);
+      observer.observe(containerRef.current);
+      return () => observer.disconnect();
     }
   }, [initCanvas]);
 
@@ -48,7 +51,7 @@ const Canvas: React.FC = () => {
         onTouchStart={isMyTurn ? startDrawing : undefined}
         onTouchMove={isMyTurn ? draw : undefined}
         onTouchEnd={isMyTurn ? endDrawing : undefined}
-        className="block touch-none"
+        className="block touch-none w-full h-full"
       />
 
       {/* Custom Artist Cursor */}

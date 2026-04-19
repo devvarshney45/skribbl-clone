@@ -88,15 +88,10 @@ class Game {
         'SELECT word FROM words ORDER BY RANDOM() LIMIT $1',
         [this.settings.wordCount]
       );
-      const wordOptions = rows.map((row) => row.word);
-
-      // Tell the drawer which words they can choose from
-      this.io.to(drawer.socketId).emit('word_options', {
-        words: wordOptions,
-        round: this.currentRound,
-        totalRounds: this.totalRounds,
-        drawerName: drawer.name,
-      });
+      let wordOptions = rows.map((row) => row.word);
+      if (wordOptions.length === 0) {
+        wordOptions = ['apple', 'dog', 'painting'];
+      }
 
       // Tell everyone else that a round is starting (no word revealed yet)
       this.io.to(this.roomId).emit('round_start', {
@@ -105,6 +100,15 @@ class Game {
         drawerId: drawer.id,
         drawerName: drawer.name,
         wordLength: 0, // will update once word is chosen
+      });
+
+      // Now tell the drawer which words they can choose from 
+      // (This guarantees the frontend gets the start state BEFORE the option payload)
+      this.io.to(drawer.socketId).emit('word_options', {
+        words: wordOptions,
+        round: this.currentRound,
+        totalRounds: this.totalRounds,
+        drawerName: drawer.name,
       });
 
       // Auto-pick a word if the drawer doesn't choose within 10 seconds
@@ -129,12 +133,15 @@ class Game {
     // Clear the auto-pick timeout if it's still pending
     clearTimeout(this.wordChoiceTimeout);
 
-    this.currentWord = word;
+    // Safety fallback to prevent crashes if word is ever undefined
+    const safeWord = word || 'emergency';
+
+    this.currentWord = safeWord;
     this.phase = 'drawing';
 
     // Build hint array: spaces stay as spaces, letters become '_'
     // e.g. "ice cream" → ['_','_','_',' ','_','_','_','_','_']
-    this.wordHints = word.split('').map((char) => {
+    this.wordHints = safeWord.split('').map((char) => {
       if (char === ' ') return ' ';
       return '_';
     });

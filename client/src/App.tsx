@@ -36,7 +36,7 @@ const App: React.FC = () => {
         <Route 
           path="/room/:code" 
           element={
-            phase === 'waiting' ? (
+            phase === 'waiting' || phase === '' ? (
               <Room />
             ) : phase === 'choosing' || phase === 'drawing' || phase === 'roundEnd' || phase === 'gameOver' ? (
               <Game />
