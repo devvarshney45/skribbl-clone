@@ -26,7 +26,6 @@ interface GameContextType {
   roomCode: string;
   setRoomCode: (code: string) => void;
   playerId: string;
-  isDrawer: boolean;
   loading: boolean;
   
   // Game State
@@ -76,7 +75,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [playerId, setPlayerId] = useState('');
-  const [isDrawer, setIsDrawer] = useState(false);
   const [loading, setLoading] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [phase, setPhase] = useState<GamePhase>('waiting');
@@ -199,13 +197,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setMessages(prev => [...prev.slice(-49), { author: 'SYSTEM', text: `Round ${data.round} is starting!`, type: 'system' }]);
     });
 
-    socket.on('word_options', (data) => {
-      setWordOptions(data.words);
-    });
-
     socket.on('you_are_drawer', ({ isDrawer: value }) => {
       console.log('[GameContext] SERVER PUSH: isDrawer =', value);
-      setIsDrawer(value);
+      // Deprecated in favor of identity_sync + playerId
+    });
+
+    socket.on('identity_sync', ({ playerId: sId }) => {
+      console.log('[GameContext] IDENTITY SYNC: Official ID =', sId);
+      setPlayerId(sId);
+      sessionStorage.setItem('skribbl_player_id', sId);
     });
 
     // Drawing start
@@ -283,7 +283,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setRoomCode(code);
       setPhase(p as any);
       setCurrentDrawerId(dId);
-      setIsDrawer(player.id === dId);
       setWordHints(rest.wordHints || []);
       setTimeLeft(rest.timeLeft || 0);
       setRound(rest.round || 1);
@@ -375,7 +374,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('reset_game', { roomCode });
   };
 
-  const currentPlayerIsDrawer = isDrawer || (playerId === currentDrawerId && !!currentDrawerId);
+  const currentPlayerIsDrawer = !!playerId && !!currentDrawerId && playerId === currentDrawerId;
 
   return (
     <GameContext.Provider
@@ -385,7 +384,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         roomCode,
         setRoomCode,
         playerId,
-        isDrawer,
         loading,
         players,
         phase,

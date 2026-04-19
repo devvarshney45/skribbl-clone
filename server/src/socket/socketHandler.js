@@ -100,11 +100,12 @@ function setupSocketHandler(io) {
         socket.emit('room_created', {
           roomId: room.id,
           roomCode: room.code,
-          player: player.toJSON(),
-          settings: room.settings,
           isPrivate: room.isPrivate,
           inviteLink: `${process.env.CLIENT_URL}/?code=${room.code}`,
         });
+
+        // Identity Sync
+        socket.emit('identity_sync', { playerId: player.id });
 
         broadcastPlayerList(io, room);
       } catch (error) {
@@ -214,6 +215,9 @@ function setupSocketHandler(io) {
           isPrivate: room.isPrivate,
         });
 
+        // Identity Sync
+        socket.emit('identity_sync', { playerId: player.id });
+
         // Notify everyone else that a new player arrived
         socket.to(room.id).emit('player_joined', { player: player.toJSON() });
 
@@ -270,6 +274,9 @@ function setupSocketHandler(io) {
           isPrivate: false
         });
 
+        // Identity Sync
+        socket.emit('identity_sync', { playerId: player.id });
+
         socket.to(availableRoom.id).emit('player_joined', { player: player.toJSON() });
         broadcastPlayerList(io, availableRoom);
       } catch (error) {
@@ -306,6 +313,9 @@ function setupSocketHandler(io) {
 
         // Update DB
         await pool.query('UPDATE players SET socket_id = $1 WHERE id = $2', [socket.id, player.id]);
+
+        // Identity Sync
+        socket.emit('identity_sync', { playerId: player.id });
 
         const game = games.get(room.id);
 
