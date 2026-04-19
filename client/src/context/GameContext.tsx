@@ -186,7 +186,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setRoomCode('');
     });
 
-    // Game starting
     socket.on('round_start', (data) => {
       setPhase('choosing');
       setCurrentDrawerId(data.drawerId);
@@ -195,7 +194,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (data.options) setWordOptions(data.options);
       setWord('');
       setWordHints([]);
-      setMessages(prev => [...prev.slice(-49), { author: 'SYSTEM', text: `Round ${data.round} is starting!`, type: 'system' }]);
+      setMessages(prev => [...prev.slice(-49), { author: 'SYSTEM', text: `Round ${data.round} — ${data.drawerName} is drawing!`, type: 'system' }]);
     });
 
     socket.on('word_options', (data) => {
