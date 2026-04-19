@@ -26,6 +26,7 @@ interface GameContextType {
   roomCode: string;
   setRoomCode: (code: string) => void;
   playerId: string;
+  isDrawer: boolean;
   loading: boolean;
   
   // Game State
@@ -75,6 +76,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [playerId, setPlayerId] = useState('');
+  const [isDrawer, setIsDrawer] = useState(false);
   const [loading, setLoading] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [phase, setPhase] = useState<GamePhase>('waiting');
@@ -201,6 +203,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setWordOptions(data.words);
     });
 
+    socket.on('you_are_drawer', ({ isDrawer: value }) => {
+      console.log('[GameContext] SERVER PUSH: isDrawer =', value);
+      setIsDrawer(value);
+    });
+
     // Drawing start
     socket.on('game_state', (data) => {
       setPhase(data.phase);
@@ -276,6 +283,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setRoomCode(code);
       setPhase(p as any);
       setCurrentDrawerId(dId);
+      setIsDrawer(player.id === dId);
       setWordHints(rest.wordHints || []);
       setTimeLeft(rest.timeLeft || 0);
       setRound(rest.round || 1);
@@ -367,7 +375,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('reset_game', { roomCode });
   };
 
-  const currentPlayerIsDrawer = playerId === currentDrawerId;
+  const currentPlayerIsDrawer = isDrawer || (playerId === currentDrawerId && !!currentDrawerId);
 
   return (
     <GameContext.Provider
@@ -377,6 +385,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         roomCode,
         setRoomCode,
         playerId,
+        isDrawer,
         loading,
         players,
         phase,

@@ -111,6 +111,12 @@ class Game {
         wordLength: 0, // will update once word is chosen
       });
 
+      // Reset drawer status for everyone initially
+      this.io.to(this.roomId).emit('you_are_drawer', { isDrawer: false });
+
+      // DIRECT ROLE PUSH: Notify the drawer explicitly that it is their turn
+      this.io.to(`user_${drawer.id}`).emit('you_are_drawer', { isDrawer: true });
+
       // RELIABILITY FIX: Use the latest socket ID from the player object 
       // which is updated on every reconnection/join.
       this.io.to(`user_${drawer.id}`).emit('word_options', {
