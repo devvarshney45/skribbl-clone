@@ -92,6 +92,7 @@ function setupSocketHandler(io) {
         // Store player info on the socket for easy lookup on disconnect
         socket.data.playerId = player.id;
         socket.data.roomCode = room.code;
+        socket.data.roomId   = room.id;
 
         console.log(`[Socket] ${playerName} created room ${room.code}`);
 
@@ -199,6 +200,7 @@ function setupSocketHandler(io) {
         socket.join(room.id);
         socket.data.playerId = player.id;
         socket.data.roomCode = room.code;
+        socket.data.roomId   = room.id;
 
         console.log(`[Socket] ${player.name} joined room ${room.code}`);
 
@@ -255,6 +257,7 @@ function setupSocketHandler(io) {
         socket.join(availableRoom.id);
         socket.data.playerId = player.id;
         socket.data.roomCode = availableRoom.code;
+        socket.data.roomId   = availableRoom.id;
 
         socket.emit('joined_room', {
           roomId: availableRoom.id,
@@ -295,6 +298,7 @@ function setupSocketHandler(io) {
         socket.join(room.id);
         socket.data.playerId = player.id;
         socket.data.roomCode = room.code;
+        socket.data.roomId   = room.id;
 
         // Update DB
         await pool.query('UPDATE players SET socket_id = $1 WHERE id = $2', [socket.id, player.id]);
@@ -332,15 +336,19 @@ function setupSocketHandler(io) {
     // Emitted when a player clicks "Ready" in the lobby.
     // Data: { roomCode }
     // -------------------------------------------------------------------------
-    socket.on('player_ready', ({ roomCode }) => {
-      const room   = rooms.get(roomCode?.toUpperCase());
+    socket.on('player_ready', ({ roomCode: clientRoomCode }) => {
+      const roomCode = clientRoomCode || socket.data.roomCode;
+      const roomId   = socket.data.roomId; // Fallback to roomId if we have it
+      
+      const room = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
-      const player = room.getPlayerBySocketId(socket.id);
+      const player = room.getPlayer(socket.data.playerId) || room.getPlayerBySocketId(socket.id);
       if (!player) return;
 
       // Toggle ready status
       player.isReady = !player.isReady;
+      console.log(`[Socket] ${player.name} is now ${player.isReady ? 'READY' : 'PREPARING'} in ${room.code}`);
       broadcastPlayerList(io, room);
     });
 
@@ -349,12 +357,13 @@ function setupSocketHandler(io) {
     // Only the host can trigger this. Requires at least 2 players.
     // Data: { roomCode }
     // -------------------------------------------------------------------------
-    socket.on('start_game', async ({ roomCode }) => {
+    socket.on('start_game', async ({ roomCode: clientRoomCode }) => {
       try {
-        const room   = rooms.get(roomCode?.toUpperCase());
+        const roomCode = clientRoomCode || socket.data.roomCode;
+        const room = rooms.get(roomCode?.toUpperCase());
         if (!room) return;
 
-        const player = room.getPlayerBySocketId(socket.id);
+        const player = room.getPlayer(socket.data.playerId) || room.getPlayerBySocketId(socket.id);
         if (!player || !player.isHost) {
           socket.emit('error', { message: 'Only the host can start the game.' });
           return;
@@ -482,8 +491,8 @@ function setupSocketHandler(io) {
     // Emitted by the drawer after selecting a word from the modal.
     // Data: { roomCode, word }
     // -------------------------------------------------------------------------
-    socket.on('word_chosen', ({ roomCode, word }) => {
-      const room = rooms.get(roomCode?.toUpperCase());
+    socket.on('word_chosen', ({ word }) => {
+      const room = rooms.get(socket.data.roomCode?.toUpperCase());
       if (!room) return;
 
       const game = games.get(room.id);
@@ -506,7 +515,8 @@ function setupSocketHandler(io) {
     // Data: { roomCode, x, y, color, brushSize }
     // -------------------------------------------------------------------------
     socket.on('draw_start', (data) => {
-      const room = rooms.get(data.roomCode?.toUpperCase());
+      const roomCode = data.roomCode || socket.data.roomCode;
+      const room = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
       // Start a new stroke object and store it
@@ -538,7 +548,8 @@ function setupSocketHandler(io) {
     // Data: { roomCode, x, y }
     // -------------------------------------------------------------------------
     socket.on('draw_move', (data) => {
-      const room = rooms.get(data.roomCode?.toUpperCase());
+      const roomCode = data.roomCode || socket.data.roomCode;
+      const room = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
       // Append point to the current stroke for replay purposes
@@ -560,7 +571,8 @@ function setupSocketHandler(io) {
     // Data: { roomCode }
     // -------------------------------------------------------------------------
     socket.on('draw_end', (data) => {
-      const room = rooms.get(data.roomCode?.toUpperCase());
+      const roomCode = data.roomCode || socket.data.roomCode;
+      const room = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
       room._currentStroke = null;
@@ -611,11 +623,11 @@ function setupSocketHandler(io) {
     // Emitted when a player types something in the chat during a game.
     // Data: { roomCode, text }
     // -------------------------------------------------------------------------
-    socket.on('guess', ({ roomCode, text }) => {
-      const room = rooms.get(roomCode?.toUpperCase());
+    socket.on('guess', ({ text }) => {
+      const room = rooms.get(socket.data.roomCode?.toUpperCase());
       if (!room) return;
 
-      const player = room.getPlayerBySocketId(socket.id);
+      const player = room.getPlayer(socket.data.playerId) || room.getPlayerBySocketId(socket.id);
       if (!player) return;
 
       const game = games.get(room.id);
