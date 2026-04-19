@@ -194,12 +194,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setTotalRounds(data.totalRounds);
       setWord('');
       setWordHints([]);
+      setWordOptions([]); // Reset for new turn
       setMessages(prev => [...prev.slice(-49), { author: 'SYSTEM', text: `Round ${data.round} is starting!`, type: 'system' }]);
     });
 
-    socket.on('you_are_drawer', ({ isDrawer: value }) => {
-      console.log('[GameContext] SERVER PUSH: isDrawer =', value);
-      // Deprecated in favor of identity_sync + playerId
+    socket.on('word_options', (data) => {
+      console.log('[GameContext] RECEIVED word_options:', data.words);
+      setWordOptions(data.words);
     });
 
     socket.on('identity_sync', ({ playerId: sId }) => {
