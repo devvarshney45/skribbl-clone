@@ -151,8 +151,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setDrawTime(rest.settings?.drawTime || 80);
       
       setDrawTime(rest.settings?.drawTime || 80);
-      
-      setDrawTime(rest.settings?.drawTime || 80);
       setLoading(false);
       
       // Refresh session storage

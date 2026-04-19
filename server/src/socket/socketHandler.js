@@ -324,7 +324,7 @@ function setupSocketHandler(io) {
     // -------------------------------------------------------------------------
     socket.on('update_settings', async ({ roomCode, settings }) => {
       try {
-        const room = rooms.get(roomCode);
+        const room = rooms.get(roomCode?.toUpperCase());
         if (!room) return;
 
         const player = room.getPlayerBySocketId(socket.id);
@@ -358,7 +358,7 @@ function setupSocketHandler(io) {
     // Data: { roomCode, word }
     // -------------------------------------------------------------------------
     socket.on('word_chosen', ({ roomCode, word }) => {
-      const room = rooms.get(roomCode);
+      const room = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
       const game = games.get(room.id);
@@ -381,7 +381,7 @@ function setupSocketHandler(io) {
     // Data: { roomCode, x, y, color, brushSize }
     // -------------------------------------------------------------------------
     socket.on('draw_start', (data) => {
-      const room = rooms.get(data.roomCode);
+      const room = rooms.get(data.roomCode?.toUpperCase());
       if (!room) return;
 
       // Start a new stroke object and store it
@@ -412,7 +412,7 @@ function setupSocketHandler(io) {
     // Data: { roomCode, x, y }
     // -------------------------------------------------------------------------
     socket.on('draw_move', (data) => {
-      const room = rooms.get(data.roomCode);
+      const room = rooms.get(data.roomCode?.toUpperCase());
       if (!room) return;
 
       // Append point to the current stroke for replay purposes
@@ -433,7 +433,7 @@ function setupSocketHandler(io) {
     // Data: { roomCode }
     // -------------------------------------------------------------------------
     socket.on('draw_end', (data) => {
-      const room = rooms.get(data.roomCode);
+      const room = rooms.get(data.roomCode?.toUpperCase());
       if (!room) return;
 
       room._currentStroke = null;
@@ -447,7 +447,7 @@ function setupSocketHandler(io) {
     // Data: { roomCode }
     // -------------------------------------------------------------------------
     socket.on('canvas_clear', ({ roomCode }) => {
-      const room = rooms.get(roomCode);
+      const room = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
       room.currentStrokes = [];
@@ -463,7 +463,7 @@ function setupSocketHandler(io) {
     // Data: { roomCode }
     // -------------------------------------------------------------------------
     socket.on('draw_undo', ({ roomCode }) => {
-      const room = rooms.get(roomCode);
+      const room = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
       // Remove the last stroke
@@ -485,7 +485,7 @@ function setupSocketHandler(io) {
     // Data: { roomCode, text }
     // -------------------------------------------------------------------------
     socket.on('guess', ({ roomCode, text }) => {
-      const room = rooms.get(roomCode);
+      const room = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
       const player = room.getPlayerBySocketId(socket.id);
@@ -541,7 +541,7 @@ function setupSocketHandler(io) {
     // Data: { roomCode, text }
     // -------------------------------------------------------------------------
     socket.on('chat', ({ roomCode, text }) => {
-      const room = rooms.get(roomCode);
+      const room = rooms.get(roomCode?.toUpperCase());
       if (!room) return;
 
       const player = room.getPlayerBySocketId(socket.id);
