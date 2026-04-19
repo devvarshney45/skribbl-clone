@@ -38,7 +38,7 @@ const Room: React.FC = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-screen bg-mesh-pro p-4 md:p-10 flex flex-col items-center justify-between font-sans overflow-hidden">
+    <div className="min-h-[100dvh] w-screen bg-mesh-pro p-4 md:p-10 flex flex-col items-center justify-between font-sans lg:overflow-hidden">
       
       {/* 1. Global Header (Approx 10vh) */}
       <header className="w-full max-w-7xl flex items-center justify-between px-4 animate-pop-in">
@@ -59,10 +59,10 @@ const Room: React.FC = () => {
       </header>
 
       {/* 2. Main Tactical Pane (Approx 80vh) */}
-      <main className="w-full max-w-7xl flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden py-6">
+      <main className="w-full max-w-7xl flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6 py-6 lg:overflow-hidden">
         
         {/* Left: Artists (4 Cols) */}
-        <section className="lg:col-span-4 flex flex-col h-full overflow-hidden animate-slide-up" style={{ animationDelay: '100ms' }}>
+        <section className="lg:col-span-4 flex flex-col h-full lg:overflow-hidden animate-slide-up" style={{ animationDelay: '100ms' }}>
             <div className="flex items-center justify-between mb-4 px-3">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Connected Artists</span>
                 <span className="bg-brand-primary/10 text-brand-primary text-[9px] font-black px-3 py-1 rounded-full">{players.length}/12</span>

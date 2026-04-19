@@ -36,9 +36,16 @@ body {
   color: #f8fafc;
   min-height: 100vh;
   min-height: 100dvh;
-  overflow: hidden; /* Strict Vertical Containment */
+  overflow-x: hidden;
+  overflow-y: auto; /* Allow scrolling on smaller devices */
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+}
+
+@media (min-width: 1024px) {
+  body {
+    overflow: hidden; /* Strict Vertical Containment for Desktop App feel */
+  }
 }
 
 /* Custom Scrollbar - Tighter */

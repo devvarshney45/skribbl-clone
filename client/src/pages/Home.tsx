@@ -57,14 +57,14 @@ const Home: React.FC = () => {
   }, [searchParams]);
 
   return (
-    <div className="h-[100dvh] w-screen bg-mesh-pro flex flex-col overflow-hidden font-sans relative">
+    <div className="min-h-[100dvh] w-screen bg-mesh-pro flex flex-col lg:overflow-hidden font-sans relative">
       
       {/* Absolute Background Sync decorations */}
       <div className="absolute top-[-5%] left-[-10%] w-1/2 h-1/2 bg-brand-primary/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-5%] right-[-10%] w-1/2 h-1/2 bg-brand-secondary/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Main Content Layout Block */}
-      <div className="flex-grow flex flex-col items-center justify-between py-6 md:py-10 z-10 px-4">
+      <div className="flex-grow flex flex-col items-center justify-between py-10 lg:py-16 z-10 px-4">
         
         {/* 1. Header Area (Compact) */}
         <header className="flex flex-col items-center gap-2 animate-pop-in shrink-0">

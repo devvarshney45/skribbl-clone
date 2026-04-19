@@ -26,8 +26,8 @@ const WordModal: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-bg-main/95 backdrop-blur-xl animate-fade-in px-4">
-      <div className="w-full max-w-4xl text-center relative animate-pop-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-main/95 backdrop-blur-xl animate-fade-in overflow-y-auto custom-scrollbar">
+      <div className="w-full max-w-4xl text-center relative animate-pop-in py-10">
         <div className="mb-12 md:mb-16">
           <div className="inline-flex items-center gap-3 px-6 py-2 mb-8 panel rounded-full border border-white/10 opacity-80">
              <span className="w-2 h-2 rounded-full bg-brand-secondary animate-pulse shadow-[0_0_10px_rgba(45,212,191,0.5)]" />

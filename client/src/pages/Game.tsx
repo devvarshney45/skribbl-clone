@@ -44,7 +44,7 @@ const Game: React.FC = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-screen bg-mesh-pro text-white overflow-hidden flex flex-col relative font-sans">
+    <div className="min-h-[100dvh] w-screen bg-mesh-pro text-white lg:overflow-hidden flex flex-col relative font-sans">
       
       {/* 1. Pro HUD Header (Compact 8-10vh) */}
       <header className="h-14 md:h-18 flex items-center justify-between px-6 md:px-10 bg-bg-panel/60 backdrop-blur-xl border-b border-white/5 z-30 shrink-0 shadow-2xl">
@@ -84,7 +84,7 @@ const Game: React.FC = () => {
       </header>
 
       {/* 2. Primary Exhibition Floor (90-92vh) */}
-      <main className="flex-grow p-3 md:p-5 flex flex-col lg:flex-row gap-4 h-full overflow-hidden relative z-20">
+      <main className="flex-grow p-3 md:p-5 flex flex-col lg:flex-row gap-4 lg:h-full lg:overflow-hidden relative z-20">
         
         {/* Left HUD: Artist Stats (Compact) */}
         <aside className="hidden xl:flex w-64 shrink-0 h-full animate-slide-up" style={{ animationDelay: '100ms' }}>
@@ -92,8 +92,8 @@ const Game: React.FC = () => {
         </aside>
 
         {/* Center HUD: The Exhibition Plane (Maximized) */}
-        <section className="flex-grow flex flex-col h-full gap-3 relative z-0 min-w-0 animate-pop-in">
-          <div className="flex-grow flex items-center justify-center relative overflow-hidden">
+        <section className="flex-grow flex flex-col h-[50dvh] lg:h-full gap-3 relative z-0 min-w-0 animate-pop-in">
+          <div className="flex-grow flex items-center justify-center relative lg:overflow-hidden">
             <div className="w-full h-full panel rounded-[1.5rem] md:rounded-[2.5rem] p-3 md:p-4 border-white/5 shadow-2xl relative overflow-hidden flex flex-col group transition-all hover:border-white/10">
               
               {/* Dynamic Progress Aura */}
@@ -133,7 +133,7 @@ const Game: React.FC = () => {
         </section>
 
         {/* Right HUD: Intercom (Chat) */}
-        <aside className="w-full lg:w-72 xl:w-80 shrink-0 flex flex-col h-full animate-slide-up" style={{ animationDelay: '200ms' }}>
+        <aside className="w-full lg:w-72 xl:w-80 shrink-0 flex flex-col h-[30dvh] lg:h-full animate-slide-up" style={{ animationDelay: '200ms' }}>
           <Chat />
         </aside>
 
