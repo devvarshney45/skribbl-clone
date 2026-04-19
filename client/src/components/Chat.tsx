@@ -1,6 +1,5 @@
 // Chat.tsx
-// Redesigned for absolute spatial efficiency.
-// Features a high-density message list for sidebars.
+// Final Transformation: Tactical intercom.
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
@@ -26,25 +25,28 @@ const Chat: React.FC = () => {
   const isGuesser = phase === 'drawing' && !currentPlayerIsDrawer;
 
   return (
-    <div className="glass h-full rounded-[1.5rem] md:rounded-[2rem] flex flex-col border-white/5 shadow-2xl overflow-hidden bg-white/1 animate-fade-in relative">
+    <div className="panel h-full rounded-[2.5rem] flex flex-col border-white/5 shadow-2xl overflow-hidden bg-bg-panel/40 animate-slide-up relative">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/5 bg-white/2">
-        <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center justify-between">
+      <div className="px-6 py-5 border-b border-white/5 bg-white/2">
+        <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] flex items-center justify-between">
           Intercom
-          <span className="text-[7px] bg-indigo-600/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/10 tracking-widest uppercase">Direct</span>
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-brand-secondary/10 text-brand-secondary rounded-lg border border-brand-secondary/20">
+             <div className="w-1.5 h-1.5 rounded-full bg-brand-secondary animate-pulse" />
+             <span className="text-[8px] font-black uppercase tracking-tighter">Live</span>
+          </div>
         </h2>
       </div>
 
-      {/* Messages List - High Density */}
+      {/* Message Feed */}
       <div 
         ref={scrollRef}
-        className="flex-grow overflow-y-auto px-4 py-4 space-y-3 custom-scrollbar"
+        className="flex-grow overflow-y-auto px-5 py-6 space-y-4 custom-scrollbar"
       >
         {messages.map((msg, idx) => {
           if (msg.type === 'system') {
             return (
               <div key={idx} className="flex justify-center py-1">
-                <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.2em] italic">
+                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic opacity-60">
                    {msg.text}
                 </span>
               </div>
@@ -52,17 +54,19 @@ const Chat: React.FC = () => {
           }
 
           if (msg.type === 'correct') {
-            return (
-              <div key={idx} className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl text-[9px] font-black text-emerald-400 uppercase tracking-widest text-center flex items-center justify-center gap-2 animate-bounce">
-                  <span>⚡</span> {msg.text}
-              </div>
-            );
+             return (
+               <div key={idx} className="bg-brand-secondary/10 border border-brand-secondary/30 p-4 rounded-2xl animate-pop-in">
+                  <div className="text-[11px] font-black text-brand-secondary uppercase tracking-[0.3em] flex items-center justify-center gap-3">
+                     <span className="text-lg">✨</span> {msg.text}
+                  </div>
+               </div>
+             );
           }
 
           return (
-            <div key={idx} className="flex flex-col items-start max-w-full">
-              <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest ml-1 mb-0.5">{msg.author}</span>
-              <div className="px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-tight bg-white/5 text-slate-300 border border-white/2 break-words max-w-full">
+            <div key={idx} className="flex flex-col items-start gap-1">
+              <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest ml-1">{msg.author}</span>
+              <div className="px-4 py-2.5 rounded-2xl text-[13px] font-bold tracking-tight bg-bg-card/60 shadow-inner border border-white/5 text-slate-300 break-words max-w-full">
                 {msg.text}
               </div>
             </div>
@@ -70,34 +74,34 @@ const Chat: React.FC = () => {
         })}
 
         {messages.length === 0 && (
-           <div className="h-full flex flex-col items-center justify-center opacity-10 text-center px-6">
-              <span className="text-3xl mb-2">📡</span>
-              <p className="text-[8px] font-black uppercase tracking-widest">Awaiting Comms</p>
+           <div className="h-full flex flex-col items-center justify-center opacity-10 text-center gap-4">
+              <div className="text-5xl">📡</div>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em]">Signal Detected</p>
            </div>
         )}
       </div>
 
-      {/* Input Area - Very compact */}
-      <div className="p-4 border-t border-white/5 bg-white/2">
+      {/* Input Stage */}
+      <div className="p-6 border-t border-white/5 bg-white/1">
         {currentPlayerIsDrawer && phase === 'drawing' ? (
-           <div className="bg-white/3 p-3 rounded-xl flex items-center justify-center gap-3 border border-white/5 opacity-50">
-              <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic">Artist is focused</span>
+           <div className="bg-bg-card/50 p-4 rounded-2xl flex items-center justify-center gap-3 border border-white/2 grayscale opacity-40">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic">Artist remains silent</span>
            </div>
         ) : (
-          <form onSubmit={handleSubmit} className="relative">
+          <form onSubmit={handleSubmit} className="relative group">
             <input
               type="text"
-              placeholder={isGuesser ? "DECODE..." : "MESSAGE..."}
+              placeholder={isGuesser ? "DECODE THE ART..." : "MODULATE MSG..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-indigo-600/30 transition-all font-bold text-xs text-white placeholder:text-slate-800"
+              className="w-full bg-bg-card border border-white/10 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-brand-secondary/30 transition-all font-bold text-sm text-white placeholder:text-slate-800"
               maxLength={100}
             />
             <button 
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-all shadow-xl shadow-indigo-600/20 active:scale-90"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white flex items-center justify-center transition-all btn-game active:scale-95"
             >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                    <path d="M5 12h14M12 5l7 7-7 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
             </button>
