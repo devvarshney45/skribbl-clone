@@ -1,6 +1,6 @@
 // Game.tsx
-// The main game board page.
-// Orchestrates the Canvas, Chat, Scoreboard, and top-bar info.
+// Redesigned with a "Senior Level" highly-polished game board.
+// Orchestrates the Canvas, Chat, Scoreboard, and top-bar info in a premium layout.
 
 import React from 'react';
 import { useGame } from '../context/GameContext';
@@ -32,8 +32,8 @@ const Game: React.FC = () => {
   const renderWordDisplay = () => {
     if (isMyTurn || phase === 'roundEnd') {
       return (
-        <span className="text-2xl font-black tracking-[0.3em] uppercase text-purple-400">
-          {word || "WAITING..."}
+        <span className="text-3xl font-black tracking-[0.2em] uppercase text-indigo-400 drop-shadow-sm">
+          {word || "WAITING..." }
         </span>
       );
     }
@@ -43,8 +43,8 @@ const Game: React.FC = () => {
         {wordHints.map((char, i) => (
           <div 
             key={i} 
-            className={`w-8 h-10 flex items-center justify-center border-b-4 text-2xl font-black uppercase transition-all ${
-              char === ' ' ? 'border-transparent mx-2' : 'border-gray-700 text-white'
+            className={`w-9 h-12 flex items-center justify-center border-b-4 text-3xl font-black uppercase transition-all duration-500 ${
+              char === ' ' ? 'border-transparent mx-2' : 'border-slate-800 text-white animate-fade-in'
             }`}
           >
             {char !== '_' ? char : ''}
@@ -55,83 +55,102 @@ const Game: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-[#03040b] bg-mesh text-white overflow-hidden flex flex-col">
       {/* Top Navigation / Status Bar */}
-      <header className="h-16 flex items-center justify-between px-6 bg-gray-900 border-b border-gray-800 shadow-xl z-20">
-        <div className="flex items-center gap-8">
+      <header className="h-20 flex items-center justify-between px-8 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20">
+        <div className="flex items-center gap-10">
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Round</span>
-            <div className="text-xl font-bold tracking-tighter">
-              {round} <span className="text-xs text-gray-700">/ {totalRounds}</span>
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none mb-1.5">Session Progress</span>
+            <div className="text-2xl font-black tracking-tighter">
+              {round} <span className="text-xs text-slate-700 mx-1">/</span> <span className="text-slate-500">{totalRounds}</span>
             </div>
           </div>
           
-          <div className="h-8 w-px bg-gray-800" />
+          <div className="h-10 w-px bg-white/5" />
           
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Time Left</span>
-            <div className={`text-xl font-mono font-black ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-yellow-500'}`}>
-              {timeLeft}s
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none mb-1.5">Game Clock</span>
+            <div className={`text-2xl font-mono font-black tabular-nums ${timeLeft < 15 ? 'text-rose-500 animate-pulse' : 'text-indigo-400'}`}>
+              {timeLeft}<span className="text-xs ml-0.5">S</span>
             </div>
           </div>
         </div>
 
         {/* Word Display (Center) */}
         <div className="hidden md:flex items-center justify-center flex-grow">
-          {renderWordDisplay()}
+          <div className="glass px-10 py-3 rounded-2xl border-white/5 shadow-inner">
+            {renderWordDisplay()}
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="text-right flex flex-col">
-            <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest leading-none mb-1">Room Code</span>
-            <span className="font-mono font-bold text-gray-300">{roomCode}</span>
+        <div className="flex items-center gap-6">
+          <div className="text-right flex flex-col hidden lg:flex">
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Studio Code</span>
+            <span className="font-mono font-bold text-slate-300 tracking-widest">{roomCode}</span>
           </div>
-          <div className="w-10 h-10 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:bg-gray-700 transition-colors">
-            ⚙️
+          <div className="w-11 h-11 glass border-white/10 rounded-2xl flex items-center justify-center shadow-lg cursor-pointer hover:bg-white/10 transition-all hover:scale-105 active:scale-95">
+            <span className="text-xl">⚙️</span>
           </div>
         </div>
       </header>
 
       {/* Main Game Layout */}
-      <main className="flex-grow p-4 lg:p-6 flex flex-col lg:flex-row gap-6 overflow-hidden">
+      <main className="flex-grow p-5 lg:p-8 flex flex-col lg:flex-row gap-6 overflow-hidden">
         
-        {/* Left Side: Scoreboard */}
-        <aside className="w-full lg:w-64 flex-shrink-0 order-2 lg:order-1 h-1/3 lg:h-auto">
+        {/* Left Sidebar: Scoreboard */}
+        <aside className="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1 h-1/4 lg:h-auto animate-fade-in">
           <Scoreboard />
         </aside>
 
-        {/* Center Side: Canvas & Toolbar */}
-        <section className="flex-grow flex flex-col order-1 lg:order-2 h-full">
-          <div className="flex-grow flex items-center justify-center">
-            <div className="w-full max-w-4xl h-full flex flex-col justify-center">
-              {/* Progress bar timer (visual only) */}
-              <div className="w-full h-2 bg-gray-900 rounded-full mb-2 overflow-hidden border border-gray-800">
+        {/* Center Section: Canvas & Controls */}
+        <section className="flex-grow flex flex-col order-1 lg:order-2 h-full gap-4 relative">
+          <div className="flex-grow flex items-center justify-center relative">
+            <div className="w-full h-full glass rounded-[2.5rem] p-4 border-white/10 shadow-2xl relative overflow-hidden flex flex-col">
+              {/* Dynamic progress timer bar */}
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-white/5 overflow-hidden">
                 <div 
                   className={`h-full transition-all duration-1000 ease-linear ${
-                    timeLeft < 15 ? 'bg-red-500' : timeLeft < 40 ? 'bg-yellow-500' : 'bg-green-500'
+                    timeLeft < 15 ? 'bg-rose-500' : 'bg-indigo-500'
                   }`}
                   style={{ width: `${(timeLeft / 80) * 100}%` }}
                 />
               </div>
-              <Canvas />
-              <Toolbar />
+              
+              <div className="flex-grow relative w-full h-full rounded-2xl overflow-hidden bg-white/5">
+                <Canvas />
+              </div>
             </div>
+
+            {/* Floating Toolbar for Drawer */}
+            {isMyTurn && (
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 animate-fade-in">
+                <Toolbar />
+              </div>
+            )}
+          </div>
+          
+          {/* Subtle instructions / status */}
+          <div className="flex justify-between items-center px-4">
+             <span className="text-[9px] font-black text-slate-700 uppercase tracking-[0.25em]">Precision Canvas v2.4</span>
+             <span className="text-[9px] font-black text-indigo-500/50 uppercase tracking-[0.25em]">
+               {isMyTurn ? "You are the master artist" : "Observe and decode the art"}
+             </span>
           </div>
         </section>
 
-        {/* Right Side: Chat */}
-        <aside className="w-full lg:w-80 flex-shrink-0 order-3 h-1/3 lg:h-auto">
+        {/* Right Sidebar: Chat */}
+        <aside className="w-full lg:w-80 flex-shrink-0 order-3 h-1/4 lg:h-auto animate-fade-in delay-200">
           <Chat />
         </aside>
 
       </main>
 
-      {/* Modals & Overlays */}
+      {/* Overlays & Modals */}
       <WordModal />
       <GameOver />
 
-      {/* Mobile Center Word (shows only on small screens) */}
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur border border-gray-800 px-6 py-2 rounded-full z-30 shadow-2xl">
+      {/* Mobile-Only Word Display */}
+      <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 glass px-8 py-3 rounded-full z-30 shadow-2xl border-white/10 animate-fade-in">
         {renderWordDisplay()}
       </div>
     </div>
