@@ -100,7 +100,7 @@ const Game: React.FC = () => {
               <div className="h-16 flex items-center justify-between px-8 bg-black/40 border-b border-white/5 z-20">
                 <div className="flex flex-col">
                     <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">Secret Transmission</span>
-                    <WordDisplay />
+                    {renderWordDisplay()}
                 </div>
                 
                 <div className="flex items-center gap-6">

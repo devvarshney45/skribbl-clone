@@ -10,7 +10,7 @@ import Room from './pages/Room';
 import Game from './pages/Game';
 
 const App: React.FC = () => {
-  const { roomCode, phase, loading } = useGame();
+  const { phase, loading } = useGame();
 
   if (loading) {
     return (
@@ -36,7 +36,7 @@ const App: React.FC = () => {
         <Route 
           path="/room/:code" 
           element={
-            phase === 'waiting' || phase === '' ? (
+            phase === 'waiting' ? (
               <Room />
             ) : phase === 'choosing' || phase === 'drawing' || phase === 'roundEnd' || phase === 'gameOver' ? (
               <Game />

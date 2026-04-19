@@ -7,7 +7,7 @@ import { useSocket } from './useSocket';
 
 export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>) {
   const socket = useSocket();
-  const { roomCode, color, size, currentDrawerId, playerId } = useGame();
+  const { roomCode, color, size, playerId } = useGame();
   
   // History for sync and resize — mirrors server's currentStrokes
   const strokes = useRef<any[]>([]);

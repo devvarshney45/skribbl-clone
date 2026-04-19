@@ -25,11 +25,10 @@ const Scoreboard: React.FC = () => {
           const isMe = player.id === playerId;
           
           let rankColor = 'text-slate-600';
-          let badgeColor = 'bg-white/5 text-slate-400';
           
-          if (index === 0) rankColor = 'text-brand-highlight', badgeColor = 'bg-brand-highlight/20 text-brand-highlight';
-          else if (index === 1) rankColor = 'text-slate-200', badgeColor = 'bg-slate-200/10 text-slate-200';
-          else if (index === 2) rankColor = 'text-orange-400', badgeColor = 'bg-orange-400/10 text-orange-400';
+          if (index === 0) rankColor = 'text-brand-highlight';
+          else if (index === 1) rankColor = 'text-slate-200';
+          else if (index === 2) rankColor = 'text-orange-400';
           
           return (
             <div 

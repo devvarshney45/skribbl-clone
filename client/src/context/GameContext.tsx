@@ -2,7 +2,8 @@
 // Manages the global state of the game, including player info,
 // room details, and real-time game status.
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useSocket } from '../hooks/useSocket';
 import confetti from 'canvas-confetti';
 
@@ -52,7 +53,7 @@ interface GameContextType {
 
   // Actions
   joinRoom: (name: string, code: string) => void;
-  createRoom: (name: string, code: string) => void;
+  createRoom: (name: string, code: string, isPrivate?: boolean) => void;
   markReady: () => void;
   startGame: () => void;
   chooseWord: (word: string) => void;
@@ -140,7 +141,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!socket) return;
 
     // Room events
-    socket.on('room_created', ({ roomId: rid, roomCode: code, player, settings, isPrivate: priv }) => {
+    socket.on('room_created', ({ roomCode: code, player, settings, isPrivate: priv }) => {
       setRoomCode(code);
       setPlayerId(player.id);
       setPlayers([player]);
@@ -153,7 +154,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       sessionStorage.setItem('skribbl_player_name', player.name);
     });
 
-    socket.on('joined_room', ({ roomId: rid, roomCode: code, player, settings, isPrivate: priv }) => {
+    socket.on('joined_room', ({ roomCode: code, player, settings, isPrivate: priv }) => {
       setRoomCode(code);
       setPlayerId(player.id);
       setIsPrivate(priv ?? false);

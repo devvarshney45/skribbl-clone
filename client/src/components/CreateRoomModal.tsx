@@ -16,7 +16,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClose, onCr
   const [drawTime, setDrawTime] = useState(80);
   const [maxPlayers, setMaxPlayers] = useState(8);
   const [wordCount, setWordCount] = useState(3);
-  const [hints, setHints] = useState(2);
+  const [hints] = useState(2);
 
   if (!isOpen) return null;
 
