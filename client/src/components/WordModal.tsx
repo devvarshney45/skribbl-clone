@@ -1,90 +1,51 @@
 // WordModal.tsx
-// Modal shown to the current drawer at the start of their round.
-// Players choose one of three words to draw.
+// Redesigned with a premium "Selection Studio" look.
 
-import React, { useState, useEffect } from 'react';
-import { useSocket } from '../hooks/useSocket';
+import React from 'react';
 import { useGame } from '../context/GameContext';
 
 const WordModal: React.FC = () => {
-  const socket = useSocket();
-  const { phase, playerId, currentDrawerId, selectWord } = useGame();
-  
-  const [wordOptions, setWordOptions] = useState<string[]>([]);
-  const [countdown, setCountdown] = useState(10);
-  
-  const isMyTurn = playerId === currentDrawerId && phase === 'choosing';
+  const { phase, wordOptions, chooseWord, currentPlayerIsDrawer } = useGame();
 
-  // ---------------------------------------------------------------------------
-  // Socket Listeners
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
-    if (!socket) return;
-
-    // Listen for word choices from the server
-    socket.on('word_options', (data: { words: string[] }) => {
-      setWordOptions(data.words);
-      setCountdown(10);
-    });
-
-    return () => {
-      socket.off('word_options');
-    };
-  }, [socket]);
-
-  // ---------------------------------------------------------------------------
-  // Modal Countdown logic
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isMyTurn && wordOptions.length > 0 && countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((c) => c - 1);
-      }, 1000);
-    } else if (isMyTurn && countdown === 0 && wordOptions.length > 0) {
-      // Auto-select first word if time runs out
-      selectWord(wordOptions[0]);
-    }
-    return () => clearInterval(timer);
-  }, [isMyTurn, wordOptions, countdown, selectWord]);
-
-  // If it's not the user's turn to choose or phase is not choosing, don't show
-  if (!isMyTurn || wordOptions.length === 0) return null;
+  if (phase !== 'choosing' || !currentPlayerIsDrawer) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in transition-all">
-      <div className="bg-gray-900 border-2 border-purple-500/50 rounded-3xl p-8 max-w-lg w-full shadow-[0_0_50px_rgba(168,85,247,0.3)] animate-in zoom-in-95 duration-300">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-black italic text-white tracking-widest uppercase mb-2">
-            Pick a word
-          </h2>
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-gray-500 font-bold uppercase text-xs tracking-widest">Choosing in:</span>
-            <span className={`text-xl font-black ${countdown < 4 ? 'text-red-500 animate-pulse' : 'text-purple-400'}`}>
-              {countdown}s
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-fade-in">
+      <div className="glass w-full max-w-2xl p-10 rounded-[3rem] border-white/10 shadow-3xl text-center relative overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-indigo-500/10 blur-[100px] pointer-events-none" />
+
+        <div className="relative">
+          <div className="inline-block px-4 py-1.5 mb-6 bg-indigo-500/10 rounded-full border border-indigo-500/20">
+            <span className="text-[10px] font-black tracking-[0.25em] text-indigo-400 uppercase">
+              ARTIST SELECTION
             </span>
+          </div>
+          
+          <h2 className="text-4xl font-black italic text-white mb-4">Choose Your Subject</h2>
+          <p className="text-slate-500 font-medium mb-12">Select the concept you'd like to bring to life on the canvas.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {wordOptions.map((word) => (
+              <button
+                key={word}
+                onClick={() => chooseWord(word)}
+                className="group relative p-8 rounded-3xl bg-white/5 border border-white/5 hover:border-indigo-500/50 hover:bg-white/10 transition-all duration-300 transform hover:scale-105 active:scale-95"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="text-xl font-black text-white uppercase tracking-wider group-hover:text-indigo-300 transition-colors">
+                  {word}
+                </span>
+                <div className="mt-4 text-[9px] font-black text-slate-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                  Pick this word
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          {wordOptions.map((word) => (
-            <button
-              key={word}
-              onClick={() => selectWord(word)}
-              className="group relative bg-gray-800 hover:bg-purple-600 border border-gray-700 hover:border-purple-400 py-6 px-4 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-95 text-center overflow-hidden"
-            >
-              <span className="relative z-10 text-xl font-bold tracking-wide text-white group-hover:text-white">
-                {word}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-8 text-center">
-          <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em]">
-            Tip: Choose something you can actually draw!
-          </p>
+        <div className="mt-12 text-[9px] font-black text-slate-700 uppercase tracking-[0.3em]">
+          Hurry! The studio is waiting for your choice.
         </div>
       </div>
     </div>

@@ -1,136 +1,98 @@
 // Chat.tsx
-// Displays the real-time chat and guessing log.
-// Correct guesses are highlighted, and the input is restricted for the current drawer.
+// Redesigned with a modern, glassmorphism messaging look.
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useSocket } from '../hooks/useSocket';
+import React, { useState, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 
-interface Message {
-  type: 'chat' | 'correct' | 'system';
-  playerName?: string;
-  text: string;
-}
-
 const Chat: React.FC = () => {
-  const socket = useSocket();
-  const { roomCode, phase, currentDrawerId, playerId, sendGuess, sendChat } = useGame();
-  
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { messages, sendGuess, currentDrawerId, playerId, phase } = useGame();
   const [inputText, setInputText] = useState('');
-  
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isMyTurn = playerId === currentDrawerId && phase === 'drawing';
+  const canGuess = playerId !== currentDrawerId && (phase === 'drawing' || phase === 'choosing');
 
-  // ---------------------------------------------------------------------------
-  // Auto-scroll to bottom on new message
-  // ---------------------------------------------------------------------------
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    scrollToBottom();
   }, [messages]);
 
-  // ---------------------------------------------------------------------------
-  // Socket Listeners
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on('chat_message', (msg: Message) => {
-      setMessages((prev) => [...prev, msg]);
-    });
-
-    return () => {
-      socket.off('chat_message');
-    };
-  }, [socket]);
-
-  // ---------------------------------------------------------------------------
-  // Handle Submit
-  // ---------------------------------------------------------------------------
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    if (phase === 'drawing') {
-      sendGuess(inputText);
-    } else {
-      sendChat(inputText);
-    }
-
+    sendGuess(inputText);
     setInputText('');
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 border border-gray-800 rounded-3xl shadow-xl overflow-hidden">
-      {/* Messages List */}
-      <div 
-        ref={scrollRef}
-        className="flex-grow p-4 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-gray-700"
-      >
-        {messages.length === 0 && (
-          <div className="text-gray-600 text-[10px] font-black uppercase text-center mt-4 tracking-widest">
-            Begone, silence! Say something!
-          </div>
-        )}
-        
+    <div className="glass h-full rounded-[2.5rem] flex flex-col border-white/5 shadow-2xl overflow-hidden animate-fade-in relative">
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between">
+        <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-3">
+          Session Chat
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        </h2>
+      </div>
+
+      {/* Messages list */}
+      <div className="flex-grow overflow-y-auto px-4 py-4 space-y-3 custom-scrollbar">
         {messages.map((msg, i) => (
           <div 
             key={i} 
-            className={`text-sm py-1 px-3 rounded-xl break-words transition-all animate-in fade-in slide-in-from-bottom-2 ${
-              msg.type === 'correct' 
-                ? 'bg-green-600/20 text-green-400 border border-green-500/30 font-bold' 
-                : msg.type === 'system'
-                ? 'bg-yellow-500/10 text-yellow-500 italic border border-yellow-500/20 text-xs'
-                : 'bg-gray-800/50 text-white'
+            className={`flex flex-col animate-fade-in ${
+              msg.type === 'system' ? 'items-center my-4' : 'items-start'
             }`}
           >
-            {msg.playerName && msg.type === 'chat' && (
-              <span className="font-black text-xs text-gray-500 uppercase mr-2 tracking-tighter">
-                {msg.playerName}:
+            {msg.type === 'system' ? (
+              <span className="text-[9px] font-black text-slate-600 bg-white/5 px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/5 text-center leading-loose">
+                {msg.text}
               </span>
+            ) : msg.type === 'correct' ? (
+              <div className="w-full bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl flex items-center gap-3">
+                <span className="text-lg">🎯</span>
+                <div>
+                  <div className="text-[10px] font-black text-emerald-400 uppercase tracking-tighter">Perfect Guess</div>
+                  <div className="text-xs font-bold text-white">{msg.text}</div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1 max-w-[90%]">
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">{msg.author}</span>
+                <div className="bg-white/5 border border-white/5 px-4 py-3 rounded-2xl rounded-tl-none">
+                  <p className="text-xs font-semibold text-slate-300 leading-relaxed">{msg.text}</p>
+                </div>
+              </div>
             )}
-            {msg.text}
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 bg-gray-950 border-t border-gray-800">
-        <form onSubmit={handleSubmit} className="relative">
+      {/* Input area */}
+      <div className="p-4 bg-black/20">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"
+            placeholder={canGuess ? "Decoded your guess..." : "Observe the art..."}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            disabled={isMyTurn}
-            placeholder={
-              isMyTurn 
-                ? "Shh! You're the artist..." 
-                : phase === 'drawing' 
-                ? "Type your guess here!" 
-                : "Type to chat..."
-            }
-            className={`w-full py-3 px-4 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 ${
-              isMyTurn
-                ? 'bg-gray-900 text-gray-700 cursor-not-allowed italic'
-                : 'bg-gray-800 text-white focus:ring-purple-500 border border-gray-700'
-            }`}
+            disabled={!canGuess}
+            className="flex-grow bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all placeholder:text-slate-600 disabled:opacity-30 disabled:grayscale"
+            maxLength={100}
           />
-          {!isMyTurn && (
-             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-25">
-                ↵
-             </div>
-          )}
+          <button 
+            type="submit" 
+            disabled={!canGuess}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white w-12 h-12 rounded-2xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-30"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+          </button>
         </form>
-        <p className="mt-2 text-[8px] font-black uppercase tracking-widest text-center text-gray-600">
-          {isMyTurn 
-            ? "Don't spoil the word!" 
-            : phase === 'drawing' 
-            ? "Faster guess = More points" 
-            : "Project Round Demo"}
-        </p>
       </div>
     </div>
   );
