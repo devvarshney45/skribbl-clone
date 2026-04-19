@@ -5,11 +5,11 @@ import React from 'react';
 import { useGame } from '../context/GameContext';
 
 const PhaseOverlay: React.FC = () => {
-  const { phase, round, word, currentDrawerId, players, timeLeft } = useGame();
+  const { phase, round, word } = useGame();
 
   if (phase !== 'roundEnd') return null;
 
-  const drawer = players.find(p => p.id === currentDrawerId);
+
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-bg-main/90 backdrop-blur-xl animate-fade-in pointer-events-none">

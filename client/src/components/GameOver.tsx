@@ -5,7 +5,7 @@ import { useGame } from '../context/GameContext';
 import { useNavigate } from 'react-router-dom';
 
 const GameOver: React.FC = () => {
-  const { phase, players, winner, resetGame, playerId } = useGame();
+  const { phase, players, resetGame, playerId } = useGame();
   const navigate = useNavigate();
 
   if (phase !== 'gameOver') return null;
