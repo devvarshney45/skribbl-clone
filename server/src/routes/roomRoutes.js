@@ -28,7 +28,7 @@ function generateRoomCode() {
 // ---------------------------------------------------------------------------
 router.post('/', async (req, res) => {
   try {
-    const { hostName, settings } = req.body;
+    const { hostName, settings, isPublic = true } = req.body;
 
     // Validate input
     if (!hostName || hostName.trim() === '') {
@@ -60,11 +60,11 @@ router.post('/', async (req, res) => {
 
     // Insert the new room into PostgreSQL
     await pool.query(`
-      INSERT INTO rooms (id, code, host_id, settings, status)
-      VALUES ($1, $2, $3, $4, 'waiting')
-    `, [roomId, roomCode, hostId, JSON.stringify(finalSettings)]);
+      INSERT INTO rooms (id, code, host_id, settings, status, is_public)
+      VALUES ($1, $2, $3, $4, 'waiting', $5)
+    `, [roomId, roomCode, hostId, JSON.stringify(finalSettings), isPublic]);
 
-    console.log(`[API] Room created — code: ${roomCode}, id: ${roomId}`);
+    console.log(`[API] Room created — code: ${roomCode}, id: ${roomId}, public: ${isPublic}`);
 
     return res.status(201).json({ roomId, roomCode });
   } catch (error) {
@@ -151,6 +151,39 @@ router.get('/:code/join', async (req, res) => {
     return res.json({ canJoin: true, roomId: room.id });
   } catch (error) {
     console.error('[API Error] GET /api/rooms/:code/join:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/rooms/find/public
+// Logic: Find a room that is waiting, is public, and is not full.
+// ---------------------------------------------------------------------------
+router.get('/find/public', async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT r.code, r.settings, (SELECT COUNT(*) FROM players p WHERE p.room_id = r.id) as player_count
+      FROM rooms r
+      WHERE r.status = 'waiting' 
+      AND r.is_public = TRUE
+      ORDER BY RANDOM()
+      LIMIT 1
+    `);
+
+    const room = rows[0];
+    if (!room) {
+      return res.status(404).json({ error: 'No public studios available. Create one!' });
+    }
+
+    const settings = typeof room.settings === 'string' ? JSON.parse(room.settings) : room.settings;
+    if (parseInt(room.player_count) >= settings.maxPlayers) {
+      // If the random one is full, just return empty for now (simplified)
+      return res.status(404).json({ error: 'All studios are currently full.' });
+    }
+
+    return res.json({ roomCode: room.code });
+  } catch (error) {
+    console.error('[API Error] GET /api/rooms/find/public:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

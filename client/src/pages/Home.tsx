@@ -15,6 +15,7 @@ const Home: React.FC = () => {
 
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,6 +31,7 @@ const Home: React.FC = () => {
     try {
       const response = await axios.post(`${API_URL}/api/rooms`, {
         hostName: name,
+        isPublic: isPublic,
         settings: {
           rounds: 3,
           drawTime: 80,
@@ -42,6 +44,28 @@ const Home: React.FC = () => {
     } catch (err: any) {
       console.error('Create room error:', err);
       setError('Failed to create room. Is the backend server running?');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoinPublic = async () => {
+    if (!name.trim()) {
+      setError('Please enter your name first!');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.get(`${API_URL}/api/rooms/find/public`);
+      const { roomCode } = response.data;
+      joinRoom(name, roomCode);
+      navigate(`/room/${roomCode}`);
+    } catch (err: any) {
+      console.error('Join public error:', err);
+      setError(err.response?.data?.error || 'No public studios found. Start one!');
     } finally {
       setLoading(false);
     }
@@ -130,6 +154,27 @@ const Home: React.FC = () => {
               </div>
             </div>
 
+            {/* Visibility Toggle */}
+            <div className="flex items-center justify-between px-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                Studio Visibility
+              </span>
+              <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+                <button
+                  onClick={() => setIsPublic(true)}
+                  className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${isPublic ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  PUBLIC
+                </button>
+                <button
+                  onClick={() => setIsPublic(false)}
+                  className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${!isPublic ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  PRIVATE
+                </button>
+              </div>
+            </div>
+
             <div className="flex flex-col gap-4">
               {/* Create Button */}
               <button
@@ -143,6 +188,14 @@ const Home: React.FC = () => {
                     <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
                   </>
                 )}
+              </button>
+
+              <button
+                onClick={handleJoinPublic}
+                disabled={loading}
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-4 rounded-2xl font-black text-[10px] tracking-widest transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? 'SEARCHING...' : '✨ JOIN PUBLIC LOUNGE'}
               </button>
 
               <div className="flex items-center gap-4 py-2">

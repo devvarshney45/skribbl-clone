@@ -202,10 +202,59 @@ function setupSocketHandler(io) {
         // Notify everyone else that a new player arrived
         socket.to(room.id).emit('player_joined', { player: player.toJSON() });
 
+    });
+
+    // -------------------------------------------------------------------------
+    // reconnect_session
+    // Emitted when a user refreshes the page and tries to re-attach to their session.
+    // -------------------------------------------------------------------------
+    socket.on('reconnect_session', async ({ playerId, roomCode }) => {
+      try {
+        const room = rooms.get(roomCode?.toUpperCase());
+        if (!room) {
+          socket.emit('session_expired', { message: 'Studio no longer exists.' });
+          return;
+        }
+
+        const player = room.getPlayer(playerId);
+        if (!player) {
+          socket.emit('session_expired', { message: 'Your session has expired.' });
+          return;
+        }
+
+        // Update socket ID and mapping
+        player.socketId = socket.id;
+        socket.join(room.id);
+        socket.data.playerId = player.id;
+        socket.data.roomCode = room.code;
+
+        // Update DB
+        await pool.query('UPDATE players SET socket_id = $1 WHERE id = $2', [socket.id, player.id]);
+
+        const game = games.get(room.id);
+
+        console.log(`[Socket] ${player.name} reconnected to ${room.code}`);
+
+        socket.emit('reconnected', {
+          player: player.toJSON(),
+          roomCode: room.code,
+          settings: room.settings,
+          phase: game?.phase || room.status,
+          currentDrawerId: game?.getCurrentDrawer()?.id || null,
+          wordHints: game?.wordHints || [],
+          timeLeft: game?.timeLeft || 0,
+          round: game?.currentRound || 1,
+          totalRounds: game?.totalRounds || room.settings.rounds,
+        });
+
+        // Replay drawing if in game
+        if (room.currentStrokes.length > 0) {
+          socket.emit('canvas_replay', { strokes: room.currentStrokes });
+        }
+
         broadcastPlayerList(io, room);
       } catch (error) {
-        console.error('[Socket Error] join_room:', error);
-        socket.emit('error', { message: 'Failed to join room.' });
+        console.error('[Socket Error] reconnect:', error);
       }
     });
 
@@ -265,6 +314,37 @@ function setupSocketHandler(io) {
       } catch (error) {
         console.error('[Socket Error] start_game:', error);
         socket.emit('error', { message: 'Failed to start game.' });
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // update_settings
+    // Only the host can update room settings while in the lobby.
+    // Data: { roomCode, settings: { rounds, drawTime, ... } }
+    // -------------------------------------------------------------------------
+    socket.on('update_settings', async ({ roomCode, settings }) => {
+      try {
+        const room = rooms.get(roomCode);
+        if (!room) return;
+
+        const player = room.getPlayerBySocketId(socket.id);
+        if (!player || !player.isHost) return;
+
+        // Merge and update settings
+        room.settings = { ...room.settings, ...settings };
+
+        // Update DB
+        await pool.query('UPDATE rooms SET settings = $1 WHERE id = $2', [
+          JSON.stringify(room.settings),
+          room.id,
+        ]);
+
+        console.log(`[Socket] Settings updated in room ${room.code}:`, room.settings);
+
+        // Broadcast updated settings to everyone in the room
+        io.to(room.id).emit('settings_updated', { settings: room.settings });
+      } catch (error) {
+        console.error('[Socket Error] update_settings:', error);
       }
     });
 
@@ -493,17 +573,15 @@ function setupSocketHandler(io) {
         const room = rooms.get(roomCode);
         if (!room) return;
 
-        const player = room.removePlayer(playerId);
+        const player = room.getPlayer(playerId);
         if (!player) return;
 
-        // Remove from PostgreSQL
-        await pool.query('DELETE FROM players WHERE id = $1', [playerId]);
-
-        // Notify the room
-        io.to(room.id).emit('player_left', { playerId, playerName: player.name });
+        // Note: We don't delete from players table here anymore to allow re-connection
+        // Instead, we just notify others that the player is "offline" (implicit by socket id change)
+        
         io.to(room.id).emit('chat_message', {
           type: 'system',
-          text: `${player.name} left the game.`,
+          text: `${player.name} (Offline)`,
         });
 
         // If nobody is left, clean up the room entirely

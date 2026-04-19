@@ -4,6 +4,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSocket } from '../hooks/useSocket';
+import confetti from 'canvas-confetti';
 
 // Type definitions for the game state
 export interface Player {
@@ -24,6 +25,7 @@ interface GameContextType {
   roomCode: string;
   setRoomCode: (code: string) => void;
   playerId: string;
+  loading: boolean;
   
   // Game State
   players: Player[];
@@ -37,6 +39,8 @@ interface GameContextType {
   round: number;
   totalRounds: number;
   winner: Player | null;
+  drawTime: number;
+  isPublic: boolean;
 
   // Status Helpers
   currentPlayerIsDrawer: boolean;
@@ -56,6 +60,7 @@ interface GameContextType {
   sendChat: (text: string) => void;
   undo: () => void;
   clearCanvas: () => void;
+  updateSettings: (settings: { rounds?: number; drawTime?: number }) => void;
   resetGame: () => void;
 }
 
@@ -68,6 +73,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [playerId, setPlayerId] = useState('');
+  const [loading, setLoading] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [phase, setPhase] = useState<GamePhase>('waiting');
   const [currentDrawerId, setCurrentDrawerId] = useState<string | null>(null);
@@ -78,6 +84,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [timeLeft, setTimeLeft] = useState(0);
   const [round, setRound] = useState(1);
   const [totalRounds, setTotalRounds] = useState(3);
+  const [drawTime, setDrawTime] = useState(80);
+  const [isPublic, setIsPublic] = useState(true);
   const [winner, setWinner] = useState<Player | null>(null);
   
   // Brush state
@@ -87,24 +95,78 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // ---------------------------------------------------------------------------
   // Socket Event Listeners
   // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Session Persistence Effect
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const savedPlayerId = localStorage.getItem('skribbl_player_id');
+    const savedRoomCode = localStorage.getItem('skribbl_room_code');
+    const savedName = localStorage.getItem('skribbl_player_name');
+
+    if (savedPlayerId && savedRoomCode && savedName) {
+      console.log('[GameContext] Found existing session, attempting reconnect...');
+      setPlayerName(savedName);
+      setRoomCode(savedRoomCode);
+      setPlayerId(savedPlayerId);
+      setLoading(true);
+      socket.emit('reconnect_session', { playerId: savedPlayerId, roomCode: savedRoomCode });
+    }
+  }, []);
+
   useEffect(() => {
     if (!socket) return;
 
     // Room events
-    socket.on('room_created', (data) => {
-      setRoomCode(data.roomCode);
-      setPlayerId(data.player.id);
-      setTotalRounds(data.settings.rounds);
+    socket.on('room_created', ({ roomId: rid, roomCode: code, player, settings }) => {
+      setRoomCode(code);
+      setPlayerId(player.id);
+      setPlayers([player]);
+      
+      // Save session
+      localStorage.setItem('skribbl_player_id', player.id);
+      localStorage.setItem('skribbl_room_code', code);
+      localStorage.setItem('skribbl_player_name', player.name);
     });
 
-    socket.on('joined_room', (data) => {
-      setRoomCode(data.roomCode);
-      setPlayerId(data.player.id);
-      setTotalRounds(data.settings.rounds);
+    socket.on('joined_room', ({ roomId: rid, roomCode: code, player, settings }) => {
+      setRoomCode(code);
+      setPlayerId(player.id);
+      
+      // Save session
+      localStorage.setItem('skribbl_player_id', player.id);
+      localStorage.setItem('skribbl_room_code', code);
+      localStorage.setItem('skribbl_player_name', player.name);
     });
 
-    socket.on('player_list', (data) => {
-      setPlayers(data.players);
+    socket.on('reconnected', ({ player, roomCode: code, phase: p, ...rest }) => {
+      setPlayerId(player.id);
+      setRoomCode(code);
+      setPhase(p as any);
+      setCurrentDrawerId(rest.currentDrawerId);
+      setWordHints(rest.wordHints);
+      setTimeLeft(rest.timeLeft);
+      setRound(rest.round);
+      setTotalRounds(rest.totalRounds);
+      setIsPublic(rest.settings?.isPublic ?? true);
+      setDrawTime(rest.settings?.drawTime || 80);
+      
+      setDrawTime(rest.settings?.drawTime || 80);
+      
+      setDrawTime(rest.settings?.drawTime || 80);
+      setLoading(false);
+      
+      // Refresh session storage
+      localStorage.setItem('skribbl_player_id', player.id);
+      localStorage.setItem('skribbl_room_code', code);
+      localStorage.setItem('skribbl_player_name', player.name);
+    });
+
+    socket.on('session_expired', ({ message }) => {
+      console.warn('[GameContext] Session expired:', message);
+      localStorage.clear();
+      setLoading(false);
+      setPhase('waiting');
+      setRoomCode('');
     });
 
     // Game starting
@@ -151,12 +213,25 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setPlayers(data.leaderboard);
     });
 
+    socket.on('settings_updated', ({ settings }) => {
+      setTotalRounds(settings.rounds);
+      setDrawTime(settings.drawTime);
+    });
+
     socket.on('chat_message', (data) => {
       setMessages(prev => [...prev.slice(-49), { author: data.playerName, text: data.text, type: 'normal' }]);
     });
 
     socket.on('guess_result', (data) => {
       if (data.correct) {
+        // Trigger confetti for a celebratory feel
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#6366f1', '#8b5cf6', '#0ea5e9', '#ffffff']
+        });
+
         setMessages(prev => [...prev.slice(-49), { 
           author: 'SYSTEM', 
           text: `${data.playerName} decoded the artwork!`, 
@@ -237,6 +312,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('canvas_clear', { roomCode });
   };
 
+  const updateSettings = (settings: { rounds?: number; drawTime?: number }) => {
+    socket.emit('update_settings', { roomCode, settings });
+  };
+
   const resetGame = () => {
     setPhase('waiting');
     setWinner(null);
@@ -255,6 +334,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         roomCode,
         setRoomCode,
         playerId,
+        loading,
         players,
         phase,
         currentDrawerId,
@@ -265,6 +345,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         timeLeft,
         round,
         totalRounds,
+        drawTime,
+        isPublic,
         winner,
         currentPlayerIsDrawer,
         joinRoom,
@@ -279,6 +361,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setBrushConfig,
         undo,
         clearCanvas,
+        updateSettings,
         resetGame,
       }}
     >

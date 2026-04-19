@@ -24,6 +24,7 @@ const initDB = async () => {
       host_id VARCHAR(50) NOT NULL,
       settings JSONB NOT NULL DEFAULT '{}',
       status VARCHAR(20) DEFAULT 'waiting',
+      is_public BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)

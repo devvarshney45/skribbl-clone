@@ -25,10 +25,12 @@ const server = http.createServer(app);
 
 // Allow requests from the frontend dev server (and production URL)
 const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:5173',
+  process.env.CLIENT_URL,
   'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
   'http://localhost:4173', // Vite preview
-];
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {

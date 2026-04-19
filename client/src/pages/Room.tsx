@@ -10,8 +10,12 @@ const Room: React.FC = () => {
     roomCode, 
     players, 
     playerId, 
+    isPublic,
     markReady, 
-    startGame
+    startGame,
+    totalRounds,
+    drawTime,
+    updateSettings
   } = useGame();
 
   const [copyState, setCopyState] = useState<'idle' | 'code' | 'link'>('idle');
@@ -184,20 +188,60 @@ const Room: React.FC = () => {
             </div>
           </div>
 
-          <div className="glass p-8 rounded-3xl opacity-60">
+          <div className="glass p-8 rounded-3xl">
             <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6">Technical Config</h2>
             <div className="space-y-4">
               <div className="flex justify-between items-center bg-white/5 px-4 py-3 rounded-xl border border-white/5">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Rotations</span>
-                <span className="font-mono font-black text-white">3 ROUNDS</span>
+                <div className="flex items-center gap-4">
+                  {isHost && (
+                    <button 
+                      onClick={() => updateSettings({ rounds: Math.max(1, totalRounds - 1) })}
+                      className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+                    >
+                      <span className="text-slate-400">-</span>
+                    </button>
+                  )}
+                  <span className="font-mono font-black text-white">{totalRounds} ROUNDS</span>
+                  {isHost && (
+                    <button 
+                      onClick={() => updateSettings({ rounds: Math.min(10, totalRounds + 1) })}
+                      className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+                    >
+                      <span className="text-slate-400">+</span>
+                    </button>
+                  )}
+                </div>
               </div>
+
               <div className="flex justify-between items-center bg-white/5 px-4 py-3 rounded-xl border border-white/5">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Window</span>
-                <span className="font-mono font-black text-white">80s / T</span>
+                <div className="flex items-center gap-4">
+                  {isHost && (
+                    <button 
+                      onClick={() => updateSettings({ drawTime: Math.max(15, drawTime - 15) })}
+                      className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+                    >
+                      <span className="text-slate-400">-</span>
+                    </button>
+                  )}
+                  <span className="font-mono font-black text-white">{drawTime}s / T</span>
+                  {isHost && (
+                    <button 
+                      onClick={() => updateSettings({ drawTime: Math.min(240, drawTime + 15) })}
+                      className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+                    >
+                      <span className="text-slate-400">+</span>
+                    </button>
+                  )}
+                </div>
               </div>
+
               <div className="flex justify-between items-center bg-white/5 px-4 py-3 rounded-xl border border-white/5">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Visibility</span>
-                <span className="font-mono font-black text-white">PRIVATE</span>
+                <span className="font-mono font-black text-white italic">
+                  {isPublic ? 'PUBLIC ACCESS' : 'INVITE ONLY'}
+                </span>
               </div>
             </div>
           </div>

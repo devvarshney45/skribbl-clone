@@ -10,7 +10,18 @@ import Room from './pages/Room';
 import Game from './pages/Game';
 
 const App: React.FC = () => {
-  const { roomCode, phase } = useGame();
+  const { roomCode, phase, loading } = useGame();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-mesh flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4" />
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">
+          Restoring Studio Session...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Router>
