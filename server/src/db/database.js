@@ -1,74 +1,68 @@
 // database.js
-// Sets up the SQLite database using better-sqlite3.
-// Creates all tables if they don't already exist.
+// This file connects to PostgreSQL using the pg library
+// and creates all tables needed for the game
 
-const Database = require('better-sqlite3');
-const path = require('path');
-require('dotenv').config();
+const { Pool } = require('pg')
+require('dotenv').config()
 
-// Resolve the database file path from .env (defaults to ./skribbl.db)
-const dbPath = path.resolve(__dirname, '../../', process.env.DB_PATH || 'skribbl.db');
+// Pool manages multiple database connections automatically
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Required for Neon cloud database
+  }
+})
 
-// Open (or create) the SQLite database file
-const db = new Database(dbPath);
+// This function creates all tables if they don't exist yet
+const initDB = async () => {
 
-// Enable WAL mode for better performance with concurrent reads
-db.pragma('journal_mode = WAL');
-
-// ---------------------------------------------------------------------------
-// Create all tables
-// ---------------------------------------------------------------------------
-
-function createTables() {
-  // rooms table: stores each game room
-  db.exec(`
+  // rooms table — stores each game room
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS rooms (
-      id          TEXT PRIMARY KEY,       -- UUID
-      code        TEXT UNIQUE NOT NULL,   -- 6-char room code shown to players
-      host_id     TEXT NOT NULL,          -- socket ID of the host
-      settings    TEXT NOT NULL,          -- JSON string: rounds, drawTime, etc.
-      status      TEXT DEFAULT 'waiting', -- waiting | playing | finished
-      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+      id VARCHAR(50) PRIMARY KEY,
+      code VARCHAR(10) UNIQUE NOT NULL,
+      host_id VARCHAR(50) NOT NULL,
+      settings JSONB NOT NULL DEFAULT '{}',
+      status VARCHAR(20) DEFAULT 'waiting',
+      created_at TIMESTAMP DEFAULT NOW()
     )
-  `);
+  `)
 
-  // players table: stores each player in a room
-  db.exec(`
+  // players table — stores each player in a room
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS players (
-      id        TEXT PRIMARY KEY,         -- UUID
-      name      TEXT NOT NULL,            -- display name chosen by player
-      room_id   TEXT NOT NULL,            -- foreign key to rooms.id
-      score     INTEGER DEFAULT 0,        -- cumulative score across all rounds
-      is_host   INTEGER DEFAULT 0,        -- 1 if this player created the room
-      socket_id TEXT NOT NULL             -- current socket.io connection ID
+      id VARCHAR(50) PRIMARY KEY,
+      name VARCHAR(50) NOT NULL,
+      room_id VARCHAR(50) REFERENCES rooms(id) ON DELETE CASCADE,
+      score INTEGER DEFAULT 0,
+      is_host BOOLEAN DEFAULT FALSE,
+      socket_id VARCHAR(100),
+      created_at TIMESTAMP DEFAULT NOW()
     )
-  `);
+  `)
 
-  // words table: the word list used for drawing rounds
-  db.exec(`
+  // words table — stores all drawable words
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS words (
-      id       INTEGER PRIMARY KEY AUTOINCREMENT,
-      word     TEXT NOT NULL,             -- the actual word
-      category TEXT NOT NULL              -- animals, food, objects, actions, places
+      id SERIAL PRIMARY KEY,
+      word VARCHAR(100) NOT NULL,
+      category VARCHAR(50) DEFAULT 'general'
     )
-  `);
+  `)
 
-  // game_sessions table: tracks the active game for a room
-  db.exec(`
+  // game_sessions table — tracks active game state
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS game_sessions (
-      id                 TEXT PRIMARY KEY,   -- UUID
-      room_id            TEXT NOT NULL,      -- foreign key to rooms.id
-      current_round      INTEGER DEFAULT 1,  -- which round we are on
-      current_drawer_id  TEXT,               -- player ID of current drawer
-      started_at         DATETIME DEFAULT CURRENT_TIMESTAMP
+      id VARCHAR(50) PRIMARY KEY,
+      room_id VARCHAR(50) REFERENCES rooms(id) ON DELETE CASCADE,
+      current_round INTEGER DEFAULT 1,
+      current_drawer_id VARCHAR(50),
+      status VARCHAR(20) DEFAULT 'active',
+      started_at TIMESTAMP DEFAULT NOW()
     )
-  `);
+  `)
 
-  console.log('[DB] All tables created / verified successfully.');
+  console.log('✅ All PostgreSQL tables created successfully')
 }
 
-// Run table creation immediately when this module is first imported
-createTables();
-
-// Export the db instance so other files can run queries
-module.exports = db;
+module.exports = { pool, initDB }
