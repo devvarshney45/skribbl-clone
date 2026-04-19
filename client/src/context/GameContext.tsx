@@ -31,19 +31,31 @@ interface GameContextType {
   currentDrawerId: string | null;
   word: string;
   wordHints: string[];
+  wordOptions: string[];
+  messages: Array<{ author: string; text: string; type: 'normal' | 'correct' | 'system' }>;
   timeLeft: number;
   round: number;
   totalRounds: number;
   winner: Player | null;
+
+  // Status Helpers
+  currentPlayerIsDrawer: boolean;
+
+  // Brush Config
+  color: string;
+  size: number;
+  setBrushConfig: (config: { color?: string; size?: number }) => void;
 
   // Actions
   joinRoom: (name: string, code: string) => void;
   createRoom: (name: string, code: string) => void;
   markReady: () => void;
   startGame: () => void;
-  selectWord: (word: string) => void;
+  chooseWord: (word: string) => void;
   sendGuess: (text: string) => void;
   sendChat: (text: string) => void;
+  undo: () => void;
+  clearCanvas: () => void;
   resetGame: () => void;
 }
 
@@ -61,10 +73,16 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [currentDrawerId, setCurrentDrawerId] = useState<string | null>(null);
   const [word, setWord] = useState('');
   const [wordHints, setWordHints] = useState<string[]>([]);
+  const [wordOptions, setWordOptions] = useState<string[]>([]);
+  const [messages, setMessages] = useState<Array<{ author: string; text: string; type: 'normal' | 'correct' | 'system' }>>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [round, setRound] = useState(1);
   const [totalRounds, setTotalRounds] = useState(3);
   const [winner, setWinner] = useState<Player | null>(null);
+  
+  // Brush state
+  const [color, setColor] = useState('#ffffff');
+  const [size, setSize] = useState(5);
 
   // ---------------------------------------------------------------------------
   // Socket Event Listeners
@@ -95,8 +113,14 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setCurrentDrawerId(data.drawerId);
       setRound(data.round);
       setTotalRounds(data.totalRounds);
-      setWord(''); // clear previous word
+      setWord('');
       setWordHints([]);
+      setWordOptions([]); // will be set by word_options event for the drawer
+      setMessages(prev => [...prev.slice(-49), { author: 'SYSTEM', text: `Round ${data.round} is starting!`, type: 'system' }]);
+    });
+
+    socket.on('word_options', (data) => {
+      setWordOptions(data.words);
     });
 
     // Drawing start
@@ -125,6 +149,20 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setPhase('gameOver');
       setWinner(data.winner);
       setPlayers(data.leaderboard);
+    });
+
+    socket.on('chat_message', (data) => {
+      setMessages(prev => [...prev.slice(-49), { author: data.playerName, text: data.text, type: 'normal' }]);
+    });
+
+    socket.on('guess_result', (data) => {
+      if (data.correct) {
+        setMessages(prev => [...prev.slice(-49), { 
+          author: 'SYSTEM', 
+          text: `${data.playerName} decoded the artwork!`, 
+          type: 'correct' 
+        }]);
+      }
     });
 
     // Reconnection
@@ -174,7 +212,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('start_game', { roomCode });
   };
 
-  const selectWord = (selectedWord: string) => {
+  const chooseWord = (selectedWord: string) => {
     socket.emit('word_chosen', { roomCode, word: selectedWord });
   };
 
@@ -186,12 +224,28 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('chat', { roomCode, text });
   };
 
+  const setBrushConfig = (config: { color?: string; size?: number }) => {
+    if (config.color) setColor(config.color);
+    if (config.size) setSize(config.size);
+  };
+
+  const undo = () => {
+    socket.emit('draw_undo', { roomCode });
+  };
+
+  const clearCanvas = () => {
+    socket.emit('canvas_clear', { roomCode });
+  };
+
   const resetGame = () => {
     setPhase('waiting');
     setWinner(null);
     setWord('');
     setWordHints([]);
+    setMessages([]);
   };
+
+  const currentPlayerIsDrawer = playerId === currentDrawerId;
 
   return (
     <GameContext.Provider
@@ -206,17 +260,25 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         currentDrawerId,
         word,
         wordHints,
+        wordOptions,
+        messages,
         timeLeft,
         round,
         totalRounds,
         winner,
+        currentPlayerIsDrawer,
         joinRoom,
         createRoom,
         markReady,
         startGame,
-        selectWord,
+        chooseWord,
         sendGuess,
         sendChat,
+        color,
+        size,
+        setBrushConfig,
+        undo,
+        clearCanvas,
         resetGame,
       }}
     >
