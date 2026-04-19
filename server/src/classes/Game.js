@@ -28,6 +28,7 @@ class Game {
     // Word state
     this.currentWord = null;        // the actual word string
     this.wordHints = [];            // array of chars or '_', e.g. ['_','p','_','e']
+    this.wordOptions = [];          // currently offered choices for the drawer
 
     // Timer
     this.timerInterval = null;       // setInterval handle
@@ -95,10 +96,11 @@ class Game {
         'SELECT word FROM words ORDER BY RANDOM() LIMIT $1',
         [this.settings.wordCount]
       );
-      let wordOptions = rows.map((row) => row.word);
-      if (wordOptions.length === 0) {
-        wordOptions = ['apple', 'dog', 'painting'];
+      let fetchedOptions = rows.map((row) => row.word);
+      if (fetchedOptions.length === 0) {
+        fetchedOptions = ['apple', 'dog', 'painting'];
       }
+      this.wordOptions = fetchedOptions;
 
       // Tell everyone else that a round is starting (no word revealed yet)
       this.io.to(this.roomId).emit('round_start', {
@@ -114,7 +116,7 @@ class Game {
       const activeSocketId = drawer.socketId;
 
       this.io.to(activeSocketId).emit('word_options', {
-        words: wordOptions,
+        words: this.wordOptions,
         round: this.currentRound,
         totalRounds: this.totalRounds,
         drawerName: drawer.name,
@@ -124,7 +126,7 @@ class Game {
       this.wordChoiceTimeout = setTimeout(() => {
         if (!this.currentWord) {
           console.log(`[Game] Drawer ${drawer.name} did not pick — auto-selecting.`);
-          this.chooseWord(wordOptions[0]);
+          this.chooseWord(this.wordOptions[0]);
         }
       }, 10000);
     } catch (error) {
@@ -146,6 +148,7 @@ class Game {
     const safeWord = word || 'emergency';
 
     this.currentWord = safeWord;
+    this.wordOptions = []; // Clear options once chosen
     this.phase = 'drawing';
 
     // Build hint array: spaces stay as spaces, letters become '_'

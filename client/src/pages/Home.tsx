@@ -107,7 +107,7 @@ const Home: React.FC = () => {
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-secondary/20 blur-[120px] animate-pulse-delayed" />
         </div>
 
-        <div className="w-full h-full max-w-7xl mx-auto flex flex-col items-center justify-center gap-2 md:gap-6 lg:gap-8 relative">
+        <div className="w-full min-h-full max-w-7xl mx-auto flex flex-col items-center justify-center gap-4 md:gap-8 relative py-8">
             
             {/* ── LOGO SECTION ── */}
             <header className="flex flex-col items-center text-center space-y-1 md:space-y-3 animate-pop-in">

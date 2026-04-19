@@ -318,6 +318,7 @@ function setupSocketHandler(io) {
           timeLeft: game?.timeLeft || 0,
           round: game?.currentRound || 1,
           totalRounds: game?.totalRounds || room.settings.rounds,
+          wordOptions: (game?.phase === 'choosing' && game?.getCurrentDrawer()?.id === player.id) ? game.wordOptions : [],
         });
 
         // Replay drawing if in game

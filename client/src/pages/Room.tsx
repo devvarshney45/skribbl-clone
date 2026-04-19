@@ -138,51 +138,51 @@ const Room: React.FC = () => {
       <div className="w-full px-4 pb-4 md:px-8 md:pb-8 z-20 animate-slide-up">
           <div className="bg-black/60 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 p-4 md:p-6 shadow-[0_-20px_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12">
               
-              {/* Settings Group */}
-              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12 flex-grow">
-                  
-                  {/* Rounds Control */}
-                  <div className="flex flex-col gap-2 w-full md:w-auto min-w-[200px]">
-                      <div className="flex items-center justify-between px-1">
-                          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Exhibition Rounds</span>
-                          <span className="text-lg font-black text-brand-secondary font-mono italic">{totalRounds}</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                          <button onClick={() => handleSettingChange('rounds', Math.max(1, totalRounds-1))} disabled={!isHost} className={`w-10 h-10 panel rounded-xl flex items-center justify-center transition-all ${!isHost ? 'opacity-20 grayscale' : 'hover:bg-white/10 active:scale-90 border-white/10'}`}>−</button>
-                          <div className="flex-grow h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                              <div className="h-full bg-gradient-to-r from-brand-primary to-brand-secondary transition-all duration-700" style={{ width: `${(totalRounds / 10) * 100}%` }} />
-                          </div>
-                          <button onClick={() => handleSettingChange('rounds', Math.min(10, totalRounds+1))} disabled={!isHost} className={`w-10 h-10 panel rounded-xl flex items-center justify-center transition-all ${!isHost ? 'opacity-20 grayscale' : 'hover:bg-white/10 active:scale-90 border-white/10'}`}>+</button>
-                      </div>
+          {/* Settings Group */}
+          <div className="flex flex-col xl:flex-row items-center gap-4 xl:gap-12 flex-grow w-full">
+              
+              {/* Rounds Control */}
+              <div className="flex flex-col gap-1 w-full xl:w-auto xl:min-w-[200px]">
+                  <div className="flex items-center justify-between px-1">
+                      <span className="text-[8px] xl:text-[9px] font-black text-slate-500 uppercase tracking-widest">Exhibition Rounds</span>
+                      <span className="text-base xl:text-lg font-black text-brand-secondary font-mono italic">{totalRounds}</span>
                   </div>
-
-                  {/* Vertical Divider (Desktop Only) */}
-                  <div className="hidden md:block w-[1px] h-10 bg-white/5" />
-
-                  {/* Time Control */}
-                  <div className="flex flex-col gap-2 w-full md:w-auto min-w-[200px]">
-                      <div className="flex items-center justify-between px-1">
-                          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Drawing window</span>
-                          <span className="text-lg font-black text-brand-secondary font-mono italic">{drawTime}s</span>
+                  <div className="flex items-center gap-3 xl:gap-4">
+                      <button onClick={() => handleSettingChange('rounds', Math.max(1, totalRounds-1))} disabled={!isHost} className={`w-8 h-8 xl:w-10 xl:h-10 panel rounded-xl flex items-center justify-center transition-all ${!isHost ? 'opacity-20 grayscale' : 'hover:bg-white/10 active:scale-90 border-white/10'}`}>−</button>
+                      <div className="flex-grow h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                          <div className="h-full bg-gradient-to-r from-brand-primary to-brand-secondary transition-all duration-700" style={{ width: `${(totalRounds / 10) * 100}%` }} />
                       </div>
-                      <div className="flex items-center gap-4">
-                          <button onClick={() => handleSettingChange('drawTime', Math.max(30, drawTime-10))} disabled={!isHost} className={`w-10 h-10 panel rounded-xl flex items-center justify-center transition-all ${!isHost ? 'opacity-20 grayscale' : 'hover:bg-white/10 active:scale-90 border-white/10'}`}>−</button>
-                          <div className="flex-grow h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                              <div className="h-full bg-gradient-to-r from-brand-primary to-brand-secondary transition-all duration-700" style={{ width: `${((drawTime - 30) / 150) * 100}%` }} />
-                          </div>
-                          <button onClick={() => handleSettingChange('drawTime', Math.min(180, drawTime+10))} disabled={!isHost} className={`w-10 h-10 panel rounded-xl flex items-center justify-center transition-all ${!isHost ? 'opacity-20 grayscale' : 'hover:bg-white/10 active:scale-90 border-white/10'}`}>+</button>
-                      </div>
+                      <button onClick={() => handleSettingChange('rounds', Math.min(10, totalRounds+1))} disabled={!isHost} className={`w-8 h-8 xl:w-10 xl:h-10 panel rounded-xl flex items-center justify-center transition-all ${!isHost ? 'opacity-20 grayscale' : 'hover:bg-white/10 active:scale-90 border-white/10'}`}>+</button>
                   </div>
               </div>
 
-              {/* Action Group */}
-              <div className="w-full md:w-auto flex items-center gap-4 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-8">
-                  <div className="flex flex-col items-center md:items-end flex-grow">
-                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1 italic">Authorized Signal</span>
-                      <span className={`text-[10px] font-black ${allReady ? 'text-brand-secondary' : 'text-rose-500/50'}`}>
-                        {allReady ? 'ARENA READY' : 'SYNCING PLAYERS'}
-                      </span>
+              {/* Vertical Divider (Desktop Only) */}
+              <div className="hidden xl:block w-[1px] h-10 bg-white/5" />
+
+              {/* Time Control */}
+              <div className="flex flex-col gap-1 w-full xl:w-auto xl:min-w-[200px]">
+                  <div className="flex items-center justify-between px-1">
+                      <span className="text-[8px] xl:text-[9px] font-black text-slate-500 uppercase tracking-widest">Drawing window</span>
+                      <span className="text-base xl:text-lg font-black text-brand-secondary font-mono italic">{drawTime}s</span>
                   </div>
+                  <div className="flex items-center gap-3 xl:gap-4">
+                      <button onClick={() => handleSettingChange('drawTime', Math.max(30, drawTime-10))} disabled={!isHost} className={`w-8 h-8 xl:w-10 xl:h-10 panel rounded-xl flex items-center justify-center transition-all ${!isHost ? 'opacity-20 grayscale' : 'hover:bg-white/10 active:scale-90 border-white/10'}`}>−</button>
+                      <div className="flex-grow h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                          <div className="h-full bg-gradient-to-r from-brand-primary to-brand-secondary transition-all duration-700" style={{ width: `${((drawTime - 30) / 150) * 100}%` }} />
+                      </div>
+                      <button onClick={() => handleSettingChange('drawTime', Math.min(180, drawTime+10))} disabled={!isHost} className={`w-8 h-8 xl:w-10 xl:h-10 panel rounded-xl flex items-center justify-center transition-all ${!isHost ? 'opacity-20 grayscale' : 'hover:bg-white/10 active:scale-90 border-white/10'}`}>+</button>
+                  </div>
+              </div>
+          </div>
+
+          {/* Action Group */}
+          <div className="w-full xl:w-auto flex items-center justify-between xl:justify-end gap-4 border-t xl:border-t-0 xl:border-l border-white/10 pt-4 xl:pt-0 xl:pl-8">
+              <div className="flex flex-col items-start xl:items-end flex-grow">
+                  <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest mb-1 italic">Authorized Signal</span>
+                  <span className={`text-[8px] xl:text-[10px] font-black ${allReady ? 'text-brand-secondary' : 'text-rose-500/50'}`}>
+                    {allReady ? 'ARENA READY' : 'SYNC PLAYERS'}
+                  </span>
+              </div>
                   
                   {isHost ? (
                     <button 

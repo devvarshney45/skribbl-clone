@@ -159,9 +159,9 @@ body {
   animation: float-delayed 12s ease-in-out infinite;
 }
 
-/* Logo Sizing - Fluid */
+/* Logo Sizing - Fluid & Responsive */
 .logo-responsive {
-  font-size: clamp(3rem, 15vh, 10rem);
+  font-size: clamp(2.5rem, 15vw, 8rem); /* Use vw for width-based safety */
 }
 
 /* Glassmorphism Refinement - High Definition */
