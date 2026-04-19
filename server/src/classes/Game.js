@@ -109,6 +109,7 @@ class Game {
         drawerId: drawer.id,
         drawerName: drawer.name,
         wordLength: 0, // will update once word is chosen
+        options: this.wordOptions // Bulletproof delivery
       });
 
       // RELIABILITY FIX: Use the latest socket ID from the player object 

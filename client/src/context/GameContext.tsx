@@ -192,6 +192,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setCurrentDrawerId(data.drawerId);
       setRound(data.round);
       setTotalRounds(data.totalRounds);
+      if (data.options) setWordOptions(data.options);
       setWord('');
       setWordHints([]);
       setMessages(prev => [...prev.slice(-49), { author: 'SYSTEM', text: `Round ${data.round} is starting!`, type: 'system' }]);
