@@ -92,10 +92,15 @@ const Chat: React.FC = () => {
 
       {/* 3. Input Terminal */}
       <div className="p-6 border-t border-white/5 bg-white/1 shrink-0">
-        {!canType ? (
-           <div className="bg-bg-card/50 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 border border-white/2 grayscale opacity-40">
+        {currentPlayerIsDrawer && phase === 'drawing' ? (
+           <div className="bg-brand-primary/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-1 border border-brand-primary/10 animate-pulse">
+              <span className="text-[9px] font-black text-brand-primary uppercase tracking-[0.3em] italic">Artist Protocol Active</span>
+              <span className="text-[7px] font-bold text-slate-500 uppercase tracking-[0.2em]">Focus on the canvas</span>
+           </div>
+        ) : !canType ? (
+           <div className="bg-bg-card/50 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 border border-white/2 grayscale opacity-40">
               <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] italic">Transmission Blocked</span>
-              <span className="text-[7px] font-bold text-slate-600 uppercase tracking-[0.2em]">Drawer cannot guess own word</span>
+              <span className="text-[7px] font-bold text-slate-600 uppercase tracking-[0.2em]">Wait for next turn</span>
            </div>
         ) : (
           <form onSubmit={handleSubmit} className="relative group">

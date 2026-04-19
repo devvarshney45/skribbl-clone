@@ -178,24 +178,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }]);
     });
 
-    socket.on('reconnected', ({ player, roomCode: code, phase: p, ...rest }) => {
-      setPlayerId(player.id);
-      setRoomCode(code);
-      setPhase(p as any);
-      setCurrentDrawerId(rest.currentDrawerId);
-      setWordHints(rest.wordHints);
-      setTimeLeft(rest.timeLeft);
-      setRound(rest.round);
-      setTotalRounds(rest.totalRounds);
-      setIsPrivate(rest.isPrivate ?? false);
-      setDrawTime(rest.settings?.drawTime || 80);
-      setLoading(false);
-      
-      sessionStorage.setItem('skribbl_player_id', player.id);
-      sessionStorage.setItem('skribbl_room_code', code);
-      sessionStorage.setItem('skribbl_player_name', player.name);
-    });
-
     socket.on('session_expired', ({ message }) => {
       console.warn('[GameContext] Session expired:', message);
       sessionStorage.clear();
@@ -284,16 +266,31 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     });
 
-    // Reconnection
+    // Iron-Clad Reconnection Sync
     socket.on('reconnected', (data) => {
-      setPlayerId(data.player.id);
-      setRoomCode(data.roomCode);
-      setPhase(data.gamePhase);
-      setCurrentDrawerId(data.currentDrawerId);
-      setWordHints(data.wordHints);
-      setTimeLeft(data.timeLeft);
-      setRound(data.round);
-      setTotalRounds(data.totalRounds);
+      console.log('[GameContext] Syncing state from server:', data);
+      
+      const { player, roomCode: code, phase: p, currentDrawerId: dId, ...rest } = data;
+      
+      setPlayerId(player.id);
+      setRoomCode(code);
+      setPhase(p as any);
+      setCurrentDrawerId(dId);
+      setWordHints(rest.wordHints || []);
+      setTimeLeft(rest.timeLeft || 0);
+      setRound(rest.round || 1);
+      setTotalRounds(rest.totalRounds || 3);
+      setIsPrivate(rest.isPrivate ?? false);
+      setDrawTime(rest.settings?.drawTime || 80);
+      setLoading(false);
+
+      if (rest.wordOptions && rest.wordOptions.length > 0) {
+        setWordOptions(rest.wordOptions);
+      }
+      
+      sessionStorage.setItem('skribbl_player_id', player.id);
+      sessionStorage.setItem('skribbl_room_code', code);
+      sessionStorage.setItem('skribbl_player_name', player.name);
     });
 
     return () => {

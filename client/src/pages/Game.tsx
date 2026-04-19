@@ -17,7 +17,7 @@ const Game: React.FC = () => {
     currentDrawerId, playerId, word, drawTime
   } = useGame();
 
-  const isMyTurn = playerId === currentDrawerId && phase === 'drawing';
+  const isMyTurn = playerId === currentDrawerId && (phase === 'drawing' || phase === 'choosing');
 
   const renderWordDisplay = () => {
     if (isMyTurn || phase === 'roundEnd') {
