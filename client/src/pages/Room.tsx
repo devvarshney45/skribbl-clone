@@ -13,6 +13,7 @@ const Room: React.FC = () => {
     startGame,
     markReady,
     isPrivate,
+    kickPlayer,
   } = useGame();
 
   const me = players.find((p) => p.id === playerId);
@@ -113,20 +114,34 @@ const Room: React.FC = () => {
                   <span className="text-[9px] font-black text-brand-secondary px-2 py-0.5 bg-brand-secondary/10 rounded-md border border-brand-secondary/20">{players.length} / 12</span>
               </div>
               
-              <div className="flex-grow overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-4">
+              <div className="flex-grow overflow-y-auto pr-1 custom-scrollbar space-y-2.5 pb-4">
                   {players.map(p => (
-                      <div key={p.id} className={`glass-pro p-4 rounded-[1.5rem] flex items-center justify-between transition-all group ${p.id === playerId ? 'border-brand-primary shadow-lg shadow-brand-primary/10 bg-brand-primary/5' : 'hover:bg-white/5 border-white/5'}`}>
-                          <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 panel rounded-2xl flex items-center justify-center font-black text-brand-secondary text-xl border-white/10 group-hover:bg-brand-secondary group-hover:text-bg-main transition-all rotate-3 group-hover:rotate-0">
+                      <div key={p.id} className={`glass-pro p-3.5 rounded-[1.5rem] flex items-center justify-between transition-all group ${p.id === playerId ? 'border-brand-primary shadow-lg shadow-brand-primary/10 bg-brand-primary/5' : 'hover:bg-white/5 border-white/5'}`}>
+                          <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 panel rounded-xl flex items-center justify-center font-black text-brand-secondary text-lg border-white/10">
                                   {p.name[0].toUpperCase()}
                               </div>
                               <div className="flex flex-col">
-                                  <span className="text-sm font-black text-white/95 truncate max-w-[150px]">{p.name} {p.id === playerId && '(You)'}</span>
-                                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{p.isHost ? 'Chief Curator' : 'Lead Artist'}</span>
+                                  <span className="text-sm font-black text-white/95 truncate max-w-[120px]">{p.name} {p.id === playerId && '(You)'}</span>
+                                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{p.isHost ? '👑 Host' : 'Artist'}</span>
                               </div>
                           </div>
-                          <div className={`px-4 py-2 rounded-xl text-[9px] font-black tracking-widest border transition-all ${p.isReady ? 'bg-brand-secondary text-bg-main border-brand-secondary shadow-lg shadow-brand-secondary/20' : 'bg-white/2 text-slate-700 border-white/10'}`}>
-                              {p.isReady ? 'READY' : 'PREPARING'}
+                          <div className="flex items-center gap-2">
+                              <div className={`px-3 py-1.5 rounded-lg text-[8px] font-black tracking-widest border transition-all ${p.isReady ? 'bg-brand-secondary text-bg-main border-brand-secondary' : 'bg-white/2 text-slate-700 border-white/10'}`}>
+                                  {p.isReady ? 'READY' : 'WAIT'}
+                              </div>
+                              {/* Host-only kick button */}
+                              {isHost && p.id !== playerId && (
+                                <button
+                                  onClick={() => kickPlayer(p.id)}
+                                  title={`Remove ${p.name}`}
+                                  className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center hover:bg-rose-500/20 transition-all active:scale-90"
+                                >
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              )}
                           </div>
                       </div>
                   ))}

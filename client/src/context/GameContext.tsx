@@ -63,6 +63,7 @@ interface GameContextType {
   clearCanvas: () => void;
   updateSettings: (settings: { rounds?: number; drawTime?: number; isPrivate?: boolean }) => void;
   resetGame: () => void;
+  kickPlayer: (targetPlayerId: string) => void;
   socket: any;
 }
 
@@ -184,6 +185,20 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
       setPhase('waiting');
       setRoomCode('');
+    });
+
+    socket.on('kicked', ({ message }) => {
+      console.warn('[GameContext] Kicked:', message);
+      sessionStorage.clear();
+      setLoading(false);
+      setPhase('waiting');
+      setRoomCode('');
+      alert(message || 'You were removed from the room.');
+    });
+
+    socket.on('player_left', ({ playerId: leftId, playerName }) => {
+      setPlayers(prev => prev.filter(p => p.id !== leftId));
+      setMessages(prev => [...prev.slice(-49), { author: 'SYSTEM', text: `${playerName} left the studio.`, type: 'system' }]);
     });
 
     socket.on('round_start', (data) => {
@@ -349,6 +364,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('word_chosen', { roomCode, word: selectedWord });
   };
 
+  const kickPlayer = (targetPlayerId: string) => {
+    socket.emit('kick_player', { roomCode, targetPlayerId });
+  };
+
   const sendGuess = (text: string) => {
     socket.emit('guess', { roomCode, text });
   };
@@ -403,6 +422,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isPrivate,
         winner,
         currentPlayerIsDrawer,
+        kickPlayer,
         joinRoom,
         createRoom,
         markReady,
