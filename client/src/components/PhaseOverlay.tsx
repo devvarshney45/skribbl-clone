@@ -33,6 +33,9 @@ const PhaseOverlay: React.FC = () => {
                     <div className="w-1.5 h-1.5 bg-brand-secondary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                     <div className="w-1.5 h-1.5 bg-brand-secondary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
