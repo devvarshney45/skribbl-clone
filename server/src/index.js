@@ -23,60 +23,60 @@ const server = http.createServer(app);
 // Middleware
 // ---------------------------------------------------------------------------
 
-// Allow requests from the frontend dev server (and production URL)
+// ---------------------------------------------------------------------------
+// CORS & Security Configuration
+// ---------------------------------------------------------------------------
+const rawClientUrl = process.env.CLIENT_URL;
+const normalizedClientUrl = rawClientUrl ? rawClientUrl.replace(/\/$/, '') : null;
+
 const allowedOrigins = [
-  process.env.CLIENT_URL,
+  normalizedClientUrl,
+  'https://skribbl.devvarshney.me',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
-  'http://localhost:4173', // Vite preview
+  'http://localhost:4173',
 ].filter(Boolean);
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl)
-    // In development, also allow any localhost origin
-    if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+    if (!origin) return callback(null, true);
+    const sanitizedOrigin = origin.replace(/\/$/, '');
+    const isAllowed = allowedOrigins.some(ao => ao.replace(/\/$/, '') === sanitizedOrigin) || 
+                     sanitizedOrigin.startsWith('http://localhost:');
+
+    if (isAllowed) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS blocked for origin: ${origin}`));
+      console.warn(`[CORS] Access Denied: ${origin}`);
+      callback(new Error('CORS blocked'));
     }
   },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
 
-app.use(express.json()); // Parse JSON request bodies
+app.use(cors(corsOptions));
+app.use(express.json());
 
 // ---------------------------------------------------------------------------
 // REST API routes
 // ---------------------------------------------------------------------------
 app.use('/api/rooms', roomRoutes);
 
-// Health check — useful for deployment platforms
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', domain: 'skribbl.devvarshney.me', client: normalizedClientUrl });
 });
 
 // ---------------------------------------------------------------------------
 // Socket.IO setup
 // ---------------------------------------------------------------------------
 const io = new Server(server, {
-  cors: {
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
-  // Allow WebSocket upgrades and fallback to long-polling
+  cors: corsOptions, // Use the same robust options
   transports: ['websocket', 'polling'],
 });
 
-// Register all socket event handlers
 setupSocketHandler(io);
 
 // ---------------------------------------------------------------------------
