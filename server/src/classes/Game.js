@@ -6,7 +6,7 @@
 //   - Score calculation
 //   - Game over logic
 
-const db = require('../db/database');
+const { pool } = require('../db/database');
 
 class Game {
   constructor({ roomId, settings, players, io }) {
@@ -46,9 +46,9 @@ class Game {
   // start()
   // Kicks off the very first round.
   // ---------------------------------------------------------------------------
-  start() {
+  async start() {
     console.log(`[Game] Starting game in room ${this.roomId}`);
-    this.startRound();
+    await this.startRound();
   }
 
   // ---------------------------------------------------------------------------
@@ -59,7 +59,7 @@ class Game {
   //   3. Fetch 3 random word choices from DB
   //   4. Emit word choices to drawer, blank hints to everyone else
   // ---------------------------------------------------------------------------
-  startRound() {
+  async startRound() {
     this.phase = 'choosing';
     this.currentWord = null;
     this.wordHints = [];
@@ -82,36 +82,42 @@ class Game {
 
     console.log(`[Game] Round ${this.currentRound}/${this.totalRounds} — Drawer: ${drawer.name}`);
 
-    // Pull 3 random words from the database
-    const wordOptions = db
-      .prepare('SELECT word FROM words ORDER BY RANDOM() LIMIT ?')
-      .all(this.settings.wordCount)
-      .map((row) => row.word);
+    try {
+      // Pull random words from the database
+      const { rows } = await pool.query(
+        'SELECT word FROM words ORDER BY RANDOM() LIMIT $1',
+        [this.settings.wordCount]
+      );
+      const wordOptions = rows.map((row) => row.word);
 
-    // Tell the drawer which words they can choose from
-    this.io.to(drawer.socketId).emit('word_options', {
-      words: wordOptions,
-      round: this.currentRound,
-      totalRounds: this.totalRounds,
-      drawerName: drawer.name,
-    });
+      // Tell the drawer which words they can choose from
+      this.io.to(drawer.socketId).emit('word_options', {
+        words: wordOptions,
+        round: this.currentRound,
+        totalRounds: this.totalRounds,
+        drawerName: drawer.name,
+      });
 
-    // Tell everyone else that a round is starting (no word revealed yet)
-    this.io.to(this.roomId).emit('round_start', {
-      round: this.currentRound,
-      totalRounds: this.totalRounds,
-      drawerId: drawer.id,
-      drawerName: drawer.name,
-      wordLength: 0, // will update once word is chosen
-    });
+      // Tell everyone else that a round is starting (no word revealed yet)
+      this.io.to(this.roomId).emit('round_start', {
+        round: this.currentRound,
+        totalRounds: this.totalRounds,
+        drawerId: drawer.id,
+        drawerName: drawer.name,
+        wordLength: 0, // will update once word is chosen
+      });
 
-    // Auto-pick a word if the drawer doesn't choose within 10 seconds
-    this.wordChoiceTimeout = setTimeout(() => {
-      if (!this.currentWord) {
-        console.log(`[Game] Drawer ${drawer.name} did not pick — auto-selecting.`);
-        this.chooseWord(wordOptions[0]);
-      }
-    }, 10000);
+      // Auto-pick a word if the drawer doesn't choose within 10 seconds
+      this.wordChoiceTimeout = setTimeout(() => {
+        if (!this.currentWord) {
+          console.log(`[Game] Drawer ${drawer.name} did not pick — auto-selecting.`);
+          this.chooseWord(wordOptions[0]);
+        }
+      }, 10000);
+    } catch (error) {
+      console.error('[Game Error] Failed to fetch words:', error);
+      this.endGame();
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -259,10 +265,10 @@ class Game {
   // ---------------------------------------------------------------------------
   // endRound()
   // Stops the timer, gives the drawer their bonus points,
-  // saves scores to SQLite, and emits round_end to the room.
+  // saves scores to PostgreSQL, and emits round_end to the room.
   // Then advances to the next round or ends the game.
   // ---------------------------------------------------------------------------
-  endRound() {
+  async endRound() {
     // Stop the countdown — only run endRound logic once
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
@@ -282,8 +288,8 @@ class Game {
       console.log(`[Game] Drawer ${drawer.name} earns +${drawerPoints} pts`);
     }
 
-    // Save all player scores to the SQLite database
-    this.saveScoresToDB();
+    // Save all player scores to the PostgreSQL database
+    await this.saveScoresToDB();
 
     // Prepare leaderboard snapshot sorted by score (highest first)
     const leaderboard = this.players
@@ -309,7 +315,7 @@ class Game {
   // Advances the drawer index and round counter.
   // If all rounds are done, calls endGame() instead.
   // ---------------------------------------------------------------------------
-  nextRound() {
+  async nextRound() {
     // Move to the next player in the rotation
     this.currentDrawerIndex = (this.currentDrawerIndex + 1) % this.players.length;
 
@@ -322,7 +328,7 @@ class Game {
     if (this.currentRound > this.totalRounds) {
       this.endGame();
     } else {
-      this.startRound();
+      await this.startRound();
     }
   }
 
@@ -351,16 +357,22 @@ class Game {
 
   // ---------------------------------------------------------------------------
   // saveScoresToDB()
-  // Persists each player's current cumulative score to the SQLite players table.
+  // Persists each player's current cumulative score to the PostgreSQL players table.
   // ---------------------------------------------------------------------------
-  saveScoresToDB() {
-    const update = db.prepare('UPDATE players SET score = ? WHERE id = ?');
-    const updateAll = db.transaction((players) => {
-      for (const player of players) {
-        update.run(player.score, player.id);
+  async saveScoresToDB() {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      for (const player of this.players) {
+        await client.query('UPDATE players SET score = $1 WHERE id = $2', [player.score, player.id]);
       }
-    });
-    updateAll(this.players);
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('[Game Error] Failed to save scores:', error);
+    } finally {
+      client.release();
+    }
   }
 
   // ---------------------------------------------------------------------------

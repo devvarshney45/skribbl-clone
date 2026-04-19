@@ -9,11 +9,9 @@ const http    = require('http');
 const cors    = require('cors');
 const { Server } = require('socket.io');
 
+const { initDB } = require('./db/database');
 const roomRoutes           = require('./routes/roomRoutes');
 const { setupSocketHandler } = require('./socket/socketHandler');
-
-// Initialize the database (creates tables if they don't exist)
-require('./db/database');
 
 // ---------------------------------------------------------------------------
 // Create Express app and HTTP server
@@ -73,12 +71,23 @@ const io = new Server(server, {
 setupSocketHandler(io);
 
 // ---------------------------------------------------------------------------
-// Start the server
+// Start the server only after database is ready
 // ---------------------------------------------------------------------------
 const PORT = process.env.PORT || 3001;
 
-server.listen(PORT, () => {
-  console.log(`\n🎨 Skribbl Clone backend running on http://localhost:${PORT}`);
-  console.log(`   Environment : ${process.env.NODE_ENV || 'development'}`);
-  console.log(`   Client URL  : ${process.env.CLIENT_URL || 'http://localhost:5173'}\n`);
-});
+const startServer = async () => {
+  try {
+    await initDB();
+    
+    server.listen(PORT, () => {
+      console.log(`\n🎨 Skribbl Clone backend running on http://localhost:${PORT}`);
+      console.log(`   Environment : ${process.env.NODE_ENV || 'development'}`);
+      console.log(`   Client URL  : ${process.env.CLIENT_URL || 'http://localhost:5173'}\n`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
