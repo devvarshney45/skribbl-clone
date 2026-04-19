@@ -121,13 +121,25 @@ class Game {
         drawerName: drawer.name,
       });
 
-      // Auto-pick a word if the drawer doesn't choose within 10 seconds
-      this.wordChoiceTimeout = setTimeout(() => {
-        if (!this.currentWord) {
-          console.log(`[Game] Drawer ${drawer.name} did not pick — auto-selecting.`);
-          this.chooseWord(this.wordOptions[0]);
+      // Introduce a visual countdown timer for word selection (10 seconds)
+      this.choosingTimeLeft = 10;
+      this.io.to(this.roomId).emit('timer_update', { timeLeft: this.choosingTimeLeft });
+      
+      this.wordChoiceInterval = setInterval(() => {
+        this.choosingTimeLeft -= 1;
+        this.io.to(this.roomId).emit('timer_update', { timeLeft: this.choosingTimeLeft });
+        
+        if (this.choosingTimeLeft <= 0) {
+          clearInterval(this.wordChoiceInterval);
+          this.wordChoiceInterval = null;
+          if (!this.currentWord) {
+            console.log(`[Game] Drawer ${drawer.name} did not pick — auto-selecting.`);
+            // Safely select the first option or a fallback
+            this.chooseWord(this.wordOptions && this.wordOptions.length > 0 ? this.wordOptions[0] : 'emergency');
+          }
         }
-      }, 10000);
+      }, 1000);
+
     } catch (error) {
       console.error('[Game Error] Failed to fetch words:', error);
       this.endGame();
@@ -140,8 +152,11 @@ class Game {
   // Builds the blank hint array and starts the countdown timer.
   // ---------------------------------------------------------------------------
   chooseWord(word) {
-    // Clear the auto-pick timeout if it's still pending
-    clearTimeout(this.wordChoiceTimeout);
+    // Clear the auto-pick timer
+    if (this.wordChoiceInterval) {
+        clearInterval(this.wordChoiceInterval);
+        this.wordChoiceInterval = null;
+    }
 
     // Safety fallback to prevent crashes if word is ever undefined
     const safeWord = word || 'emergency';
@@ -338,10 +353,11 @@ class Game {
     this.currentDrawerIndex++;
 
     if (this.currentDrawerIndex >= this.players.length) {
-      // Entire cycle of players finished drawing once each
       this.currentDrawerIndex = 0;
-      this.currentRound++;
     }
+
+    // Treat 1 Round = 1 Turn for intuitive game length
+    this.currentRound++;
 
     // 2. Check if we've completed the last round
     if (this.currentRound > this.totalRounds) {

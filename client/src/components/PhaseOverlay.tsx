@@ -5,7 +5,7 @@ import React from 'react';
 import { useGame } from '../context/GameContext';
 
 const PhaseOverlay: React.FC = () => {
-  const { phase, round, word, currentDrawerId, players } = useGame();
+  const { phase, round, word, currentDrawerId, players, timeLeft } = useGame();
 
   if (phase !== 'roundEnd' && phase !== 'choosing') return null;
 
@@ -50,9 +50,15 @@ const PhaseOverlay: React.FC = () => {
                 <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter mb-2">
                     {drawer?.name || "The Artist"}
                 </h2>
-                <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] italic">
-                   is picking a word to draw...
-                </p>
+                <div className="flex items-center gap-4 mt-2">
+                   <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] italic">
+                      is picking a word...
+                   </p>
+                   {/* Live countdown timer for the guessers */}
+                   <span className="text-brand-secondary font-mono font-black text-xl bg-bg-main/50 px-3 py-1 rounded-lg border border-white/5 shadow-inner">
+                      {timeLeft}s
+                   </span>
+                </div>
             </div>
           </div>
         )}

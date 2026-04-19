@@ -5,7 +5,7 @@ import React from 'react';
 import { useGame } from '../context/GameContext';
 
 const WordModal: React.FC = () => {
-  const { phase, currentPlayerIsDrawer, wordOptions, chooseWord } = useGame();
+  const { phase, currentPlayerIsDrawer, wordOptions, chooseWord, timeLeft } = useGame();
 
   if (phase !== 'choosing') return null;
 
@@ -19,6 +19,11 @@ const WordModal: React.FC = () => {
            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.6em] leading-relaxed max-w-[240px]">
               Preparing the canvas... Get ready to guess.
            </p>
+
+           <div className="mt-8 px-6 py-2 bg-black/40 rounded-full border border-white/5 flex items-center gap-3">
+              <span className="text-xl animate-pulse">⏳</span>
+              <span className="text-xl font-mono font-black text-white">{timeLeft}s</span>
+           </div>
         </div>
       </div>
     );
@@ -37,6 +42,11 @@ const WordModal: React.FC = () => {
             PICK YOUR <span className="text-brand-primary">MUSE</span>
           </h1>
           <p className="text-slate-600 font-bold uppercase text-[10px] tracking-[0.5em] mt-8">Select a word below to begin the transmission</p>
+          
+          <div className="mt-12 inline-flex items-center gap-4 bg-brand-primary/10 border border-brand-primary/20 px-8 py-3 rounded-full">
+              <span className="text-2xl animate-pulse filter grayscale select-none">⏳</span>
+              <span className="text-2xl font-mono font-black text-brand-primary">{timeLeft}s</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">

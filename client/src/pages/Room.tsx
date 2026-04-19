@@ -144,7 +144,7 @@ const Room: React.FC = () => {
               {/* Rounds Control */}
               <div className="flex flex-col gap-1 w-full xl:w-auto xl:min-w-[200px]">
                   <div className="flex items-center justify-between px-1">
-                      <span className="text-[8px] xl:text-[9px] font-black text-slate-500 uppercase tracking-widest">Exhibition Rounds</span>
+                      <span className="text-[8px] xl:text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Turns</span>
                       <span className="text-base xl:text-lg font-black text-brand-secondary font-mono italic">{totalRounds}</span>
                   </div>
                   <div className="flex items-center gap-3 xl:gap-4">

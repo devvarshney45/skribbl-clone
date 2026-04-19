@@ -27,7 +27,7 @@ const GameOver: React.FC = () => {
                Final Results
             </span>
           </div>
-          <h1 className="text-6xl md:text-8xl font-black italic text-gradient-pro tracking-tighter leading-none mb-4">
+          <h1 className="text-5xl md:text-7xl lg:text-[7rem] font-black italic text-gradient-pro tracking-tighter leading-none mb-4">
              GAME <span className="opacity-20 text-slate-500">OVER</span>
           </h1>
           <p className="text-slate-600 font-black uppercase text-[10px] tracking-[0.5em] mt-6">Scores Calculated • Thanks for playing!</p>
@@ -39,7 +39,7 @@ const GameOver: React.FC = () => {
             {sortedPlayers[1] && (
                 <div className="order-2 md:order-1 panel p-8 md:p-10 rounded-[2.5rem] border-white/5 relative group transition-all hover:bg-bg-panel/60 h-fit">
                     <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 italic">Runner Up</div>
-                    <div className="text-xl md:text-2xl font-black text-white/95 mb-4 truncate italic px-2">{sortedPlayers[1].name}</div>
+                    <div className="text-xl md:text-2xl font-black text-white/95 mb-4 px-2 max-w-[150px] md:max-w-[180px] mx-auto overflow-hidden text-ellipsis whitespace-nowrap italic">{sortedPlayers[1].name}</div>
                     <div className="inline-block bg-white/5 px-6 py-2 rounded-full text-[10px] font-mono font-black text-brand-secondary">{sortedPlayers[1].score} PTS</div>
                     <div className="absolute -top-6 left-1/2 -translate-x-1/2 panel-card w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl ring-4 ring-bg-main bg-bg-card">🥈</div>
                 </div>
@@ -50,7 +50,7 @@ const GameOver: React.FC = () => {
                 <div className="order-1 md:order-2 panel p-10 md:p-14 rounded-[3.5rem] border-brand-highlight/20 relative shadow-3xl bg-bg-panel/80 scale-100 md:scale-105 animate-pop-in overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-brand-highlight/10 to-transparent pointer-events-none" />
                     <div className="text-[10px] font-black text-brand-highlight uppercase tracking-[0.5em] mb-6 animate-pulse">Winner</div>
-                    <div className="text-4xl md:text-6xl font-black text-white mb-8 drop-shadow-2xl italic truncate px-4">{winner.name}</div>
+                    <div className="text-3xl md:text-5xl font-black text-white mb-8 drop-shadow-2xl italic px-4 max-w-[200px] md:max-w-[280px] mx-auto overflow-hidden text-ellipsis whitespace-nowrap">{winner.name}</div>
                     
                     <div className="inline-flex items-center gap-4 bg-brand-highlight/10 border border-brand-highlight/20 px-8 py-4 rounded-[2.5rem]">
                         <span className="text-2xl font-black text-white italic">{winner.score}</span>
@@ -65,7 +65,7 @@ const GameOver: React.FC = () => {
             {sortedPlayers[2] && (
                 <div className="order-3 panel p-8 md:p-10 rounded-[2.5rem] border-white/5 relative group transition-all hover:bg-bg-panel/60 h-fit">
                     <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 italic">3rd Place</div>
-                    <div className="text-xl md:text-2xl font-black text-white/95 mb-4 truncate italic px-2">{sortedPlayers[2].name}</div>
+                    <div className="text-xl md:text-2xl font-black text-white/95 mb-4 px-2 max-w-[150px] md:max-w-[180px] mx-auto overflow-hidden text-ellipsis whitespace-nowrap italic">{sortedPlayers[2].name}</div>
                     <div className="inline-block bg-white/5 px-6 py-2 rounded-full text-[10px] font-mono font-black text-brand-secondary">{sortedPlayers[2].score} PTS</div>
                     <div className="absolute -top-6 left-1/2 -translate-x-1/2 panel-card w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl ring-4 ring-bg-main bg-bg-card">🥉</div>
                 </div>
