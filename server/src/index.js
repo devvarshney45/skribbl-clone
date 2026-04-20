@@ -40,10 +40,13 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
+    
     const sanitizedOrigin = origin.replace(/\/$/, '');
     const isAllowed = allowedOrigins.some(ao => ao.replace(/\/$/, '') === sanitizedOrigin) || 
-                     sanitizedOrigin.startsWith('http://localhost:');
+                     sanitizedOrigin.startsWith('http://localhost:') ||
+                     sanitizedOrigin.endsWith('.onrender.com'); // Allow Render environments
 
     if (isAllowed) {
       callback(null, true);
