@@ -53,6 +53,30 @@ const sketchRegistry = {
     { type: 'circle', x: 425, y: 350, r: 15, color: '#0ea5e9' },
     { type: 'rect', x: 400, y: 260, w: 40, h: 40, color: '#facc15' },
   ],
+  house: [
+    { type: 'rect', x: 350, y: 350, w: 100, h: 100, color: '#f97316' }, // base
+    { type: 'line', x1: 350, y1: 350, x2: 400, y2: 300, color: '#ef4444' }, // roof-left
+    { type: 'line', x1: 400, y1: 300, x2: 450, y2: 350, color: '#ef4444' }, // roof-right
+    { type: 'rect', x: 385, y: 400, w: 30, h: 50, color: '#78350f' }, // door
+  ],
+  tree: [
+    { type: 'rect', x: 390, y: 400, w: 20, h: 100, color: '#78350f' }, // trunk
+    { type: 'circle', x: 400, y: 350, r: 60, color: '#22c55e' }, // leaves
+  ],
+  car: [
+    { type: 'rect', x: 300, y: 350, w: 200, h: 70, color: '#3b82f6' }, // body
+    { type: 'circle', x: 340, y: 420, r: 20, color: '#000000' }, // wheel1
+    { type: 'circle', x: 460, y: 420, r: 20, color: '#000000' }, // wheel2
+  ],
+  flower: [
+    { type: 'line', x1: 400, y1: 450, x2: 400, y2: 350, color: '#10b981' }, // stem
+    { type: 'circle', x: 400, y: 320, r: 25, color: '#f59e0b' }, // center
+    { type: 'circle', x: 400, y: 300, r: 20, color: '#f43f5e' }, // petal top
+  ],
+  laptop: [
+    { type: 'rect', x: 320, y: 380, w: 160, h: 20, color: '#64748b' }, // base
+    { type: 'rect', x: 330, y: 250, w: 140, h: 130, color: '#94a3b8' }, // screen
+  ],
 };
 
 class Game {
@@ -563,60 +587,61 @@ class Game {
         }, 50);
 
       } else {
-        // Case B: Sophisticated Abstract Patterns (Fallback)
+        // Case B: Sophisticated "Canvas Blobs" (Improved Fallback)
         let patternStep = 0;
-        let currentPattern = Math.floor(Math.random() * 3);
-        let centerX = 150 + Math.random() * 500;
-        let centerY = 100 + Math.random() * 400;
-        const colors = ['#ffffff', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#a855f7'];
-        let currentColor = colors[Math.floor(Math.random() * colors.length)];
-        let currentSize = Math.floor(Math.random() * 8) + 4;
+        const colors = ['#f8fafc', '#e2e8f0', '#cbd5e1']; // Draft-style colors
+        const centerX = 400;
+        const centerY = 300;
 
         this.botDrawingInterval = setInterval(() => {
-          if (patternStep > 60) {
+          if (patternStep > 40) {
               this.io.to(this.roomId).emit('draw_data', { type: 'end', playerId: drawer.id });
               patternStep = 0;
-              currentPattern = (currentPattern + 1) % 3;
               return;
           }
 
-          let x, y;
-          const t = patternStep * 0.15;
-          switch(currentPattern) {
-              case 0: x = centerX + Math.cos(t * 2) * (patternStep * 3); y = centerY + Math.sin(t * 2) * (patternStep * 3); break;
-              case 1: x = centerX + patternStep * 8; y = centerY + Math.sin(t * 3) * 60; break;
-              case 2: x = centerX + Math.cos(t) * 100; y = centerY + Math.sin(t) * 100; break;
-          }
+          // Draw a rough central blob to simulate "roughing out" the shape
+          const r = 40 + Math.random() * 60;
+          const t = patternStep * 0.3;
+          const x = centerX + Math.cos(t) * r;
+          const y = centerY + Math.sin(t) * r;
 
           if (patternStep === 0) {
-            this.io.to(this.roomId).emit('draw_data', { type: 'start', x, y, color: currentColor, size: currentSize, playerId: drawer.id });
+            this.io.to(this.roomId).emit('draw_data', { type: 'start', x, y, color: colors[0], size: 4, playerId: drawer.id });
           } else {
             this.io.to(this.roomId).emit('draw_data', { type: 'move', x, y, playerId: drawer.id });
           }
           patternStep++;
-        }, 60);
+        }, 80);
       }
     }
     
     // 2. Bot Guessing Simulation (Reactive Intelligence)
+    const startTime = Date.now();
+    const GUESSING_DELAY_MS = 8000; // 8 second hard delay
+
     const dummyWords = ['apple', 'cat', 'house', 'tree', 'sun', 'moon', 'fish', 'bird', 'car', 'book', 'pizza', 'star'];
     this.botGuessingInterval = setInterval(() => {
+      // Hard Delay: Do nothing for the first 8 seconds
+      if (Date.now() - startTime < GUESSING_DELAY_MS) return;
+
       const guessingBots = this.players.filter(p => p.isBot && p.id !== drawer?.id && !p.hasGuessedCorrectly);
       
       guessingBots.forEach(bot => {
-        // Proactive engagement check (25% chance every 1.5s)
+        // Reduced frequency for a more natural feel (25% check chance)
         if (Math.random() > 0.25) return;
         
         const timeRatio = (this.settings.drawTime - this.timeLeft) / this.settings.drawTime; 
         
-        // Smarter probability curve: 15% base + scaling + hint boost
-        let correctChance = 0.15 + (timeRatio * 0.45); 
+        // QUADRATIC PROBABILITY: Chance remains extremely low early on and ramps up significantly late
+        // Formula: 0.02 base + (ratio^2 * 0.65)
+        let correctChance = 0.02 + (timeRatio * timeRatio * 0.65); 
         
-        // HINT REACTIVITY: If many hints are revealed, bot "notices" the word
+        // HINT REACTIVITY: Massive boost if hints are heavily revealed
         const revealedHints = this.wordHints.filter(h => h !== '_').length;
         const totalLetters = this.currentWord?.length || 1;
         if (revealedHints / totalLetters > 0.4) {
-             correctChance += 0.25; // Massive boost if half the word is visible
+             correctChance += 0.30; 
         }
 
         let guessWord = '';
@@ -636,6 +661,7 @@ class Game {
         }
       });
     }, 1500); 
+  }
   }
 
   // ---------------------------------------------------------------------------
