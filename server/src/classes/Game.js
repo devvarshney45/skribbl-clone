@@ -77,6 +77,45 @@ const sketchRegistry = {
     { type: 'rect', x: 320, y: 380, w: 160, h: 20, color: '#64748b' }, // base
     { type: 'rect', x: 330, y: 250, w: 140, h: 130, color: '#94a3b8' }, // screen
   ],
+  sword: [
+    { type: 'rect', x: 390, y: 400, w: 20, h: 80, color: '#78350f' }, // handle
+    { type: 'rect', x: 350, y: 390, w: 100, h: 10, color: '#78350f' }, // crossguard
+    { type: 'line', x1: 400, y1: 390, x2: 400, y2: 100, color: '#cbd5e1' }, // blade
+  ],
+  cloud: [
+    { type: 'circle', x: 350, y: 250, r: 40, color: '#f8fafc' },
+    { type: 'circle', x: 400, y: 230, r: 50, color: '#f8fafc' },
+    { type: 'circle', x: 450, y: 250, r: 40, color: '#f8fafc' },
+  ],
+  mountain: [
+    { type: 'line', x1: 150, y1: 500, x2: 400, y2: 150, color: '#475569' }, // left slope
+    { type: 'line', x1: 400, y1: 150, x2: 650, y2: 500, color: '#475569' }, // right slope
+    { type: 'line', x1: 350, y1: 220, x2: 450, y2: 220, color: '#ffffff' }, // snow peak base
+  ],
+  computer: [
+    { type: 'rect', x: 250, y: 150, w: 300, h: 200, color: '#1e293b' }, // monitor
+    { type: 'rect', x: 380, y: 350, w: 40, h: 50, color: '#334155' }, // stand
+    { type: 'rect', x: 330, y: 400, w: 140, h: 10, color: '#334155' }, // base
+  ],
+  tree: [
+    { type: 'rect', x: 385, y: 350, w: 30, h: 100, color: '#78350f' }, // trunk
+    { type: 'circle', x: 400, y: 300, r: 60, color: '#15803d' }, // leaves
+    { type: 'circle', x: 360, y: 320, r: 50, color: '#15803d' },
+    { type: 'circle', x: 440, y: 320, r: 50, color: '#15803d' },
+  ],
+  car: [
+    { type: 'rect', x: 300, y: 350, w: 200, h: 60, color: '#3b82f6' }, // body
+    { type: 'rect', x: 340, y: 310, w: 120, h: 40, color: '#60a5fa' }, // roof
+    { type: 'circle', x: 340, y: 410, r: 20, color: '#1e293b' }, // wheels
+    { type: 'circle', x: 460, y: 410, r: 20, color: '#1e293b' },
+  ],
+  star: [
+    { type: 'line', x1: 400, y1: 200, x2: 450, y2: 350, color: '#facc15' },
+    { type: 'line', x1: 450, y1: 350, x2: 300, y2: 250, color: '#facc15' },
+    { type: 'line', x1: 300, y1: 250, x2: 500, y2: 250, color: '#facc15' },
+    { type: 'line', x1: 500, y1: 250, x2: 350, y2: 350, color: '#facc15' },
+    { type: 'line', x1: 350, y1: 350, x2: 400, y2: 200, color: '#facc15' },
+  ],
 };
 
 class Game {
@@ -577,14 +616,21 @@ class Game {
           }
 
           stepIndex++;
-          // High fidelity: switch instructions every ~30 points
-          if (stepIndex > 32) {
+          // High fidelity: switch instructions every ~25 points for smoother transitions
+          if (stepIndex > 25) {
              this.io.to(this.roomId).emit('draw_data', { type: 'end', playerId: drawer.id });
              instructionIndex++;
              stepIndex = 0;
-             if (instructionIndex >= sketchData.length) instructionIndex = 0; // Repeat for beauty
+             if (instructionIndex >= sketchData.length) {
+                // If it's a bot, it might stop or start over
+                if (Math.random() > 0.6) {
+                   clearInterval(this.botDrawingInterval);
+                   return;
+                }
+                instructionIndex = 0;
+             }
           }
-        }, 50);
+        }, 55); // Slightly slower for more organic feel
 
       } else {
         // Case B: Sophisticated "Canvas Blobs" (Improved Fallback)

@@ -19,11 +19,12 @@ const Canvas: React.FC = () => {
     if (canvasRef.current && containerRef.current) {
       const resize = () => {
         if (!containerRef.current || !canvasRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
         
-        if (canvasRef.current.width !== rect.width || canvasRef.current.height !== rect.height) {
-            canvasRef.current.width = rect.width;
-            canvasRef.current.height = rect.height;
+        // Logical Coordinate Fix: Always use 800x600 internally
+        // CSS (w-full h-full) handles the visual display scaling
+        if (canvasRef.current.width !== 800 || canvasRef.current.height !== 600) {
+            canvasRef.current.width = 800;
+            canvasRef.current.height = 600;
             initCanvas();
             redraw();
         }

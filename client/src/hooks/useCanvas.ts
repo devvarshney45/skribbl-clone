@@ -68,8 +68,8 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
     if (!ctx || !canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = canvasRef.current.width / rect.width;
-    const scaleY = canvasRef.current.height / rect.height;
+    const scaleX = 800 / rect.width;
+    const scaleY = 600 / rect.height;
     
     let x, y;
 
