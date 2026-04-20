@@ -56,7 +56,12 @@ const Scoreboard: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-white/95 truncate max-w-[90px]">{player.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-white/95 truncate max-w-[90px]">{player.name}</span>
+                    {!player.isOnline && (
+                      <span className="bg-rose-500/20 text-rose-500 text-[6px] font-black uppercase px-1.5 py-0.5 rounded-full border border-rose-500/20 animate-pulse">Offline</span>
+                    )}
+                  </div>
                   <div className={`text-[7px] font-black uppercase tracking-widest mt-1 ${
                       isDrawer ? 'text-brand-secondary' : player.hasGuessedCorrectly ? 'text-brand-secondary animate-pulse' : 'text-slate-700'
                   }`}>

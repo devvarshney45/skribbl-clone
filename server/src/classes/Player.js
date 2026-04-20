@@ -13,6 +13,7 @@ class Player {
     this.isReady = false;        // has the player clicked "Ready" in the lobby?
     this.isHost = false;         // is this player the room host?
     this.isBot = isBot;          // is this player a bot?
+    this.isOnline = true;        // is the player currently connected via socket?
   }
 
   // ---------------------------------------------------------------------------
@@ -46,6 +47,7 @@ class Player {
       isReady: this.isReady,
       isHost: this.isHost,
       isBot: this.isBot,
+      isOnline: this.isOnline,
     };
   }
 }

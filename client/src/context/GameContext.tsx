@@ -16,6 +16,7 @@ export interface Player {
   isReady: boolean;
   isHost: boolean;
   isBot: boolean;
+  isOnline: boolean;
 }
 
 export type GamePhase = 'waiting' | 'choosing' | 'drawing' | 'roundEnd' | 'gameOver';
@@ -267,8 +268,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     socket.on('settings_updated', ({ settings, isPrivate: priv }) => {
-      setTotalRounds(settings.rounds);
-      setDrawTime(settings.drawTime);
+      console.log('[GameContext] SETTINGS UPDATE RECEIVED:', settings, '| isPrivate:', priv);
+      if (settings.rounds) setTotalRounds(settings.rounds);
+      if (settings.drawTime) setDrawTime(settings.drawTime);
       if (priv !== undefined) setIsPrivate(priv);
     });
 

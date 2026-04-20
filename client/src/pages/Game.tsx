@@ -20,6 +20,15 @@ const Game: React.FC = () => {
   const isDrawing = phase === 'drawing';
   const [tab, setTab] = useState<'canvas' | 'chat' | 'board'>('canvas');
 
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ''; // Standard browser blocking alert
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
   const renderWordDisplay = () => {
     if (isDrawer || phase === 'roundEnd') {
       return (

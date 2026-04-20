@@ -100,6 +100,7 @@ function setupSocketHandler(io) {
         socket.emit('room_created', {
           roomId: room.id,
           roomCode: room.code,
+          settings: room.settings,
           isPrivate: room.isPrivate,
           inviteLink: `${process.env.CLIENT_URL}/?code=${room.code}`,
         });
@@ -303,7 +304,8 @@ function setupSocketHandler(io) {
           return;
         }
 
-        // Update socket ID and mapping
+        // Update status
+        player.isOnline = true;
         player.socketId = socket.id;
         socket.join(room.id);
         socket.join(`user_${player.id}`);
@@ -431,8 +433,11 @@ function setupSocketHandler(io) {
         const room = rooms.get(roomCode?.toUpperCase());
         if (!room) return;
 
-        const player = room.getPlayerBySocketId(socket.id);
-        if (!player || !player.isHost) return;
+        const player = room.getPlayer(socket.data.playerId);
+        if (!player || !player.isHost) {
+          console.warn(`[Socket] Unauthorized settings update attempt by ${socket.data.playerId} in ${roomCode}`);
+          return;
+        }
 
         // Extract isPrivate separately — it lives on room, not room.settings
         const { isPrivate: newIsPrivate, ...gameSettings } = settings;
@@ -452,9 +457,14 @@ function setupSocketHandler(io) {
           await pool.query('UPDATE rooms SET is_private = $1 WHERE id = $2', [room.isPrivate, room.id]);
         }
 
+        // Refresh AFK timer
+        room.lastActive = Date.now();
+
+
         console.log(`[Socket] Settings updated in room ${room.code}:`, room.settings, `| isPrivate: ${room.isPrivate}`);
 
         // Broadcast updated settings + privacy to everyone in the room
+        console.log(`[Socket] Broadcasting settings_updated to room ${room.id} (${room.code})`);
         io.to(room.id).emit('settings_updated', { 
           settings: room.settings,
           isPrivate: room.isPrivate,
@@ -799,19 +809,28 @@ function setupSocketHandler(io) {
         const player = room.getPlayer(playerId);
         if (!player) return;
 
-        // Grace period for brief disconnects/reloads
+        // Set status to offline immediately and notify everyone
+        player.isOnline = false;
+        broadcastPlayerList(io, room);
+
+        io.to(room.id).emit('chat_message', {
+          type: 'system',
+          text: `${player.name} is offline. Auto-removing in 10 seconds...`,
+        });
+
+        // 10-second grace period for reloads/brief drops
         setTimeout(async () => {
-          // Check if player still exists and hasn't reconnected (socketId unchanged)
+          // Check if player reconnected (isOnline becomes true again in reconnect_session)
           const roomCheck = rooms.get(roomCode?.toUpperCase());
           if (!roomCheck) return;
           
-          const playerCheck = roomCheck.getPlayer(playerId);
-          if (!playerCheck || playerCheck.socketId !== socket.id) {
-            // Player successfully reconnected with a new socket ID! Do nothing.
-            return;
+          const pInstance = roomCheck.getPlayer(playerId);
+          if (!pInstance || pInstance.isOnline) {
+             // Either already gone or successfully reconnected
+             return;
           }
 
-          // Remove player entirely from memory and DB
+          // Case: Grace period expired and player is still offline. Wipe them.
           roomCheck.removePlayer(playerId);
           
           try {
@@ -820,10 +839,10 @@ function setupSocketHandler(io) {
           
           io.to(roomCheck.id).emit('chat_message', {
             type: 'system',
-            text: `${playerCheck.name} left the game.`,
+            text: `${pInstance.name} was removed from the game (Timeout).`,
           });
           
-          io.to(roomCheck.id).emit('player_left', { playerId, playerName: playerCheck.name });
+          io.to(roomCheck.id).emit('player_left', { playerId, playerName: pInstance.name });
 
           // If nobody is left, clean up the room entirely
           if (roomCheck.players.size === 0) {
@@ -835,7 +854,7 @@ function setupSocketHandler(io) {
           }
 
           // If the host left, assign a new host (first player in the list)
-          if (playerCheck.isHost) {
+          if (pInstance.isHost) {
             const newHost = roomCheck.getPlayers()[0];
             if (newHost) {
               newHost.isHost = true;
@@ -857,7 +876,7 @@ function setupSocketHandler(io) {
             if (!drawer || drawer.id === playerId) {
               io.to(roomCheck.id).emit('chat_message', {
                 type: 'system',
-                text: 'The drawer left — skipping to next round.',
+                text: 'The drawer timed out — skipping to next round.',
               });
               game.endRound();
             }
