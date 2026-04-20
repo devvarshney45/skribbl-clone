@@ -8,6 +8,53 @@
 
 const { pool } = require('../db/database');
 
+// Senior Level Sketch Registry: Maps words to geometric instructions
+const sketchRegistry = {
+  apple: [
+    { type: 'circle', x: 400, y: 350, r: 80, color: '#ef4444' }, // body
+    { type: 'line', x1: 400, y1: 270, x2: 410, y2: 240, color: '#10b981' }, // stem
+  ],
+  moon: [
+    { type: 'circle', x: 400, y: 300, r: 100, color: '#fef3c7' }, // glow
+    { type: 'circle', x: 430, y: 280, r: 80, color: '#000000' }, // shadow (crescent effect) - wait, canvas is usually white/bg, but we just draw the shape
+  ],
+  sun: [
+    { type: 'circle', x: 400, y: 300, r: 80, color: '#f59e0b' },
+    { type: 'line', x1: 400, y1: 200, x2: 400, y2: 150, color: '#f59e0b' },
+    { type: 'line', x1: 400, y1: 400, x2: 400, y2: 450, color: '#f59e0b' },
+    { type: 'line', x1: 300, y1: 300, x2: 250, y2: 300, color: '#f59e0b' },
+    { type: 'line', x1: 500, y1: 300, x2: 550, y2: 300, color: '#f59e0b' },
+  ],
+  skyscraper: [
+    { type: 'rect', x: 350, y: 150, w: 100, h: 400, color: '#3b82f6' },
+    { type: 'rect', x: 370, y: 200, w: 20, h: 20, color: '#fbbf24' },
+    { type: 'rect', x: 410, y: 200, w: 20, h: 20, color: '#fbbf24' },
+  ],
+  pizza: [
+    { type: 'circle', x: 400, y: 300, r: 120, color: '#fbbf24' }, // crust
+    { type: 'circle', x: 360, y: 270, r: 15, color: '#ef4444' }, // pepperoni
+    { type: 'circle', x: 440, y: 330, r: 15, color: '#ef4444' },
+    { type: 'circle', x: 370, y: 350, r: 15, color: '#ef4444' },
+  ],
+  dog: [
+    { type: 'rect', x: 300, y: 350, w: 180, h: 90, color: '#78350f' }, // body
+    { type: 'rect', x: 440, y: 300, w: 70, h: 70, color: '#78350f' }, // head
+    { type: 'line', x1: 310, y1: 440, x2: 310, y2: 480, color: '#78350f' }, // legs
+    { type: 'line', x1: 470, y1: 440, x2: 470, y2: 480, color: '#78350f' },
+  ],
+  telescope: [
+    { type: 'rect', x: 300, y: 250, w: 250, h: 40, color: '#64748b' },
+    { type: 'line', x1: 425, y1: 290, x2: 400, y2: 350, color: '#64748b' },
+    { type: 'line', x1: 425, y1: 290, x2: 450, y2: 350, color: '#64748b' },
+  ],
+  submarine: [
+    { type: 'rect', x: 300, y: 300, w: 250, h: 100, color: '#facc15' },
+    { type: 'circle', x: 350, y: 350, r: 15, color: '#0ea5e9' },
+    { type: 'circle', x: 425, y: 350, r: 15, color: '#0ea5e9' },
+    { type: 'rect', x: 400, y: 260, w: 40, h: 40, color: '#facc15' },
+  ],
+};
+
 class Game {
   constructor({ roomId, settings, players, io, onRoundStart }) {
     this.roomId = roomId;          // which room this game belongs to
@@ -451,83 +498,127 @@ class Game {
   setupBotSimulators() {
     const drawer = this.getCurrentDrawer();
     
-    // 1. Bot Drawing Simulation (Enhanced "Senior Level" Generator)
+    // 1. Bot Drawing Simulation (Enhanced Keyword-Aware Intelligence)
     if (drawer && drawer.isBot) {
-      let patternStep = 0;
-      let currentPattern = Math.floor(Math.random() * 3); // 0: Spiral, 1: Wave, 2: Shapes
-      let centerX = 300 + Math.random() * 200;
-      let centerY = 200 + Math.random() * 200;
-      const colors = ['#ffffff', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#a855f7'];
-      let currentColor = colors[Math.floor(Math.random() * colors.length)];
-      let currentSize = Math.floor(Math.random() * 8) + 4;
+      const sketchData = sketchRegistry[this.currentWord?.toLowerCase()];
+      let stepIndex = 0;
+      let instructionIndex = 0;
 
-      this.botDrawingInterval = setInterval(() => {
-        // Occasionally reset or change patterns
-        if (patternStep > 40 + Math.random() * 40) {
-            this.io.to(this.roomId).emit('draw_data', { type: 'end', playerId: drawer.id });
-            patternStep = 0;
-            currentPattern = Math.floor(Math.random() * 3);
-            centerX = 150 + Math.random() * 500;
-            centerY = 100 + Math.random() * 400;
-            currentColor = colors[Math.floor(Math.random() * colors.length)];
-            currentSize = Math.floor(Math.random() * 8) + 4;
-            return;
-        }
+      if (sketchData) {
+        // Case A: Keyword-Aware Intelligent Drawing
+        this.botDrawingInterval = setInterval(() => {
+          const instruction = sketchData[instructionIndex];
+          if (!instruction) {
+             clearInterval(this.botDrawingInterval);
+             return;
+          }
 
-        let x, y;
-        const t = patternStep * 0.15;
+          let x, y;
+          const t = stepIndex * 0.2;
+          const size = instruction.size || 6;
 
-        // Structured logic
-        switch(currentPattern) {
-            case 0: // Expanding Spiral
-                const r = patternStep * 4;
-                x = centerX + Math.cos(t * 2) * r;
-                y = centerY + Math.sin(t * 2) * r;
-                break;
-            case 1: // Sine Wave
-                x = (centerX - 200) + patternStep * 10;
-                y = centerY + Math.sin(t * 3) * 80;
-                break;
-            case 2: // Circular Orbit
-                x = centerX + Math.cos(t) * 120;
-                y = centerY + Math.sin(t) * 120;
-                break;
-            default:
-                x = centerX; y = centerY;
-        }
+          // Re-draw instructions as smooth paths
+          if (instruction.type === 'circle') {
+             x = instruction.x + Math.cos(t) * instruction.r;
+             y = instruction.y + Math.sin(t) * instruction.r;
+          } else if (instruction.type === 'rect') {
+             // Basic rect path tracing: 0.25 segments per side
+             if (t < Math.PI/2) { // Top
+                x = instruction.x + (t/(Math.PI/2)) * instruction.w;
+                y = instruction.y;
+             } else if (t < Math.PI) { // Right
+                x = instruction.x + instruction.w;
+                y = instruction.y + ((t-Math.PI/2)/(Math.PI/2)) * instruction.h;
+             } else if (t < 1.5*Math.PI) { // Bottom
+                x = instruction.x + instruction.w - ((t-Math.PI)/(Math.PI/2)) * instruction.w;
+                y = instruction.y + instruction.h;
+             } else { // Left
+                x = instruction.x;
+                y = instruction.y + instruction.h - ((t-1.5*Math.PI)/(Math.PI/2)) * instruction.h;
+             }
+          } else if (instruction.type === 'line') {
+             const progress = Math.min(1, t / Math.PI);
+             x = instruction.x1 + (instruction.x2 - instruction.x1) * progress;
+             y = instruction.y1 + (instruction.y2 - instruction.y1) * progress;
+          }
 
-        // Clamp to canvas bounds
-        x = Math.max(10, Math.min(790, x));
-        y = Math.max(10, Math.min(590, y));
+          if (stepIndex === 0) {
+            this.io.to(this.roomId).emit('draw_data', {
+              type: 'start', x, y, color: instruction.color, size, playerId: drawer.id
+            });
+          } else {
+            this.io.to(this.roomId).emit('draw_data', {
+              type: 'move', x, y, playerId: drawer.id
+            });
+          }
 
-        if (patternStep === 0) {
-          this.io.to(this.roomId).emit('draw_data', {
-            type: 'start', x, y, color: currentColor, size: currentSize, playerId: drawer.id
-          });
-        } else {
-          this.io.to(this.roomId).emit('draw_data', {
-            type: 'move', x, y, playerId: drawer.id
-          });
-        }
+          stepIndex++;
+          // High fidelity: switch instructions every ~30 points
+          if (stepIndex > 32) {
+             this.io.to(this.roomId).emit('draw_data', { type: 'end', playerId: drawer.id });
+             instructionIndex++;
+             stepIndex = 0;
+             if (instructionIndex >= sketchData.length) instructionIndex = 0; // Repeat for beauty
+          }
+        }, 50);
 
-        patternStep++;
-      }, 60); // 60ms for smooth continuous strokes
+      } else {
+        // Case B: Sophisticated Abstract Patterns (Fallback)
+        let patternStep = 0;
+        let currentPattern = Math.floor(Math.random() * 3);
+        let centerX = 150 + Math.random() * 500;
+        let centerY = 100 + Math.random() * 400;
+        const colors = ['#ffffff', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#a855f7'];
+        let currentColor = colors[Math.floor(Math.random() * colors.length)];
+        let currentSize = Math.floor(Math.random() * 8) + 4;
+
+        this.botDrawingInterval = setInterval(() => {
+          if (patternStep > 60) {
+              this.io.to(this.roomId).emit('draw_data', { type: 'end', playerId: drawer.id });
+              patternStep = 0;
+              currentPattern = (currentPattern + 1) % 3;
+              return;
+          }
+
+          let x, y;
+          const t = patternStep * 0.15;
+          switch(currentPattern) {
+              case 0: x = centerX + Math.cos(t * 2) * (patternStep * 3); y = centerY + Math.sin(t * 2) * (patternStep * 3); break;
+              case 1: x = centerX + patternStep * 8; y = centerY + Math.sin(t * 3) * 60; break;
+              case 2: x = centerX + Math.cos(t) * 100; y = centerY + Math.sin(t) * 100; break;
+          }
+
+          if (patternStep === 0) {
+            this.io.to(this.roomId).emit('draw_data', { type: 'start', x, y, color: currentColor, size: currentSize, playerId: drawer.id });
+          } else {
+            this.io.to(this.roomId).emit('draw_data', { type: 'move', x, y, playerId: drawer.id });
+          }
+          patternStep++;
+        }, 60);
+      }
     }
     
-    // 2. Bot Guessing Simulation
+    // 2. Bot Guessing Simulation (Reactive Intelligence)
     const dummyWords = ['apple', 'cat', 'house', 'tree', 'sun', 'moon', 'fish', 'bird', 'car', 'book', 'pizza', 'star'];
     this.botGuessingInterval = setInterval(() => {
-      // Find bots that aren't the drawer and haven't guessed correctly yet
       const guessingBots = this.players.filter(p => p.isBot && p.id !== drawer?.id && !p.hasGuessedCorrectly);
       
       guessingBots.forEach(bot => {
-        // 15% chance to do something each tick (2 seconds)
-        if (Math.random() > 0.15) return;
+        // Proactive engagement check (25% chance every 1.5s)
+        if (Math.random() > 0.25) return;
         
-        // As time runs out, higher chance to guess correctly
-        const timeRatio = (this.settings.drawTime - this.timeLeft) / this.settings.drawTime; // 0.0 to 1.0
-        const correctChance = 0.05 + (timeRatio * 0.4); // Starts at 5%, goes up to 45%
+        const timeRatio = (this.settings.drawTime - this.timeLeft) / this.settings.drawTime; 
         
+        // Smarter probability curve: 15% base + scaling + hint boost
+        let correctChance = 0.15 + (timeRatio * 0.45); 
+        
+        // HINT REACTIVITY: If many hints are revealed, bot "notices" the word
+        const revealedHints = this.wordHints.filter(h => h !== '_').length;
+        const totalLetters = this.currentWord?.length || 1;
+        if (revealedHints / totalLetters > 0.4) {
+             correctChance += 0.25; // Massive boost if half the word is visible
+        }
+
         let guessWord = '';
         if (Math.random() < correctChance && this.currentWord) {
           guessWord = this.currentWord;
@@ -535,31 +626,16 @@ class Game {
           guessWord = dummyWords[Math.floor(Math.random() * dummyWords.length)];
         }
         
-        // Attempt to guess
         const result = this.handleGuess(bot, guessWord);
         
-        // Notify chat
         if (result?.correct) {
-          this.io.to(this.roomId).emit('chat_message', {
-            type: 'correct',
-            playerName: bot.name,
-            text: 'guessed the word!',
-          });
-          
-          this.io.to(this.roomId).emit('player_guessed', {
-            playerId: bot.id,
-            points: result.points,
-            guessOrder: result.guessOrder,
-          });
+          this.io.to(this.roomId).emit('chat_message', { type: 'correct', playerName: bot.name, text: 'guessed the word!' });
+          this.io.to(this.roomId).emit('player_guessed', { playerId: bot.id, points: result.points, guessOrder: result.guessOrder });
         } else {
-          this.io.to(this.roomId).emit('chat_message', {
-            type: 'chat',
-            playerName: bot.name,
-            text: guessWord,
-          });
+          this.io.to(this.roomId).emit('chat_message', { type: 'chat', playerName: bot.name, text: guessWord });
         }
       });
-    }, 2000); // Check every 2 seconds
+    }, 1500); 
   }
 
   // ---------------------------------------------------------------------------
