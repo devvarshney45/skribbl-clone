@@ -58,6 +58,13 @@ const Room: React.FC = () => {
               <h1 className="text-2xl md:text-3xl font-black italic tracking-tighter text-white leading-none">
                 SKRIBBL<span className="text-brand-primary">.</span>IO <span className="text-brand-secondary opacity-50 ml-1 text-sm md:text-lg">ARENA</span>
               </h1>
+          </div>
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+          >
+            Quit Lobby
+          </button>
               <div className="flex items-center gap-2 mt-1 px-2 py-0.5 bg-white/5 rounded-full border border-white/5 w-fit">
                   <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPrivate ? 'bg-rose-500' : 'bg-brand-secondary'}`} />
                   <span className="text-[9px] font-black text-white/50 uppercase tracking-widest">{isPrivate ? 'Private Studio' : 'Public Discovery'}</span>
@@ -153,16 +160,6 @@ const Room: React.FC = () => {
                                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                                   </svg>
-                                </button>
-                              )}
-                              {/* Claim Host button if current host is offline */}
-                              {!isHost && p.isHost && isDisconnected && (
-                                <button
-                                  onClick={() => claimHost()}
-                                  title="Claim Host Role"
-                                  className="px-2 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 font-black text-[8px] uppercase tracking-widest hover:bg-yellow-500/20 transition-all active:scale-90"
-                                >
-                                  Claim
                                 </button>
                               )}
                           </div>

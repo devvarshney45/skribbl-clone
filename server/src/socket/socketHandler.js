@@ -776,38 +776,6 @@ function setupSocketHandler(io) {
       });
     });
 
-    // -------------------------------------------------------------------------
-    // claim_host
-    // Allows a user to claim the host role if they believe the host is disconnected
-    // -------------------------------------------------------------------------
-    socket.on('claim_host', async ({ roomCode }) => {
-      const room = rooms.get(roomCode?.toUpperCase());
-      if (!room) return;
-      
-      const { playerId } = socket.data;
-      const player = room.getPlayer(playerId);
-      if (!player) return;
-
-      // Make the claiming player the new host
-      room.getPlayers().forEach(p => p.isHost = false); // remove host from others
-      player.isHost = true;
-      room.hostId = player.id;
-      
-      try {
-        await pool.query('UPDATE players SET is_host = FALSE WHERE room_id = $1', [room.id]);
-        await pool.query('UPDATE players SET is_host = TRUE WHERE id = $1', [player.id]);
-        await pool.query('UPDATE rooms SET host_id = $1 WHERE id = $2', [player.id, room.id]);
-
-        io.to(room.id).emit('chat_message', {
-          type: 'system',
-          text: `${player.name} claimed the host role.`,
-        });
-        
-        broadcastPlayerList(io, room);
-      } catch (error) {
-         console.error('[Socket Error] claim_host:', error);
-      }
-    });
 
     // =========================================================================
     // DISCONNECT
@@ -831,13 +799,19 @@ function setupSocketHandler(io) {
         const player = room.getPlayer(playerId);
         if (!player) return;
 
-        // Note: We don't delete from players table here anymore to allow re-connection
-        // Instead, we just notify others that the player is "offline" (implicit by socket id change)
+        // Remove player entirely from memory and DB
+        room.removePlayer(playerId);
+        
+        try {
+           await pool.query('DELETE FROM players WHERE id = $1', [playerId]);
+        } catch(e) {}
         
         io.to(room.id).emit('chat_message', {
           type: 'system',
-          text: `${player.name} (Offline)`,
+          text: `${player.name} left the game.`,
         });
+        
+        io.to(room.id).emit('player_left', { playerId, playerName: player.name });
 
         // If nobody is left, clean up the room entirely
         if (room.players.size === 0) {
