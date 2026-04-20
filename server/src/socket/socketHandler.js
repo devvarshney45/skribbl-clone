@@ -799,67 +799,112 @@ function setupSocketHandler(io) {
         const player = room.getPlayer(playerId);
         if (!player) return;
 
-        // Remove player entirely from memory and DB
-        room.removePlayer(playerId);
-        
-        try {
-           await pool.query('DELETE FROM players WHERE id = $1', [playerId]);
-        } catch(e) {}
-        
-        io.to(room.id).emit('chat_message', {
-          type: 'system',
-          text: `${player.name} left the game.`,
-        });
-        
-        io.to(room.id).emit('player_left', { playerId, playerName: player.name });
-
-        // If nobody is left, clean up the room entirely
-        if (room.players.size === 0) {
-          rooms.delete(roomCode);
-          games.delete(room.id);
-          await pool.query('DELETE FROM rooms WHERE id = $1', [room.id]);
-          console.log(`[Socket] Room ${roomCode} is empty — cleaned up.`);
-          return;
-        }
-
-        // If the host left, assign a new host (first player in the list)
-        if (player.isHost) {
-          const newHost = room.getPlayers()[0];
-          if (newHost) {
-            newHost.isHost = true;
-            room.hostId = newHost.id;
-            await pool.query('UPDATE players SET is_host = TRUE WHERE id = $1', [newHost.id]);
-            await pool.query('UPDATE rooms SET host_id = $1 WHERE id = $2', [newHost.id, room.id]);
-
-            io.to(room.id).emit('chat_message', {
-              type: 'system',
-              text: `${newHost.name} is now the host.`,
-            });
-          }
-        }
-
-        // If game is running and the drawer disconnected, skip to next round
-        const game = games.get(room.id);
-        if (game && game.phase === 'drawing') {
-          const drawer = game.getCurrentDrawer();
-          if (!drawer || drawer.id === playerId) {
-            io.to(room.id).emit('chat_message', {
-              type: 'system',
-              text: 'The drawer left — skipping to next round.',
-            });
-            game.endRound();
+        // Grace period for brief disconnects/reloads
+        setTimeout(async () => {
+          // Check if player still exists and hasn't reconnected (socketId unchanged)
+          const roomCheck = rooms.get(roomCode?.toUpperCase());
+          if (!roomCheck) return;
+          
+          const playerCheck = roomCheck.getPlayer(playerId);
+          if (!playerCheck || playerCheck.socketId !== socket.id) {
+            // Player successfully reconnected with a new socket ID! Do nothing.
+            return;
           }
 
-          // Update the game's player list
-          game.players = room.getPlayers();
-        }
+          // Remove player entirely from memory and DB
+          roomCheck.removePlayer(playerId);
+          
+          try {
+             await pool.query('DELETE FROM players WHERE id = $1', [playerId]);
+          } catch(e) {}
+          
+          io.to(roomCheck.id).emit('chat_message', {
+            type: 'system',
+            text: `${playerCheck.name} left the game.`,
+          });
+          
+          io.to(roomCheck.id).emit('player_left', { playerId, playerName: playerCheck.name });
 
-        broadcastPlayerList(io, room);
+          // If nobody is left, clean up the room entirely
+          if (roomCheck.players.size === 0) {
+            rooms.delete(roomCode);
+            games.delete(roomCheck.id);
+            await pool.query('DELETE FROM rooms WHERE id = $1', [roomCheck.id]);
+            console.log(`[Socket] Room ${roomCode} is empty — cleaned up.`);
+            return;
+          }
+
+          // If the host left, assign a new host (first player in the list)
+          if (playerCheck.isHost) {
+            const newHost = roomCheck.getPlayers()[0];
+            if (newHost) {
+              newHost.isHost = true;
+              roomCheck.hostId = newHost.id;
+              await pool.query('UPDATE players SET is_host = TRUE WHERE id = $1', [newHost.id]);
+              await pool.query('UPDATE rooms SET host_id = $1 WHERE id = $2', [newHost.id, roomCheck.id]);
+
+              io.to(roomCheck.id).emit('chat_message', {
+                type: 'system',
+                text: `${newHost.name} is now the host.`,
+              });
+            }
+          }
+
+          // If game is running and the drawer disconnected, skip to next round
+          const game = games.get(roomCheck.id);
+          if (game && game.phase === 'drawing') {
+            const drawer = game.getCurrentDrawer();
+            if (!drawer || drawer.id === playerId) {
+              io.to(roomCheck.id).emit('chat_message', {
+                type: 'system',
+                text: 'The drawer left — skipping to next round.',
+              });
+              game.endRound();
+            }
+
+            // Update the game's player list
+            game.players = roomCheck.getPlayers();
+          }
+
+          broadcastPlayerList(io, roomCheck);
+        }, 5000); // 5 second grace period
+
       } catch (error) {
         console.error('[Socket Error] disconnect:', error);
       }
     });
   });
+
+  // =========================================================================
+  // GLOBAL BACKGROUND TASKS
+  // =========================================================================
+
+  // Check every 30 seconds for AFK lobbies
+  setInterval(() => {
+    const now = Date.now();
+    for (const [roomCode, room] of rooms.entries()) {
+      if (room.status === 'waiting') {
+        const timeSinceActive = now - room.lastActive;
+        // If lobby stuck in waiting for > 3 minutes (180,000ms), auto-kick host
+        if (timeSinceActive > 180000) {
+          const hostPlayer = room.getPlayer(room.hostId);
+          if (hostPlayer) {
+            // Disconnect their socket to trigger cleanup flow
+            const hostSocket = io.sockets.sockets.get(hostPlayer.socketId);
+            if (hostSocket) {
+              hostSocket.emit('kicked', { message: 'You were kicked for being AFK too long.' });
+              hostSocket.disconnect(true);
+            }
+          }
+          // Reset timer so it doesn't immediately kick the NEXT host too
+          room.lastActive = Date.now();
+        }
+      } else {
+        // If game is active, keep updating lastActive
+        room.lastActive = Date.now();
+      }
+    }
+  }, 30000);
 }
 
 module.exports = { setupSocketHandler };

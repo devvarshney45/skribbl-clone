@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import SketchBackground from '../components/SketchBackground';
 
@@ -46,6 +46,23 @@ const Room: React.FC = () => {
     startGame();
   };
 
+  const [showQuitModal, setShowQuitModal] = useState(false);
+
+  useEffect(() => {
+    // Intercept native browser Back / Close tab buttons
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ''; // Required for most browsers to show the default alert dialog
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  const handleQuitConfirm = () => {
+    // Navigating via href unmounts the component and inherently disconnects the socket cleanly
+    window.location.href = '/';
+  };
+
   return (
     <div className="min-h-[100dvh] w-screen bg-mesh-pro flex flex-col font-sans relative overflow-x-hidden overflow-y-auto selection:bg-brand-primary/30">
       
@@ -60,7 +77,7 @@ const Room: React.FC = () => {
               </h1>
           </div>
           <button 
-            onClick={() => window.location.href = '/'}
+            onClick={() => setShowQuitModal(true)}
             className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95"
           >
             Quit Lobby
@@ -241,6 +258,35 @@ const Room: React.FC = () => {
               </div>
           </div>
       </div>
+      
+      {/* 5. Custom Quit Confirmation Modal */}
+      {showQuitModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in p-4">
+          <div className="bg-bg-main border border-white/10 rounded-[2rem] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-slide-up">
+            <div className="w-16 h-16 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-500 text-3xl mb-4 border border-rose-500/30">
+              🚪
+            </div>
+            <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">Leave Studio?</h2>
+            <p className="text-sm font-black text-slate-400 mb-8">
+              Are you sure you want to quit? If you are the Host, the room will be passed to another artist.
+            </p>
+            <div className="flex gap-4 w-full">
+              <button 
+                onClick={() => setShowQuitModal(false)}
+                className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-black uppercase tracking-widest transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleQuitConfirm}
+                className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-500/20 text-white rounded-xl font-black uppercase tracking-widest transition-all"
+              >
+                Quit Game
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

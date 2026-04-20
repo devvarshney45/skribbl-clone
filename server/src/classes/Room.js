@@ -23,6 +23,7 @@ class Room {
 
     // Room status: 'waiting' | 'playing' | 'finished'
     this.status = 'waiting';
+    this.lastActive = Date.now();
 
     // Strokes drawn so far in the current round (used for replay on join)
     this.currentStrokes = [];
