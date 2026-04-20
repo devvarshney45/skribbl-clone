@@ -200,6 +200,7 @@ function setupSocketHandler(io) {
         `, [player.id, player.name, room.id, socket.id]);
 
         room.addPlayer(player);
+        await room.ensureHumanHost(pool, io);
         socket.join(room.id);
         socket.join(`user_${player.id}`);
         socket.data.playerId = player.id;
@@ -261,6 +262,7 @@ function setupSocketHandler(io) {
         `, [player.id, player.name, availableRoom.id, socket.id]);
 
         availableRoom.addPlayer(player);
+        await availableRoom.ensureHumanHost(pool, io);
         socket.join(availableRoom.id);
         socket.join(`user_${player.id}`);
         socket.data.playerId = player.id;
@@ -849,61 +851,37 @@ function setupSocketHandler(io) {
         player.isOnline = false;
         broadcastPlayerList(io, room);
 
-        io.to(room.id).emit('chat_message', {
-          type: 'system',
-          text: `${player.name} is offline. Auto-removing in 10 seconds...`,
-        });
-
         // 10-second grace period for reloads/brief drops
         setTimeout(async () => {
-          // Check if player reconnected (isOnline becomes true again in reconnect_session)
+          // Check if player reconnected
           const roomCheck = rooms.get(roomCode?.toUpperCase());
           if (!roomCheck) return;
           
           const pInstance = roomCheck.getPlayer(playerId);
-          if (!pInstance || pInstance.isOnline) {
-             // Either already gone or successfully reconnected
-             return;
-          }
+          if (!pInstance || pInstance.isOnline) return;
 
-          // Case: Grace period expired and player is still offline. Wipe them.
-          roomCheck.removePlayer(playerId);
-          
-          try {
-             await pool.query('DELETE FROM players WHERE id = $1', [playerId]);
-          } catch(e) {}
-          
-          io.to(roomCheck.id).emit('chat_message', {
-            type: 'system',
-            text: `${pInstance.name} was removed from the game (Timeout).`,
-          });
-          
-          io.to(roomCheck.id).emit('player_left', { playerId, playerName: pInstance.name });
+          // Case: Grace period expired. Mark as Confirmed Disconnected.
+          pInstance.isConfirmedDisconnected = true;
+          broadcastPlayerList(io, roomCheck);
 
-          // If nobody is left, clean up the room entirely
-          if (roomCheck.players.size === 0) {
-            rooms.delete(roomCode);
-            games.delete(roomCheck.id);
-            await pool.query('DELETE FROM rooms WHERE id = $1', [roomCheck.id]);
-            console.log(`[Socket] Room ${roomCode} is empty — cleaned up.`);
-            return;
-          }
-
-          // If the host left, assign a new host (first player in the list)
+          // If they were host, immediately transfer to the next human
           if (pInstance.isHost) {
-            const newHost = roomCheck.getPlayers()[0];
-            if (newHost) {
-              newHost.isHost = true;
-              roomCheck.hostId = newHost.id;
-              await pool.query('UPDATE players SET is_host = TRUE WHERE id = $1', [newHost.id]);
-              await pool.query('UPDATE rooms SET host_id = $1 WHERE id = $2', [newHost.id, roomCheck.id]);
-
-              io.to(roomCheck.id).emit('chat_message', {
-                type: 'system',
-                text: `${newHost.name} is now the host.`,
-              });
-            }
+            await roomCheck.ensureHumanHost(pool, io);
+            broadcastPlayerList(io, roomCheck);
           }
+
+          // Auto-remove after 2 minutes of confirmed disconnect to clean memory
+          setTimeout(async () => {
+             const finalRC = rooms.get(roomCode?.toUpperCase());
+             if (!finalRC) return;
+             const finalP = finalRC.getPlayer(playerId);
+             if (finalP && !finalP.isOnline) {
+                finalRC.removePlayer(playerId);
+                try { await pool.query('DELETE FROM players WHERE id = $1', [playerId]); } catch(e) {}
+                io.to(finalRC.id).emit('player_left', { playerId, playerName: finalP.name });
+                broadcastPlayerList(io, finalRC);
+             }
+          }, 120000);
 
           // If game is running and the drawer disconnected, skip to next round
           const game = games.get(roomCheck.id);
@@ -922,10 +900,59 @@ function setupSocketHandler(io) {
           }
 
           broadcastPlayerList(io, roomCheck);
-        }, 5000); // 5 second grace period
+        }, 10000); // 10 second grace period
 
       } catch (error) {
         console.error('[Socket Error] disconnect:', error);
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // kick_player
+    // Data: { playerId }
+    // -------------------------------------------------------------------------
+    socket.on('kick_player', async ({ playerId: targetId }) => {
+      try {
+        const roomId = socket.data.roomId;
+        const requesterId = socket.data.playerId;
+        if (!roomId || !requesterId) return;
+
+        const room = rooms.get(socket.data.roomCode?.toUpperCase());
+        if (!room) return;
+
+        const requester = room.getPlayer(requesterId);
+        const target = room.getPlayer(targetId);
+        if (!requester || !target) return;
+
+        // Permission check: Host can kick anyone. Real players can kick confirmed disconnected players.
+        const canKick = requester.isHost || target.isConfirmedDisconnected || target.isBot;
+        if (!canKick) {
+           socket.emit('error', { message: 'You do not have permission to kick this player.' });
+           return;
+        }
+
+        // Kick logic
+        room.removePlayer(targetId);
+        if (!target.isBot) {
+           try { await pool.query('DELETE FROM players WHERE id = $1', [targetId]); } catch(e) {}
+        }
+
+        io.to(room.id).emit('chat_message', {
+          type: 'system',
+          text: `${target.name} was kicked from the studio.`
+        });
+
+        io.to(room.id).emit('player_left', { playerId: targetId, playerName: target.name });
+        
+        // If kicked person was host, ensure human host
+        if (target.isHost) {
+          await room.ensureHumanHost(pool, io);
+        }
+
+        broadcastPlayerList(io, room);
+
+      } catch (error) {
+        console.error('[Socket Error] kick_player:', error);
       }
     });
   });

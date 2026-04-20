@@ -134,6 +134,53 @@ class Room {
   }
 
   // ---------------------------------------------------------------------------
+  // ensureHumanHost()
+  // Ensures a human player is the host if any are present.
+  // Returns the new host if changed, otherwise null.
+  // ---------------------------------------------------------------------------
+  async ensureHumanHost(pool, io) {
+    const currentHost = this.getPlayer(this.hostId);
+    
+    // If host is a bot or is missing, try to find a real human
+    if (!currentHost || currentHost.isBot || !currentHost.isOnline) {
+      const humanPlayers = this.getPlayers().filter(p => !p.isBot && p.isOnline);
+      
+      if (humanPlayers.length > 0) {
+        const newHost = humanPlayers[0];
+        
+        // Update old host
+        if (currentHost) currentHost.isHost = false;
+        
+        // Setup new host
+        newHost.isHost = true;
+        this.hostId = newHost.id;
+        
+        // Persist to DB
+        if (pool) {
+          try {
+            await pool.query('UPDATE players SET is_host = FALSE WHERE room_id = $1', [this.id]);
+            await pool.query('UPDATE players SET is_host = TRUE WHERE id = $1', [newHost.id]);
+            await pool.query('UPDATE rooms SET host_id = $1 WHERE id = $2', [newHost.id, this.id]);
+          } catch (e) {
+            console.error('[Room] DB error during host handover:', e);
+          }
+        }
+        
+        // Notify
+        if (io) {
+          io.to(this.id).emit('chat_message', {
+            type: 'system',
+            text: `${newHost.name} has been promoted to Host.`
+          });
+        }
+        
+        return newHost;
+      }
+    }
+    return null;
+  }
+
+  // ---------------------------------------------------------------------------
   // toJSON()
   // Returns a plain object representation for safe serialization.
   // ---------------------------------------------------------------------------

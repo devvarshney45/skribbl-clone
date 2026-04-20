@@ -17,6 +17,7 @@ export interface Player {
   isHost: boolean;
   isBot: boolean;
   isOnline: boolean;
+  isConfirmedDisconnected: boolean;
 }
 
 export type GamePhase = 'waiting' | 'choosing' | 'drawing' | 'roundEnd' | 'gameOver';
@@ -381,8 +382,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('word_chosen', { roomCode, word: selectedWord });
   };
 
-  const kickPlayer = (targetPlayerId: string) => {
-    socket.emit('kick_player', { roomCode, targetPlayerId });
+  const kickPlayer = (playerId: string) => {
+    socket.emit('kick_player', { roomCode, playerId });
   };
 
   const claimHost = () => {

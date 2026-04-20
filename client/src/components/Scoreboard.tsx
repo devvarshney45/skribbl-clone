@@ -5,7 +5,7 @@ import React from 'react';
 import { useGame } from '../context/GameContext';
 
 const Scoreboard: React.FC = () => {
-  const { players, currentDrawerId, playerId } = useGame();
+  const { players, currentDrawerId, playerId, kickPlayer } = useGame();
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
   return (
@@ -57,9 +57,18 @@ const Scoreboard: React.FC = () => {
 
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-white/95 truncate max-w-[90px]">{player.name}</span>
+                    <span className="text-xs font-black text-white/95 truncate max-w-[90px] text-shadow-sm">{player.name}</span>
+                    {player.isHost && (
+                      <span className="text-[6px] text-brand-highlight ring-1 ring-brand-highlight/30 px-1 rounded-sm font-black uppercase tracking-tighter">Host</span>
+                    )}
                     {!player.isOnline && (
-                      <span className="bg-rose-500/20 text-rose-500 text-[6px] font-black uppercase px-1.5 py-0.5 rounded-full border border-rose-500/20 animate-pulse">Offline</span>
+                      <span className={`text-[6px] font-black uppercase px-1.5 py-0.5 rounded-full border animate-pulse ${
+                        player.isConfirmedDisconnected 
+                        ? 'bg-rose-500/20 text-rose-500 border-rose-500/20' 
+                        : 'bg-slate-500/20 text-slate-500 border-slate-500/20'
+                      }`}>
+                        {player.isConfirmedDisconnected ? 'Disconnected' : 'Offline'}
+                      </span>
                     )}
                   </div>
                   <div className={`text-[7px] font-black uppercase tracking-widest mt-1 ${
@@ -70,9 +79,29 @@ const Scoreboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="text-right flex flex-col items-end px-1">
-                <span className="text-[13px] font-black text-white tabular-nums drop-shadow-md">{player.score}</span>
-                <span className="text-[7px] font-black text-slate-700 uppercase tracking-widest">PTS</span>
+              <div className="flex items-center gap-4">
+                {/* Kick Button: Visible if I am host, or if the target is disconnected/bot */}
+                {((players.find(p => p.id === playerId)?.isHost || player.isConfirmedDisconnected || player.isBot) && !isMe) && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`Kick ${player.name}?`)) {
+                        kickPlayer(player.id);
+                      }
+                    }}
+                    className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                    title="Kick Player"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </button>
+                )}
+
+                <div className="text-right flex flex-col items-end px-1 min-w-[40px]">
+                  <span className="text-[13px] font-black text-white tabular-nums drop-shadow-md">{player.score}</span>
+                  <span className="text-[7px] font-black text-slate-700 uppercase tracking-widest">PTS</span>
+                </div>
               </div>
             </div>
           );

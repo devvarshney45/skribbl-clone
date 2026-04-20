@@ -14,6 +14,7 @@ class Player {
     this.isHost = false;         // is this player the room host?
     this.isBot = isBot;          // is this player a bot?
     this.isOnline = true;        // is the player currently connected via socket?
+    this.isConfirmedDisconnected = false; // NEW: True after 10s of being offline
   }
 
   // ---------------------------------------------------------------------------
@@ -48,6 +49,7 @@ class Player {
       isHost: this.isHost,
       isBot: this.isBot,
       isOnline: this.isOnline,
+      isConfirmedDisconnected: this.isConfirmedDisconnected,
     };
   }
 }
