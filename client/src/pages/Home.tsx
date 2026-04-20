@@ -56,7 +56,7 @@ const Home: React.FC = () => {
     setLoading(true); setError('');
     try {
       const resp = await axios.post(`${API_URL}/api/rooms`, { hostName: name, isPrivate, settings });
-      createRoom(name, resp.data.roomCode, isPrivate);
+      createRoom(name, resp.data.roomCode, isPrivate, settings);
       navigate(`/room/${resp.data.roomCode}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create studio.');

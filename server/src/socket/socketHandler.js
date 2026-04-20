@@ -292,16 +292,52 @@ function setupSocketHandler(io) {
     // -------------------------------------------------------------------------
     socket.on('reconnect_session', async ({ playerId, roomCode }) => {
       try {
-        const room = rooms.get(roomCode?.toUpperCase());
+        let room = rooms.get(roomCode?.toUpperCase());
+        
+        // --- 1. Dynamic Room Restoration ---
         if (!room) {
-          socket.emit('session_expired', { message: 'Studio no longer exists.' });
-          return;
+          console.log(`[Reconnect] Room ${roomCode} missing from memory, restoring from DB...`);
+          const { rows: roomRows } = await pool.query('SELECT * FROM rooms WHERE code = $1', [roomCode?.toUpperCase()]);
+          const roomRecord = roomRows[0];
+          
+          if (!roomRecord) {
+            socket.emit('session_expired', { message: 'The studio has been closed.' });
+            return;
+          }
+
+          room = new Room({
+            id: roomRecord.id,
+            code: roomRecord.code,
+            hostId: roomRecord.host_id,
+            isPrivate: roomRecord.is_private,
+            settings: typeof roomRecord.settings === 'string' ? JSON.parse(roomRecord.settings) : roomRecord.settings,
+          });
+          room.status = roomRecord.status;
+          rooms.set(room.code, room);
         }
 
-        const player = room.getPlayer(playerId);
+        let player = room.getPlayer(playerId);
+        
         if (!player) {
-          socket.emit('session_expired', { message: 'Your session has expired.' });
-          return;
+          console.log(`[Reconnect] Player ${playerId} missing from room memory, restoring from DB...`);
+          const { rows: playerRows } = await pool.query('SELECT * FROM players WHERE id = $1', [playerId]);
+          const playerRecord = playerRows[0];
+
+          if (!playerRecord || playerRecord.room_id !== room.id) {
+            socket.emit('session_expired', { message: 'Your invitation has expired.' });
+            return;
+          }
+
+          player = new Player({
+            id: playerRecord.id,
+            name: playerRecord.name,
+            socketId: socket.id,
+            roomId: room.id,
+            score: playerRecord.score || 0
+          });
+          player.isHost = playerRecord.is_host;
+          player.isReady = true; 
+          room.addPlayer(player);
         }
 
         // Update status

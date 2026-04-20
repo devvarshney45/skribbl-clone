@@ -108,9 +108,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Session Persistence Effect
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    const savedPlayerId = sessionStorage.getItem('skribbl_player_id');
-    const savedRoomCode = sessionStorage.getItem('skribbl_room_code');
-    const savedName = sessionStorage.getItem('skribbl_player_name');
+    const savedPlayerId = localStorage.getItem('skribbl_player_id');
+    const savedRoomCode = localStorage.getItem('skribbl_room_code');
+    const savedName = localStorage.getItem('skribbl_player_name');
 
     if (savedPlayerId && savedRoomCode && savedName) {
       console.log('[GameContext] Found existing session, attempting reconnect...');
@@ -130,9 +130,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     socket.on('connect', () => {
       setIsDisconnected(false);
-      const savedPlayerId = sessionStorage.getItem('skribbl_player_id');
-      const savedRoomCode = sessionStorage.getItem('skribbl_room_code');
-      const savedName = sessionStorage.getItem('skribbl_player_name');
+      const savedPlayerId = localStorage.getItem('skribbl_player_id');
+      const savedRoomCode = localStorage.getItem('skribbl_room_code');
+      const savedName = localStorage.getItem('skribbl_player_name');
       
       if (savedPlayerId && savedRoomCode && savedName) {
         console.log('[Socket] Recovered connection, resyncing session...');
@@ -159,24 +159,24 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setPlayerId(player.id);
       setPlayers([player]);
       setIsPrivate(priv ?? false);
-      setTotalRounds(settings.rounds);
-      setDrawTime(settings.drawTime);
+      if (settings?.rounds) setTotalRounds(settings.rounds);
+      if (settings?.drawTime) setDrawTime(settings.drawTime);
       
-      sessionStorage.setItem('skribbl_player_id', player.id);
-      sessionStorage.setItem('skribbl_room_code', code);
-      sessionStorage.setItem('skribbl_player_name', player.name);
+      localStorage.setItem('skribbl_player_id', player.id);
+      localStorage.setItem('skribbl_room_code', code);
+      localStorage.setItem('skribbl_player_name', player.name);
     });
 
     socket.on('joined_room', ({ roomCode: code, player, settings, isPrivate: priv }) => {
       setRoomCode(code);
       setPlayerId(player.id);
       setIsPrivate(priv ?? false);
-      setTotalRounds(settings.rounds);
-      setDrawTime(settings.drawTime);
+      if (settings?.rounds) setTotalRounds(settings.rounds);
+      if (settings?.drawTime) setDrawTime(settings.drawTime);
       
-      sessionStorage.setItem('skribbl_player_id', player.id);
-      sessionStorage.setItem('skribbl_room_code', code);
-      sessionStorage.setItem('skribbl_player_name', player.name);
+      localStorage.setItem('skribbl_player_id', player.id);
+      localStorage.setItem('skribbl_room_code', code);
+      localStorage.setItem('skribbl_player_name', player.name);
     });
 
     socket.on('player_list', ({ players: list }) => {
@@ -193,7 +193,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     socket.on('session_expired', ({ message }) => {
       console.warn('[GameContext] Session expired:', message);
-      sessionStorage.clear();
+      localStorage.clear();
       setLoading(false);
       setPhase('waiting');
       setRoomCode('');
@@ -201,7 +201,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     socket.on('kicked', ({ message }) => {
       console.warn('[GameContext] Kicked:', message);
-      sessionStorage.clear();
+      localStorage.clear();
       setLoading(false);
       setPhase('waiting');
       setRoomCode('');
@@ -217,7 +217,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setPhase('choosing');
       setCurrentDrawerId(data.drawerId);
       setRound(data.round);
-      setTotalRounds(data.totalRounds);
+      if (data.totalRounds) setTotalRounds(data.totalRounds);
       if (data.options) setWordOptions(data.options);
       setWord('');
       setWordHints([]);
@@ -236,7 +236,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.on('identity_sync', ({ playerId: sId }) => {
       console.log('[GameContext] IDENTITY SYNC: Official ID =', sId);
       setPlayerId(sId);
-      sessionStorage.setItem('skribbl_player_id', sId);
+      localStorage.setItem('skribbl_player_id', sId);
     });
 
     // Drawing start
@@ -327,9 +327,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setWordOptions(rest.wordOptions);
       }
       
-      sessionStorage.setItem('skribbl_player_id', player.id);
-      sessionStorage.setItem('skribbl_room_code', code);
-      sessionStorage.setItem('skribbl_player_name', player.name);
+      localStorage.setItem('skribbl_player_id', player.id);
+      localStorage.setItem('skribbl_room_code', code);
+      localStorage.setItem('skribbl_player_name', player.name);
     });
 
     return () => {
@@ -353,10 +353,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // ---------------------------------------------------------------------------
   // Action Helpers
   // ---------------------------------------------------------------------------
-  const createRoom = (name: string, code: string, isPrivate: boolean = false) => {
+  const createRoom = (name: string, code: string, isPrivate: boolean = false, settings?: any) => {
     setPlayerName(name);
     setPhase('waiting');
-    socket.emit('create_room', { playerName: name, roomCode: code, isPrivate });
+    socket.emit('create_room', { playerName: name, roomCode: code, isPrivate, settings });
   };
 
   const joinRoom = (name: string, code: string) => {

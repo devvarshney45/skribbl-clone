@@ -68,38 +68,55 @@ const Room: React.FC = () => {
       <SketchBackground />
 
       {/* 2. Top Navigation Bar */}
-      <header className="w-full px-6 py-4 flex items-center justify-between z-20 animate-pop-in relative">
-          <div className="flex flex-col">
-              <h1 className="text-2xl md:text-3xl font-black italic tracking-tighter text-white leading-none">
-                SKRIBBL<span className="text-brand-primary">.</span>IO <span className="text-brand-secondary opacity-50 ml-1 text-sm md:text-lg">ARENA</span>
-              </h1>
-          </div>
-          <button 
-            onClick={() => setShowQuitModal(true)}
-            className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95"
-          >
-            Quit Lobby
-          </button>
-              <div className="flex items-center gap-2 mt-1 px-2 py-0.5 bg-white/5 rounded-full border border-white/5 w-fit">
-                  <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPrivate ? 'bg-rose-500' : 'bg-brand-secondary'}`} />
-                  <span className="text-[9px] font-black text-white/50 uppercase tracking-widest">{isPrivate ? 'Private Studio' : 'Public Discovery'}</span>
+      <header className="w-full px-4 md:px-6 py-3 md:py-4 z-20 animate-pop-in relative border-b border-white/5 bg-black/10 backdrop-blur-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              
+              {/* Left Group: Logo & Privacy */}
+              <div className="flex items-center justify-between md:justify-start gap-4">
+                  <div className="flex flex-col">
+                      <h1 className="text-xl md:text-3xl font-black italic tracking-tighter text-white leading-none">
+                        SKRIBBL<span className="text-brand-primary">.</span>IO <span className="text-brand-secondary opacity-50 ml-1 text-sm md:text-lg hidden xs:inline">ARENA</span>
+                      </h1>
+                      <div className="flex items-center gap-2 mt-1.5 px-2 py-0.5 bg-white/5 rounded-full border border-white/5 w-fit">
+                          <span className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full animate-pulse ${isPrivate ? 'bg-rose-500' : 'bg-brand-secondary'}`} />
+                          <span className="text-[7px] md:text-[9px] font-black text-white/50 uppercase tracking-widest">{isPrivate ? 'Private Studio' : 'Public Discovery'}</span>
+                      </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setShowQuitModal(true)}
+                    className="md:hidden px-4 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+                  >
+                    Quit
+                  </button>
               </div>
 
-          <div className="flex items-center gap-4 bg-black/40 px-4 py-2 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-md">
-             <div className="flex flex-col items-end">
-                <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Invite Link</span>
-                <span className="font-mono text-lg md:text-xl font-black text-brand-secondary tracking-[0.2em] leading-none">{roomCode}</span>
-             </div>
-             <button
-               onClick={copyRoomCode}
-               className={`px-3 py-1.5 rounded-lg text-[9px] font-black tracking-widest transition-all border ${
-                 copied
-                   ? 'bg-brand-secondary/20 text-brand-secondary border-brand-secondary/30'
-                   : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'
-               }`}
-             >
-               {copied ? '✓ COPIED' : 'COPY'}
-             </button>
+              {/* Right Group: Invite & Desktop Quit */}
+              <div className="flex items-center justify-between md:justify-end gap-3 md:gap-6">
+                  <div className="flex-grow md:flex-grow-0 flex items-center gap-3 bg-black/40 px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl border border-white/5 shadow-2xl backdrop-blur-md">
+                     <div className="flex flex-col items-start md:items-end">
+                        <span className="text-[6px] md:text-[7px] font-black text-slate-600 uppercase tracking-widest leading-none mb-1">Invite Link</span>
+                        <span className="font-mono text-base md:text-xl font-black text-brand-secondary tracking-[0.1em] md:tracking-[0.2em] leading-none">{roomCode}</span>
+                     </div>
+                     <button
+                       onClick={copyRoomCode}
+                       className={`px-2.5 py-1.5 rounded-lg text-[8px] md:text-[9px] font-black tracking-widest transition-all border ${
+                         copied
+                           ? 'bg-brand-secondary/20 text-brand-secondary border-brand-secondary/30'
+                           : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'
+                       }`}
+                     >
+                       {copied ? '✓' : 'COPY'}
+                     </button>
+                  </div>
+
+                  <button 
+                    onClick={() => setShowQuitModal(true)}
+                    className="hidden md:block px-4 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+                  >
+                    Quit Lobby
+                  </button>
+              </div>
           </div>
       </header>
 

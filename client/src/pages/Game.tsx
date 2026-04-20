@@ -19,6 +19,11 @@ const Game: React.FC = () => {
   const isDrawer = playerId === currentDrawerId;
   const isDrawing = phase === 'drawing';
   const [tab, setTab] = useState<'canvas' | 'chat' | 'board'>('canvas');
+  const [showQuitModal, setShowQuitModal] = useState(false);
+
+  const handleQuitConfirm = () => {
+    window.location.href = '/';
+  };
 
   React.useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -78,9 +83,18 @@ const Game: React.FC = () => {
           {renderWordDisplay()}
         </div>
 
-        <div className="shrink-0 hidden sm:block text-right">
-          <p className="text-[7px] font-black text-slate-600 uppercase tracking-widest leading-none">Room</p>
-          <p className="text-[10px] font-mono font-black text-brand-secondary tracking-wider">{roomCode}</p>
+        <div className="shrink-0 text-right flex items-center gap-4">
+          <div className="hidden sm:block">
+            <p className="text-[7px] font-black text-slate-600 uppercase tracking-widest leading-none">Room</p>
+            <p className="text-[10px] font-mono font-black text-brand-secondary tracking-wider">{roomCode}</p>
+          </div>
+          <button 
+            onClick={() => setShowQuitModal(true)}
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-lg sm:rounded-xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all active:scale-90 shadow-lg shadow-rose-500/10"
+            title="Quit Game"
+          >
+            <span className="text-lg">🚪</span>
+          </button>
         </div>
       </header>
 
@@ -144,6 +158,34 @@ const Game: React.FC = () => {
       <WordModal />
       <GameOver />
       <PhaseOverlay />
+      {/* ── QUIT MODAL ────────────────────── */}
+      {showQuitModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in p-4">
+          <div className="bg-bg-main border border-white/10 rounded-[2rem] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-slide-up">
+            <div className="w-16 h-16 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-500 text-3xl mb-4 border border-rose-500/30">
+              🚪
+            </div>
+            <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">Leave Arena?</h2>
+            <p className="text-sm font-black text-slate-400 mb-8">
+              Are you sure you want to quit this match? Your points will be lost.
+            </p>
+            <div className="flex gap-4 w-full">
+              <button 
+                onClick={() => setShowQuitModal(false)}
+                className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white font-black uppercase tracking-widest transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleQuitConfirm}
+                className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-500/20 text-white rounded-xl font-black uppercase tracking-widest transition-all"
+              >
+                Quit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
