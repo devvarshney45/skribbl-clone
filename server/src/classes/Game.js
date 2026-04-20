@@ -282,8 +282,13 @@ class Game {
       this.guessOrder += 1;
       player.hasGuessedCorrectly = true;
 
-      // Points formula: 300 for first, -10 for each subsequent
-      const points = Math.max(50, 300 - (this.guessOrder - 1) * 10);
+      // Points formula heavily based on time remaining:
+      // Max 300 points from time ratio, plus a flat bonus for being an early guesser (up to 100)
+      const timeRatio = Math.max(0, this.timeLeft / this.settings.drawTime); // 0.0 to 1.0
+      const timePoints = Math.floor(timeRatio * 300);
+      const orderBonus = Math.max(0, 100 - (this.guessOrder - 1) * 20); // 100 for 1st, 80 for 2nd...
+      
+      const points = Math.max(10, timePoints + orderBonus);
       player.addScore(points);
       this.correctGuessCount += 1;
 
