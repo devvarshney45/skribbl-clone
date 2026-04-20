@@ -159,6 +159,17 @@ body {
   animation: float-delayed 12s ease-in-out infinite;
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-8px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
 /* Logo Sizing - Fluid & Responsive */
 .logo-responsive {
   font-size: clamp(2.5rem, 15vw, 8rem); /* Use vw for width-based safety */

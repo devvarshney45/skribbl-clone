@@ -18,6 +18,17 @@ const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [shouldShake, setShouldShake] = useState(false);
+
+  const validateName = () => {
+    if (!name.trim()) {
+      setError('First, you must reveal your alias!');
+      setShouldShake(true);
+      setTimeout(() => setShouldShake(false), 600);
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     const urlCode = searchParams.get('code');
@@ -52,7 +63,7 @@ const Home: React.FC = () => {
   }, [socket, name]);
 
   const handleCreateRoom = async (settings: any, isPrivate: boolean) => {
-    if (!name.trim()) { setError('Please enter your name first!'); return; }
+    if (!validateName()) return;
     setLoading(true); setError('');
     try {
       const resp = await axios.post(`${API_URL}/api/rooms`, { hostName: name, isPrivate, settings });
@@ -67,14 +78,14 @@ const Home: React.FC = () => {
   };
 
   const handleQuickJoin = () => {
-    if (!name.trim()) { setError('Please enter your name first!'); return; }
+    if (!validateName()) return;
     setLoading(true); setError('Searching for an active studio...');
     socket?.emit('quick_join', { playerName: name });
   };
 
   const handleJoinWithCode = async () => {
-    if (!name.trim()) { setError('Please enter your name first!'); return; }
-    if (!code.trim() || code.length < 6) { setError('Please enter a valid 6-character code.'); return; }
+    if (!validateName()) return;
+    if (!code.trim() || code.length < 6) { setError('A valid 6-character code is required.'); return; }
     setLoading(true); setError('');
     try {
       const resp = await axios.get(`${API_URL}/api/rooms/${code}/join`);
@@ -141,7 +152,7 @@ const Home: React.FC = () => {
                       placeholder="e.g. Picasso"
                       value={name}
                       onChange={(e) => { setName(e.target.value); setError(''); }}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg md:rounded-xl px-4 py-3 md:px-5 md:py-4 outline-none focus:ring-2 focus:ring-brand-primary transition-all font-black text-lg md:text-2xl text-brand-primary placeholder:text-slate-800"
+                      className={`w-full bg-black/40 border rounded-lg md:rounded-xl px-4 py-3 md:px-5 md:py-4 outline-none transition-all font-black text-lg md:text-2xl text-brand-primary placeholder:text-slate-800 ${shouldShake ? 'animate-shake border-brand-accent ring-4 ring-brand-accent/20' : 'border-white/10 focus:ring-2 focus:ring-brand-primary'}`}
                       maxLength={16}
                       autoFocus
                     />
@@ -157,8 +168,8 @@ const Home: React.FC = () => {
                     <div className="grid grid-cols-2 gap-3">
                         {/* PRIMARY: New Studio */}
                         <button 
-                            onClick={() => { if (!name) return setError('Enter name first!'); setIsModalOpen(true); }}
-                            className={`group py-3 md:py-5 rounded-lg md:rounded-xl font-black text-[9px] md:text-xs tracking-[0.2em] transition-all flex flex-col items-center gap-1 shadow-tactile-heavy ${name ? 'bg-brand-primary text-white hover:scale-[1.02] active:scale-95 shadow-brand-primary/20' : 'bg-white/5 text-slate-700 pointer-events-none opacity-50'}`}
+                            onClick={() => { if (validateName()) setIsModalOpen(true); }}
+                            className={`group py-3 md:py-5 rounded-lg md:rounded-xl font-black text-[9px] md:text-xs tracking-[0.2em] transition-all flex flex-col items-center gap-1 shadow-tactile-heavy bg-brand-primary text-white hover:scale-[1.02] active:scale-95 shadow-brand-primary/20 ${!name.trim() ? 'opacity-70 saturate-[0.8]' : ''}`}
                         >
                             <span className="text-lg md:text-xl group-hover:-rotate-12 transition-transform">🛡️</span>
                             NEW STUDIO
@@ -168,7 +179,7 @@ const Home: React.FC = () => {
                         <button 
                             onClick={handleQuickJoin}
                             disabled={loading && !error.includes('Searching')}
-                            className={`group relative overflow-hidden py-3 md:py-5 rounded-lg md:rounded-xl font-black text-[9px] md:text-xs tracking-[0.2em] transition-all flex flex-col items-center gap-1 shadow-tactile ${name ? 'bg-bg-card border border-white/10 text-white hover:bg-white/5 hover:scale-[1.02] active:scale-95' : 'bg-white/5 text-slate-700 pointer-events-none opacity-50'}`}
+                            className={`group relative overflow-hidden py-3 md:py-5 rounded-lg md:rounded-xl font-black text-[9px] md:text-xs tracking-[0.2em] transition-all flex flex-col items-center gap-1 shadow-tactile bg-bg-card border border-white/10 text-white hover:bg-white/5 hover:scale-[1.02] active:scale-95 ${!name.trim() ? 'opacity-70 saturate-[0.8]' : ''}`}
                         >
                             <span className="text-lg md:text-xl group-hover:rotate-12 transition-transform">🌍</span>
                             {loading && error.includes('Searching') ? '...' : 'QUICK START'}
@@ -187,7 +198,7 @@ const Home: React.FC = () => {
                         />
                         <button 
                             onClick={handleJoinWithCode}
-                            className={`px-4 md:px-6 rounded-lg font-black text-[10px] tracking-widest transition-all ${code.length === 6 ? 'bg-brand-secondary text-bg-main shadow-lg shadow-brand-secondary/20 hover:scale-105' : 'bg-white/5 text-slate-700 pointer-events-none'}`}
+                            className={`px-4 md:px-6 rounded-lg font-black text-[10px] tracking-widest transition-all ${code.length === 6 ? 'bg-brand-secondary text-bg-main shadow-lg shadow-brand-secondary/20 hover:scale-105' : 'bg-white/5 text-slate-700 pointer-events-none opacity-50'}`}
                             disabled={loading || code.length < 6}
                         >
                             JOIN
