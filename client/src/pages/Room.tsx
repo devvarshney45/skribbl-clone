@@ -14,9 +14,7 @@ const Room: React.FC = () => {
     markReady,
     isPrivate,
     kickPlayer,
-    claimHost,
     addBot,
-    isDisconnected,
   } = useGame();
 
   const me = players.find((p) => p.id === playerId);
