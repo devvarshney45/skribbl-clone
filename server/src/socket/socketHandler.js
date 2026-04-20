@@ -579,33 +579,7 @@ function setupSocketHandler(io) {
       }
     });
 
-    // -------------------------------------------------------------------------
-    // kick_player
-    // Only the host can kick other players from the room lobby.
-    // Data: { roomCode, targetPlayerId }
-    // -------------------------------------------------------------------------
-    socket.on('kick_player', ({ roomCode, targetPlayerId }) => {
-      const room = rooms.get(roomCode?.toUpperCase());
-      if (!room) return;
 
-      const host = room.getPlayerBySocketId(socket.id);
-      if (!host || !host.isHost) {
-        socket.emit('error', { message: 'Only the host can kick players.' });
-        return;
-      }
-      if (host.id === targetPlayerId) return; // Can't kick yourself
-
-      const target = room.getPlayer(targetPlayerId);
-      if (!target) return;
-
-      console.log(`[Socket] Host kicked ${target.name} from room ${room.code}`);
-      room.removePlayer(targetPlayerId);
-      
-      // Notify the target
-      io.to(target.socketId).emit('kicked', { reason: 'You were kicked by the host.' });
-      
-      broadcastPlayerList(io, room);
-    });
 
     // -------------------------------------------------------------------------
     // vote_kick
@@ -651,20 +625,7 @@ function setupSocketHandler(io) {
       }
     });
 
-      // Notify the kicked player
-      const targetSocket = io.sockets.sockets.get(target.socketId);
-      if (targetSocket) {
-        targetSocket.emit('kicked', { message: 'You were removed by the host.' });
-        targetSocket.leave(room.id);
-      }
 
-      // Remove from room
-      room.players.delete(targetPlayerId);
-      console.log(`[Socket] ${host.name} kicked ${target.name} from ${room.code}`);
-
-      io.to(room.id).emit('player_left', { playerId: targetPlayerId, playerName: target.name });
-      broadcastPlayerList(io, room);
-    });
 
     // =========================================================================
     // GAME STATE EVENTS
