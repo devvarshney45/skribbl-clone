@@ -4,6 +4,8 @@
   "description": "Premium Skribbl.io Clone - Full Stack",
   "scripts": {
     "install-all": "npm install --prefix client && npm install --prefix server",
+    "build": "npm run build --prefix client",
+    "render-build": "npm run install-all && npm run build",
     "dev": "concurrently \"npm run dev --prefix client\" \"npm run dev --prefix server\"",
     "start": "node server/src/index.js"
   },
