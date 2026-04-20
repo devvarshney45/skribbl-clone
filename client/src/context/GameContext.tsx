@@ -55,7 +55,7 @@ interface GameContextType {
 
   // Actions
   joinRoom: (name: string, code: string) => void;
-  createRoom: (name: string, code: string, isPrivate?: boolean) => void;
+  createRoom: (name: string, code: string, isPrivate?: boolean, settings?: any) => void;
   markReady: () => void;
   startGame: () => void;
   chooseWord: (word: string) => void;
