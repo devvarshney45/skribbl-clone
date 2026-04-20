@@ -18,6 +18,7 @@ export interface Player {
   isBot: boolean;
   isOnline: boolean;
   isConfirmedDisconnected: boolean;
+  avatar: string; // NEW
 }
 
 export type GamePhase = 'waiting' | 'choosing' | 'drawing' | 'roundEnd' | 'gameOver';
@@ -45,6 +46,7 @@ interface GameContextType {
   winner: Player | null;
   drawTime: number;
   isPrivate: boolean;
+  wordMode: 'normal' | 'hidden'; // NEW
 
   // Status Helpers
   currentPlayerIsDrawer: boolean;
@@ -67,6 +69,7 @@ interface GameContextType {
   updateSettings: (settings: { rounds?: number; drawTime?: number; isPrivate?: boolean }) => void;
   resetGame: () => void;
   kickPlayer: (targetPlayerId: string) => void;
+  voteKick: (targetPlayerId: string) => void; // NEW
   claimHost: () => void;
   addBot: () => void;
   isDisconnected: boolean;
@@ -95,6 +98,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [totalRounds, setTotalRounds] = useState(3);
   const [drawTime, setDrawTime] = useState(80);
   const [isPrivate, setIsPrivate] = useState(false);
+  const [wordMode, setWordMode] = useState<'normal' | 'hidden'>('normal'); // NEW
   const [winner, setWinner] = useState<Player | null>(null);
   const [isDisconnected, setIsDisconnected] = useState(false);
   
@@ -162,6 +166,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsPrivate(priv ?? false);
       if (settings?.rounds) setTotalRounds(settings.rounds);
       if (settings?.drawTime) setDrawTime(settings.drawTime);
+      if (settings?.wordMode) setWordMode(settings.wordMode);
       
       localStorage.setItem('skribbl_player_id', player.id);
       localStorage.setItem('skribbl_room_code', code);
@@ -174,6 +179,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsPrivate(priv ?? false);
       if (settings?.rounds) setTotalRounds(settings.rounds);
       if (settings?.drawTime) setDrawTime(settings.drawTime);
+      if (settings?.wordMode) setWordMode(settings.wordMode);
       
       localStorage.setItem('skribbl_player_id', player.id);
       localStorage.setItem('skribbl_room_code', code);
@@ -276,6 +282,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('[GameContext] SETTINGS UPDATE RECEIVED:', settings, '| isPrivate:', priv);
       if (settings.rounds) setTotalRounds(settings.rounds);
       if (settings.drawTime) setDrawTime(settings.drawTime);
+      if (settings.wordMode) setWordMode(settings.wordMode);
       if (priv !== undefined) setIsPrivate(priv);
     });
 
@@ -390,6 +397,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('claim_host', { roomCode });
   };
 
+  const voteKick = (targetId: string) => {
+    socket.emit('vote_kick', { roomCode, targetPlayerId: targetId });
+  };
+
   const addBot = () => {
     socket.emit('add_bot', { roomCode });
   };
@@ -449,6 +460,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         winner,
         currentPlayerIsDrawer,
         kickPlayer,
+        voteKick,
         claimHost,
         addBot,
         isDisconnected,
@@ -465,6 +477,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         undo,
         clearCanvas,
         updateSettings,
+        wordMode,
         resetGame,
         socket,
       }}

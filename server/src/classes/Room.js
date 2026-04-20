@@ -16,6 +16,7 @@ class Room {
       drawTime: settings?.drawTime || 80,  // seconds per turn
       wordCount: settings?.wordCount || 3, // number of word choices shown
       hints: settings?.hints || 2,         // number of hints revealed
+      wordMode: settings?.wordMode || 'normal', // NEW: 'normal' | 'hidden'
     };
 
     // Map of playerId → Player object for fast lookups
@@ -27,6 +28,9 @@ class Room {
 
     // Strokes drawn so far in the current round (used for replay on join)
     this.currentStrokes = [];
+
+    // NEW: playerId -> Set of playerIds who voted to kick them
+    this.kickVotes = new Map(); 
   }
 
   // ---------------------------------------------------------------------------

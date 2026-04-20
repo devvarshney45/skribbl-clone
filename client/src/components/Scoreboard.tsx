@@ -5,7 +5,7 @@ import React from 'react';
 import { useGame } from '../context/GameContext';
 
 const Scoreboard: React.FC = () => {
-  const { players, currentDrawerId, playerId, kickPlayer } = useGame();
+  const { players, currentDrawerId, playerId, kickPlayer, voteKick } = useGame();
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
   return (
@@ -44,7 +44,7 @@ const Scoreboard: React.FC = () => {
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm transition-transform group-hover:scale-110 ${
                     isDrawer ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30' : 'bg-white/5 text-slate-300'
                   }`}>
-                    {player.name[0].toUpperCase()}
+                    {player.avatar || player.name[0].toUpperCase()}
                   </div>
                   {isDrawer && (
                      <div className="absolute -bottom-1 -right-1 bg-brand-secondary rounded-full p-1.5 ring-4 ring-bg-panel">
@@ -80,22 +80,42 @@ const Scoreboard: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-4">
-                {/* Kick Button: Visible if I am host, or if the target is disconnected/bot */}
-                {((players.find(p => p.id === playerId)?.isHost || player.isConfirmedDisconnected || player.isBot) && !isMe) && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(`Kick ${player.name}?`)) {
-                        kickPlayer(player.id);
-                      }
-                    }}
-                    className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
-                    title="Kick Player"
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                  </button>
+                {/* Actions: Kick (Host-only or disconnect/bot) or Vote Kick (Any human) */}
+                {!isMe && (
+                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* Host Direct Kick */}
+                      {(players.find(p => p.id === playerId)?.isHost || player.isConfirmedDisconnected || player.isBot) ? (
+                         <button 
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           if (window.confirm(`Kick ${player.name}?`)) {
+                             kickPlayer(player.id);
+                           }
+                         }}
+                         className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors"
+                         title="Host Kick"
+                       >
+                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                         </svg>
+                       </button>
+                      ) : (
+                         /* Vote Kick */
+                         <button 
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           voteKick(player.id);
+                         }}
+                         className="p-1.5 rounded-lg bg-slate-500/10 text-slate-400 hover:bg-slate-500 hover:text-white transition-colors flex items-center gap-1"
+                         title="Vote Kick"
+                       >
+                         <span className="text-[8px] font-black uppercase">Vote</span>
+                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                         </svg>
+                       </button>
+                      )}
+                   </div>
                 )}
 
                 <div className="text-right flex flex-col items-end px-1 min-w-[40px]">

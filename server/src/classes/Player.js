@@ -15,6 +15,12 @@ class Player {
     this.isBot = isBot;          // is this player a bot?
     this.isOnline = true;        // is the player currently connected via socket?
     this.isConfirmedDisconnected = false; // NEW: True after 10s of being offline
+    this.avatar = this.getRandomAvatar(); // NEW
+  }
+
+  getRandomAvatar() {
+    const avatars = ['🦊', '🐱', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐙', '🦖', '🦄'];
+    return avatars[Math.floor(Math.random() * avatars.length)];
   }
 
   // ---------------------------------------------------------------------------
@@ -50,6 +56,7 @@ class Player {
       isBot: this.isBot,
       isOnline: this.isOnline,
       isConfirmedDisconnected: this.isConfirmedDisconnected,
+      avatar: this.avatar,
     };
   }
 }

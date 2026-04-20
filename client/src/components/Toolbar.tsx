@@ -21,6 +21,8 @@ const SIZES = [
 
 const Toolbar: React.FC = () => {
   const { color, size, setBrushConfig, clearCanvas, undo, phase, currentPlayerIsDrawer } = useGame();
+  
+  const isEraser = color === '#0a0b1e';
 
   if (phase !== 'drawing' || !currentPlayerIsDrawer) return null;
 
@@ -65,6 +67,21 @@ const Toolbar: React.FC = () => {
 
       {/* Actions */}
       <div className="flex items-center gap-2 shrink-0 ml-auto">
+        <button
+          onClick={() => setBrushConfig({ color: '#0a0b1e' })}
+          title="Eraser"
+          className={`w-9 h-9 border rounded-xl flex items-center justify-center transition-all active:scale-90 ${
+            isEraser 
+              ? 'bg-brand-secondary text-bg-main border-brand-secondary' 
+              : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 14l9-9 3 3-9 9-9-9 3-3 9 9zM2 20h20" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11l-3 3-3-3" />
+          </svg>
+        </button>
+
         <button
           onClick={undo}
           title="Undo"

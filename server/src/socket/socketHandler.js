@@ -598,6 +598,59 @@ function setupSocketHandler(io) {
       const target = room.getPlayer(targetPlayerId);
       if (!target) return;
 
+      console.log(`[Socket] Host kicked ${target.name} from room ${room.code}`);
+      room.removePlayer(targetPlayerId);
+      
+      // Notify the target
+      io.to(target.socketId).emit('kicked', { reason: 'You were kicked by the host.' });
+      
+      broadcastPlayerList(io, room);
+    });
+
+    // -------------------------------------------------------------------------
+    // vote_kick
+    // Any player can vote to kick another. Requires > 50% online humans.
+    // -------------------------------------------------------------------------
+    socket.on('vote_kick', ({ roomCode, targetPlayerId }) => {
+      try {
+        const room = rooms.get(roomCode?.toUpperCase());
+        if (!room) return;
+
+        const voter = room.getPlayerBySocketId(socket.id);
+        if (!voter || voter.id === targetPlayerId) return;
+
+        const target = room.getPlayer(targetPlayerId);
+        if (!target || target.isBot) return; // Bots can't be votekicked? (or maybe they can, but keep it simple)
+
+        // Initialize votes set for this target if not exists
+        if (!room.kickVotes.has(targetPlayerId)) {
+          room.kickVotes.set(targetPlayerId, new Set());
+        }
+
+        const votes = room.kickVotes.get(targetPlayerId);
+        votes.add(voter.id);
+
+        const onlineHumans = room.getPlayers().filter(p => !p.isBot && p.isOnline).length;
+        const required = Math.ceil(onlineHumans / 2); // > 50%
+
+        if (votes.size >= required) {
+          console.log(`[Socket] Votekick success: ${target.name} in room ${room.code}`);
+          room.removePlayer(targetPlayerId);
+          room.kickVotes.delete(targetPlayerId);
+          io.to(target.socketId).emit('kicked', { reason: 'You were kicked by a player vote.' });
+          broadcastPlayerList(io, room);
+        } else {
+          // Notify the room of the progress
+          io.to(room.id).emit('chat_message', {
+             type: 'system',
+             text: `Vote kick against ${target.name}: ${votes.size}/${required} votes.`
+          });
+        }
+      } catch (error) {
+        console.error('[Socket Error] vote_kick:', error);
+      }
+    });
+
       // Notify the kicked player
       const targetSocket = io.sockets.sockets.get(target.socketId);
       if (targetSocket) {

@@ -320,10 +320,12 @@ class Game {
     this.phase = 'drawing';
 
     // Build hint array: spaces stay as spaces, letters become '_'
-    // e.g. "ice cream" → ['_','_','_',' ','_','_','_','_','_']
+    // If wordMode is 'hidden', use '?' or similar to hide length if desired, 
+    // or just keep them all as '?' to hide exact letter counts.
+    const isHidden = this.settings.wordMode === 'hidden';
     this.wordHints = safeWord.split('').map((char) => {
       if (char === ' ') return ' ';
-      return '_';
+      return isHidden ? '?' : '_';
     });
 
     console.log(`[Game] Word chosen: "${word}" — starting timer`);
@@ -393,7 +395,7 @@ class Game {
   // Emits updated hints to the room (but NOT to the drawer).
   // ---------------------------------------------------------------------------
   revealHintLetter() {
-    if (!this.currentWord) return;
+    if (!this.currentWord || this.settings.wordMode === 'hidden') return;
 
     // Collect indices of positions that are still '_' (not yet revealed)
     const hiddenIndices = [];

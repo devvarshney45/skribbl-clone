@@ -16,6 +16,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClose, onCr
   const drawTime = 80;
   const [maxPlayers, setMaxPlayers] = useState(8);
   const [wordCount, setWordCount] = useState(3);
+  const [wordMode, setWordMode] = useState<'normal' | 'hidden'>('normal');
   const [hints] = useState(2);
 
   if (!isOpen) return null;
@@ -56,6 +57,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClose, onCr
                 <input type="range" min="2" max="12" value={maxPlayers} onChange={(e) => setMaxPlayers(parseInt(e.target.value))} className="w-full accent-brand-primary" />
             </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Word Count */}
             <div className="space-y-3">
                 <div className="flex justify-between items-center px-1">
@@ -64,10 +66,23 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClose, onCr
                 </div>
                 <input type="range" min="2" max="5" value={wordCount} onChange={(e) => setWordCount(parseInt(e.target.value))} className="w-full accent-brand-primary" />
             </div>
+
+            {/* Word Mode */}
+            <div className="space-y-3">
+                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Logic Pattern</label>
+                <select 
+                  value={wordMode} 
+                  onChange={(e) => setWordMode(e.target.value as any)}
+                  className="w-full bg-bg-main border border-white/5 rounded-xl py-2.5 px-3 text-[10px] font-black text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                >
+                  <option value="normal">NORMAL (HINTS)</option>
+                  <option value="hidden">HIDDEN (NO HINTS)</option>
+                </select>
+            </div>
           </div>
 
           <button 
-            onClick={() => onCreate({ rounds, drawTime, maxPlayers, wordCount, hints }, isPrivate)}
+            onClick={() => onCreate({ rounds, drawTime, maxPlayers, wordCount, hints, wordMode }, isPrivate)}
             disabled={loading}
             className={`w-full py-5 rounded-2xl font-black text-[11px] tracking-[0.4em] btn-game shadow-tactile-heavy transition-all mt-4 ${loading ? 'bg-brand-primary/50 text-white cursor-not-allowed animate-pulse' : 'bg-brand-primary hover:bg-brand-primary/90 text-white'}`}
           >
