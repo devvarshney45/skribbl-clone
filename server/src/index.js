@@ -70,6 +70,19 @@ app.get('/health', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Static Frontend Delivery (For all-in-one Render deployment)
+// ---------------------------------------------------------------------------
+const path = require('path');
+
+// Serve the compiled React application statically
+app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+// Catch-all route to serve index.html for React Router compatibility
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+});
+
+// ---------------------------------------------------------------------------
 // Socket.IO setup
 // ---------------------------------------------------------------------------
 const io = new Server(server, {
