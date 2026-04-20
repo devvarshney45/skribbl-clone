@@ -12,8 +12,8 @@ interface CreateRoomModalProps {
 
 const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClose, onCreate, loading }) => {
   const [isPrivate, setIsPrivate] = useState(false);
-  const [rounds, setRounds] = useState(3);
-  const [drawTime, setDrawTime] = useState(80);
+  const rounds = 3;
+  const drawTime = 80;
   const [maxPlayers, setMaxPlayers] = useState(8);
   const [wordCount, setWordCount] = useState(3);
   const [hints] = useState(2);
@@ -46,25 +46,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({ isOpen, onClose, onCr
               </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            {/* Rounds */}
-            <div className="space-y-3">
-                <div className="flex justify-between items-center px-1">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Rounds</label>
-                    <span className="text-xs font-black font-mono text-brand-secondary">{rounds}</span>
-                </div>
-                <input type="range" min="1" max="10" value={rounds} onChange={(e) => setRounds(parseInt(e.target.value))} className="w-full accent-brand-secondary" />
-            </div>
-
-            {/* Draw Time */}
-            <div className="space-y-3">
-                <div className="flex justify-between items-center px-1">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Draw Time (s)</label>
-                    <span className="text-xs font-black font-mono text-brand-secondary">{drawTime}</span>
-                </div>
-                <input type="range" min="30" max="180" step="10" value={drawTime} onChange={(e) => setDrawTime(parseInt(e.target.value))} className="w-full accent-brand-secondary" />
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Max Players */}
             <div className="space-y-3">
                 <div className="flex justify-between items-center px-1">
