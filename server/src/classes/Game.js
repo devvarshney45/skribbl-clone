@@ -190,6 +190,12 @@ class Game {
       timeLeft: this.timeLeft,
     });
 
+    // Provide the actual word to the drawer immediately for UI display
+    const drawer = this.getCurrentDrawer();
+    if (drawer && !drawer.isBot) {
+        this.io.to(`user_${drawer.id}`).emit('word_selected', { word: safeWord });
+    }
+
     // Start the countdown
     this.startTimer();
   }
@@ -445,40 +451,67 @@ class Game {
   setupBotSimulators() {
     const drawer = this.getCurrentDrawer();
     
-    // 1. Bot Drawing Simulation
+    // 1. Bot Drawing Simulation (Enhanced "Senior Level" Generator)
     if (drawer && drawer.isBot) {
-      // Simulate drawing scribbles
+      let patternStep = 0;
+      let currentPattern = Math.floor(Math.random() * 3); // 0: Spiral, 1: Wave, 2: Shapes
+      let centerX = 300 + Math.random() * 200;
+      let centerY = 200 + Math.random() * 200;
+      const colors = ['#ffffff', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#a855f7'];
+      let currentColor = colors[Math.floor(Math.random() * colors.length)];
+      let currentSize = Math.floor(Math.random() * 8) + 4;
+
       this.botDrawingInterval = setInterval(() => {
-        // Randomly pick a color
-        const colors = ['#ffffff', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const size = Math.floor(Math.random() * 15) + 5;
-        
-        // Randomly generate an anchor point across an 800x600 canvas coordinate space
-        let currentX = Math.random() * 800; 
-        let currentY = Math.random() * 600;
-        
-        // Fire 'start' event
-        this.io.to(this.roomId).emit('draw_data', {
-          type: 'start', x: currentX, y: currentY, color, size, playerId: drawer.id
-        });
-        
-        const numPoints = Math.floor(Math.random() * 4) + 2;
-        
-        for (let i = 0; i < numPoints; i++) {
-          currentX = Math.max(0, Math.min(800, currentX + (Math.random() - 0.5) * 100)); // jump up to 50px
-          currentY = Math.max(0, Math.min(600, currentY + (Math.random() - 0.5) * 100));
-          // Fire 'move' event
+        // Occasionally reset or change patterns
+        if (patternStep > 40 + Math.random() * 40) {
+            this.io.to(this.roomId).emit('draw_data', { type: 'end', playerId: drawer.id });
+            patternStep = 0;
+            currentPattern = Math.floor(Math.random() * 3);
+            centerX = 150 + Math.random() * 500;
+            centerY = 100 + Math.random() * 400;
+            currentColor = colors[Math.floor(Math.random() * colors.length)];
+            currentSize = Math.floor(Math.random() * 8) + 4;
+            return;
+        }
+
+        let x, y;
+        const t = patternStep * 0.15;
+
+        // Structured logic
+        switch(currentPattern) {
+            case 0: // Expanding Spiral
+                const r = patternStep * 4;
+                x = centerX + Math.cos(t * 2) * r;
+                y = centerY + Math.sin(t * 2) * r;
+                break;
+            case 1: // Sine Wave
+                x = (centerX - 200) + patternStep * 10;
+                y = centerY + Math.sin(t * 3) * 80;
+                break;
+            case 2: // Circular Orbit
+                x = centerX + Math.cos(t) * 120;
+                y = centerY + Math.sin(t) * 120;
+                break;
+            default:
+                x = centerX; y = centerY;
+        }
+
+        // Clamp to canvas bounds
+        x = Math.max(10, Math.min(790, x));
+        y = Math.max(10, Math.min(590, y));
+
+        if (patternStep === 0) {
           this.io.to(this.roomId).emit('draw_data', {
-            type: 'move', x: currentX, y: currentY, playerId: drawer.id
+            type: 'start', x, y, color: currentColor, size: currentSize, playerId: drawer.id
+          });
+        } else {
+          this.io.to(this.roomId).emit('draw_data', {
+            type: 'move', x, y, playerId: drawer.id
           });
         }
-        
-        // Fire 'end' event
-        this.io.to(this.roomId).emit('draw_data', {
-            type: 'end', playerId: drawer.id
-        });
-      }, 500); // Draw every 500ms
+
+        patternStep++;
+      }, 60); // 60ms for smooth continuous strokes
     }
     
     // 2. Bot Guessing Simulation

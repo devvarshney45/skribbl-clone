@@ -228,6 +228,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setWordOptions(data.words);
     });
 
+    socket.on('word_selected', ({ word: selectedWord }) => {
+      setWord(selectedWord);
+    });
+
     socket.on('you_are_drawer', ({ isDrawer: value }) => {
       console.log('[GameContext] SERVER PUSH: isDrawer =', value);
       // Deprecated in favor of identity_sync + playerId
