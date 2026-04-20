@@ -1,157 +1,122 @@
-# 🎨 Skribbl Clone
+<div align="center">
+  <img src="https://media.giphy.com/media/LmNwrBhejkK9EFP504/giphy.gif" width="100" />
+  <h1>🎨 Real-Time Skribbl.io Clone</h1>
+  <p><b>A highly scalable, event-driven multiplayer drawing arena built for production.</b></p>
 
-A real-time multiplayer drawing and guessing game — a clone of skribbl.io built for a professional internship technical round.
-
-## 🚀 Live Demo
-
-> Coming soon — deployment in progress.
-
----
-
-## 🧰 Tech Stack
-
-| Layer | Tech |
-|---|---|
-| Frontend | React + TypeScript + Vite |
-| Styling | Tailwind CSS (dark theme) |
-| Backend | Node.js + Express |
-| WebSockets | Socket.IO |
-| Database | PostgreSQL via `pg` (Neon) |
+  [![React](https://img.shields.io/badge/React-18-blue.svg?style=flat&logo=react)](https://reactjs.org/)
+  [![Node](https://img.shields.io/badge/Node.js-24-green.svg?style=flat&logo=nodedotjs)](https://nodejs.org/)
+  [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.x-black.svg?style=flat&logo=socketdotio)](https://socket.io/)
+  [![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3-38B2AC.svg?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791.svg?style=flat&logo=postgresql)](https://www.postgresql.org/)
+</div>
 
 ---
 
-## 📁 Folder Structure
+## 📖 Overview
+This repository contains a full-stack, real-time multiplayer drawing and guessing game engineered to replicate and modernize the classic `skribbl.io` architecture. 
 
+Designed for a technical engineering assessment, this project emphasizes **low-latency WebSocket transmission**, **Object-Oriented backend state management**, and a **premium Glassmorphism UI** optimized for all viewport sizes.
+
+🌍 **Live Production URL:** [https://skribbl-clone-yaf6.onrender.com](https://skribbl-clone-yaf6.onrender.com) *(Hosted via Render)*
+
+---
+
+## 🏗️ System Architecture
+
+The core philosophy separates real-time ephemeral game state from persistent data storage, operating primarily via a robust Event-Driven Architecture (EDA).
+
+### 🧩 Core Mechanics
+* **Canvas Synchronization**: Client strokes are mapped to Cartesian coordinates, batched, and emitted via `Socket.IO`. The Engine utilizes `destination-out` composite operations for precise eraser tooling against translucent backgrounds.
+* **OOP State Container**: The Node.js server maintains live match contexts via transient `Room`, `Game`, and `Player` class instances stored in memory heaps, minimizing DB round-trips during live matches.
+* **Persisted Truth (Postgres)**: Scores, Host Authority, and dynamic Word Dictionaries are written to PostgreSQL (Neon Node) for permanent ledgering and crash recovery.
+* **Auto-Routing**: Graceful disconnection intercepts auto-promote alternate human players to room hosts after a 10s transient networking grace period.
+
+```mermaid
+graph LR
+    C[React Client] <-->|WebSockets| S[Node.js Server]
+    S <-->|CRUD| DB[(PostgreSQL)]
+    S <-->|In-Memory Map| M((Game State Classes))
 ```
-skribbl-clone/
-├── server/           ← Express + Socket.IO backend
-│   └── src/
-│       ├── classes/  ← OOP: Player, Room, Game
-│       ├── routes/   ← REST API
-│       ├── db/       ← PostgreSQL setup + seed
-│       └── socket/   ← All socket events
-└── client/           ← React + TypeScript frontend
-    └── src/
-        ├── components/
-        ├── pages/
-        ├── hooks/
-        └── context/
-```
 
 ---
 
-## ⚙️ How to Run Locally
+## ⚡ Technical Stack
+
+| Layer | Technologies | Primary Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, TypeScript, Vite | Component rendering, UI Context, localized buffering. |
+| **Styling** | Tailwind CSS (JIT) | Responsive design tokens, atomic classes, Glassmorphism. |
+| **Backend API** | Node.js, Express.js | Route handling, HTTP lifecycle, Static Asset Delivery. |
+| **Real-Time** | Socket.IO (ws long-polling) | Event broadcasting, presence tracking, stream sync. |
+| **Database** | PostgreSQL (Neon), `pg` pool | ACID-compliant storage for users, dicts, and metadata. |
+
+---
+
+## ✨ Enterprise Features
+Beyond the required MVP scope, this architecture introduces several advanced mechanics:
+
+* 🛡️ **Democratic Governance**: True >50% consensus Votekick algorithm linked to hard database connection culling (blocks cache-spoofing).
+* 🕵️ **Hardcore 'Hidden' Mode**: Cryptographic masking of word lengths (`_ _ _`) replaced by a pure state-blind UI block to prevent meta-gaming.
+* 🎭 **Deterministic Entity Hashing**: Player Avatars utilize a strict Unicode sum-hash against their session UUIDs to perfectly maintain identity continuity through random internet disconnects.
+* 🤖 **Bot Simulation Engine**: Algorithmic bots can be provisioned into the lobby for isolated testing scenarios and scaling benchmarks.
+* 📊 **Smart Interpolation Timer**: Clock verification is authoritative on the server, destroying clock-drift exploits.
+
+---
+
+## 🛠️ Local Development & Deployment
 
 ### Prerequisites
-- Node.js v18+
-- npm v9+
+* **Node.js**: v18.x or higher
+* **npm**: v9+
+* **PostgreSQL**: Accessible local or remote instance
 
-### 1. Clone the repo
+### 1. Installation
+Clone the repository and install all localized workspaces. We utilize a root-level script tree for unified command orchestration.
 ```bash
-git clone https://github.com/yourusername/skribbl-clone.git
+git clone https://github.com/devvarshney45/skribbl-clone.git
 cd skribbl-clone
+npm run install-all
 ```
 
-### 2. Start the backend
+### 2. Environment Configuration
+Populate the environmental variables in `./server/.env`:
+```env
+PORT=3001
+NODE_ENV=development
+CLIENT_URL=http://localhost:5173
+DATABASE_URL=postgresql://user:password@host/neondb
+```
+
+### 3. Execution
+Launch the entire monorepo simultaneously:
 ```bash
-cd server
-npm install
 npm run dev
-# Server runs on http://localhost:3001
+# -> Client UI mounts to http://localhost:5173
+# -> Express / Socket Listener mounts to http://localhost:3001
 ```
 
-### 3. Start the frontend
+### 4. Automated Build Hook (Production)
+For unified platforms like Render, the app exposes an aggressive `postinstall` hook that natively builds the frontend Vite asset chain and binds it statically to Express.
 ```bash
-cd client
-npm install
-npm run dev
-# Client runs on http://localhost:5173
+npm run render-build # Equivalent to Production CI/CD prep
+npm start            # Executes server/src/index.js (Static fallback active)
 ```
 
-### 4. Open the game
-Open two browser tabs at `http://localhost:5173` and enjoy!
+---
+
+## 📡 Essential Socket Protocol (API Surface)
+
+| Channel Event | Payload Definition | Description |
+| :--- | :--- | :--- |
+| `create_room` | `{ settings: Object, isPrivate: bool }` | Provisions a new Class memory instance. |
+| `word_chosen` | `{ word: string }` | Emitted by Active Drawer. Initiates countdown. |
+| `draw_data` | `{ type: string, x: float, y: float, ... }`| Primary binary stream multiplexed to subscribers. |
+| `guess_result` | `{ correct: bool, playerId: string }` | Score allocation event broadcasted globally. |
+| `vote_kick` | `{ targetPlayerId: string }` | Registers user against internal consensus threshold. |
 
 ---
 
-## 🔌 WebSocket Events Reference
-
-| Event | Direction | Description |
-|---|---|---|
-| `create_room` | Client → Server | Host creates a new room |
-| `room_created` | Server → Client | Room code & info returned |
-| `join_room` | Client → Server | Player joins existing room |
-| `player_joined` | Server → Room | All players see updated list |
-| `player_ready` | Client → Server | Player marks themselves ready |
-| `start_game` | Client → Server | Host starts the game |
-| `round_start` | Server → Room | Drawer gets word options, others get blanks |
-| `word_chosen` | Client → Server | Drawer picks a word |
-| `game_state` | Server → Room | Current hints, phase, timer |
-| `draw_start` | Client → Server | Pen down on canvas |
-| `draw_move` | Client → Server | Mouse dragging |
-| `draw_end` | Client → Server | Pen lifted |
-| `draw_data` | Server → Room | Broadcasts drawing to everyone else |
-| `canvas_clear` | Client ↔ Server | Clear the canvas |
-| `draw_undo` | Client ↔ Server | Undo last stroke |
-| `guess` | Client → Server | Player guesses the word |
-| `guess_result` | Server → Room | Correct/wrong result |
-| `chat` | Client → Server | Normal chat message |
-| `chat_message` | Server → Room | Broadcast chat |
-| `timer_update` | Server → Room | Countdown tick every second |
-| `round_end` | Server → Room | Round over, word revealed, scores shown |
-| `game_over` | Server → Room | Final leaderboard |
-| `player_left` | Server → Room | Player disconnected |
-
----
-
-## 🏗 Architecture Overview
-
-```
-Browser Tab 1 (Drawer)          Browser Tab 2 (Guesser)
-       │                                  │
-       │──── Socket.IO ──────────────────►│
-       │                                  │
-       └──────────────── Express Server ──┘
-                              │
-                         PostgreSQL DB
-                    (rooms, players, words)
-```
-
-- All game logic lives on the **server** in memory (Room, Game, Player classes)
-- PostgreSQL stores persistent data (scores, rooms, word list)
-- Socket.IO handles all real-time communication
-- React context manages frontend state
-
----
-
-## 🎮 Features
-
-- ✅ Create / Join rooms with a 6-character code
-- ✅ Real-time drawing canvas with color picker and brush sizes
-- ✅ Undo stroke and clear canvas
-- ✅ Word selection modal (3 choices, 10s to pick)
-- ✅ Animated countdown timer (green → yellow → red)
-- ✅ Hint system (reveals letters at 30s intervals)
-- ✅ Scoring — faster guess = more points
-- ✅ Shareable invite link
-- ✅ Reconnection handling
-- ✅ Game over screen with confetti + leaderboard
-
-## ☁️ Deployment (Render + Neon)
-
-### Backend (Render)
-1. Link your GitHub repo to Render.
-2. Set Build Command: `cd server && npm install`
-3. Set Start Command: `cd server && node src/index.js`
-4. Add Environment Variables:
-   - `DATABASE_URL`: Your actual Neon connection string.
-   - `PORT`: `3001`
-   - `CLIENT_URL`: Your frontend URL.
-   - `NODE_ENV`: `production`
-
-### Frontend (Render/Vercel)
-1. Set Build Command: `cd client && npm install && npm run build`
-2. Set Publish Directory: `client/dist`
-
----
-
-Built with ❤️ as an internship project.
+<div align="center">
+  <sub>Engineered for Performance by Dev Varshney.</sub><br/>
+  <sub>Code Assessment Confidential © 2026</sub>
+</div>
