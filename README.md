@@ -1,35 +1,52 @@
-<div align="center">
-  <img src="https://media.giphy.com/media/LmNwrBhejkK9EFP504/giphy.gif" width="100" />
-  <h1>🎨 Real-Time Skribbl.io Clone</h1>
-  <p><b>A highly scalable, event-driven multiplayer drawing arena built for production.</b></p>
+# Skribbl.io Clone - Real-Time Multiplayer Web Socket Arena
 
-  [![React](https://img.shields.io/badge/React-18-blue.svg?style=flat&logo=react)](https://reactjs.org/)
-  [![Node](https://img.shields.io/badge/Node.js-24-green.svg?style=flat&logo=nodedotjs)](https://nodejs.org/)
-  [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.x-black.svg?style=flat&logo=socketdotio)](https://socket.io/)
-  [![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3-38B2AC.svg?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
-  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791.svg?style=flat&logo=postgresql)](https://www.postgresql.org/)
-</div>
+**A highly scalable, event-driven multiplayer drawing arena built for production.**  
+*Developed as a Round 2 Technical Assignment Submission.*
+
+[![React](https://img.shields.io/badge/React-18-blue.svg?style=flat&logo=react)](https://reactjs.org/)
+[![Node](https://img.shields.io/badge/Node.js-24-green.svg?style=flat&logo=nodedotjs)](https://nodejs.org/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.x-black.svg?style=flat&logo=socketdotio)](https://socket.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791.svg?style=flat&logo=postgresql)](https://www.postgresql.org/)
 
 ---
 
-## 📖 Overview
-This repository contains a full-stack, real-time multiplayer drawing and guessing game engineered to replicate and modernize the classic `skribbl.io` architecture. 
+## 🌐 Production Deployments
 
-Designed for a technical engineering assessment, this project emphasizes **low-latency WebSocket transmission**, **Object-Oriented backend state management**, and a **premium Glassmorphism UI** optimized for all viewport sizes.
+The application is fully deployed and optimized for both desktop and mobile viewports.
 
-🌍 **Live Production URL:** [https://skribbl-clone-yaf6.onrender.com](https://skribbl-clone-yaf6.onrender.com) *(Hosted via Render)*
+* **Primary Application Interface:** [https://skribbl.devvarshney.me/](https://skribbl.devvarshney.me/)
+* **Backend Socket Provider (Render):** [https://skribbl-clone-yaf6.onrender.com](https://skribbl-clone-yaf6.onrender.com)
+* **Code Repository:** [GitHub Repository](https://github.com/devvarshney45/skribbl-clone.git)
+
+---
+
+## 📖 Project Overview & Highlights
+
+This project implements a complete end-to-end replicate of the popular multiplayer drawing game *Skribbl.io*. To surpass standard MVP requirements, this architecture prioritizes scalable backend design, asynchronous state bridging via WebSockets, and database persistence.
+
+### Core Specifications Achieved:
+* **Real-time multiplayer drawing & guessing:** Absolute low-latency path interpolation across client canvases.
+* **Public & Private Routing:** Shareable invite links paired with random global lobby matchmaking.
+* **OOP Architecture:** Clean class-based data structures isolating `Room`, `Game`, and `Player` states in-memory.
+* **PostgreSQL (Neon) Database:** Engineered as recommended—persisting dictionary sets and match metadata.
+* **Clean Version Control:** Systematically documented commit history outlining logical implementation steps.
+* **Responsive UI/UX:** Mobile-ready "Glassmorphism" interface overlaying CSS grid constructs.
+
+### Advanced Engineering Features (Bonus Extensions)
+To demonstrate production-readiness, several advanced mechanisms were engineered into the match loop:
+* **🤖 Smart AI Bots:** Algorithmic dummy players can be provisioned into lobbies for automated state-validation and match filling.
+* **🥷 Hidden Word Mode:** Hardcore gametype removing metadata leaks (`_ _ _` length indicators) to prevent meta-gaming.
+* **🎭 Emoji Avatars:** Deterministic UUID-hash entity mapping ensuring unique player avatars survive browser crashes.
+* **⚖️ Votekick System:** Strict >50% consensus algorithm linked to deterministic socket expulsion and PostgreSQL connection bans.
+* **👑 Auto Host Promotion:** Fallback authority algorithms ensure lobbies never hard-lock when hosts naturally sever connections.
+* **🔌 10s Grace Period:** Transient network handlers holding state instances, allowing unexpected disconnecters to transparently reclaim their socket identity.
+* **🧽 Destination-Out Eraser Tool:** Native canvas compositing that carves strokes completely rather than utilizing lazy color-fill layers.
 
 ---
 
 ## 🏗️ System Architecture
 
-The core philosophy separates real-time ephemeral game state from persistent data storage, operating primarily via a robust Event-Driven Architecture (EDA).
-
-### 🧩 Core Mechanics
-* **Canvas Synchronization**: Client strokes are mapped to Cartesian coordinates, batched, and emitted via `Socket.IO`. The Engine utilizes `destination-out` composite operations for precise eraser tooling against translucent backgrounds.
-* **OOP State Container**: The Node.js server maintains live match contexts via transient `Room`, `Game`, and `Player` class instances stored in memory heaps, minimizing DB round-trips during live matches.
-* **Persisted Truth (Postgres)**: Scores, Host Authority, and dynamic Word Dictionaries are written to PostgreSQL (Neon Node) for permanent ledgering and crash recovery.
-* **Auto-Routing**: Graceful disconnection intercepts auto-promote alternate human players to room hosts after a 10s transient networking grace period.
+The ecosystem separates real-time ephemeral game state from persistent data storage, operating primarily via a robust Event-Driven Architecture.
 
 ```mermaid
 graph LR
@@ -38,85 +55,44 @@ graph LR
     S <-->|In-Memory Map| M((Game State Classes))
 ```
 
----
-
-## ⚡ Technical Stack
-
+### Component Breakdown
 | Layer | Technologies | Primary Purpose |
 | :--- | :--- | :--- |
-| **Frontend** | React 18, TypeScript, Vite | Component rendering, UI Context, localized buffering. |
-| **Styling** | Tailwind CSS (JIT) | Responsive design tokens, atomic classes, Glassmorphism. |
-| **Backend API** | Node.js, Express.js | Route handling, HTTP lifecycle, Static Asset Delivery. |
-| **Real-Time** | Socket.IO (ws long-polling) | Event broadcasting, presence tracking, stream sync. |
-| **Database** | PostgreSQL (Neon), `pg` pool | ACID-compliant storage for users, dicts, and metadata. |
+| **Frontend UI** | React 18, TypeScript, Tailwind | Canvas event listening, buffer arrays, scalable UI tokens. |
+| **Backend API** | Node.js, Express.js | Route handling, HTTP lifecycle provisioning, REST facades. |
+| **Transport** | Socket.IO | Full-duplex bidirectional arrays linking client Cartesian maps to server logic. |
+| **Persistence** | PostgreSQL (`pg`), Neon | Transactional ledgering, avoiding long-term memory leaks. |
 
 ---
 
-## ✨ Enterprise Features
-Beyond the required MVP scope, this architecture introduces several advanced mechanics:
+## 🛠️ Local Development & Orchestration
 
-* 🛡️ **Democratic Governance**: True >50% consensus Votekick algorithm linked to hard database connection culling (blocks cache-spoofing).
-* 🕵️ **Hardcore 'Hidden' Mode**: Cryptographic masking of word lengths (`_ _ _`) replaced by a pure state-blind UI block to prevent meta-gaming.
-* 🎭 **Deterministic Entity Hashing**: Player Avatars utilize a strict Unicode sum-hash against their session UUIDs to perfectly maintain identity continuity through random internet disconnects.
-* 🤖 **Bot Simulation Engine**: Algorithmic bots can be provisioned into the lobby for isolated testing scenarios and scaling benchmarks.
-* 📊 **Smart Interpolation Timer**: Clock verification is authoritative on the server, destroying clock-drift exploits.
-
----
-
-## 🛠️ Local Development & Deployment
+The repository leverages a unified workspace script block allowing simultaneous front/backend booting.
 
 ### Prerequisites
 * **Node.js**: v18.x or higher
 * **npm**: v9+
-* **PostgreSQL**: Accessible local or remote instance
+* **PostgreSQL**: Accessible local/remote URL string
 
-### 1. Installation
-Clone the repository and install all localized workspaces. We utilize a root-level script tree for unified command orchestration.
+### Command Line Instruction set:
+
 ```bash
+# 1. Clone implementation
 git clone https://github.com/devvarshney45/skribbl-clone.git
 cd skribbl-clone
+
+# 2. Workspace installation
 npm run install-all
-```
 
-### 2. Environment Configuration
-Populate the environmental variables in `./server/.env`:
-```env
-PORT=3001
-NODE_ENV=development
-CLIENT_URL=http://localhost:5173
-DATABASE_URL=postgresql://user:password@host/neondb
-```
+# 3. Provision environment variables inside `server/.env`
+# PORT=3001
+# CLIENT_URL=http://localhost:5173
+# DATABASE_URL=postgresql://link...
 
-### 3. Execution
-Launch the entire monorepo simultaneously:
-```bash
+# 4. Boot internal environments
 npm run dev
-# -> Client UI mounts to http://localhost:5173
-# -> Express / Socket Listener mounts to http://localhost:3001
-```
-
-### 4. Automated Build Hook (Production)
-For unified platforms like Render, the app exposes an aggressive `postinstall` hook that natively builds the frontend Vite asset chain and binds it statically to Express.
-```bash
-npm run render-build # Equivalent to Production CI/CD prep
-npm start            # Executes server/src/index.js (Static fallback active)
+# (Client serves on 5173, Server multiplexes on 3001)
 ```
 
 ---
-
-## 📡 Essential Socket Protocol (API Surface)
-
-| Channel Event | Payload Definition | Description |
-| :--- | :--- | :--- |
-| `create_room` | `{ settings: Object, isPrivate: bool }` | Provisions a new Class memory instance. |
-| `word_chosen` | `{ word: string }` | Emitted by Active Drawer. Initiates countdown. |
-| `draw_data` | `{ type: string, x: float, y: float, ... }`| Primary binary stream multiplexed to subscribers. |
-| `guess_result` | `{ correct: bool, playerId: string }` | Score allocation event broadcasted globally. |
-| `vote_kick` | `{ targetPlayerId: string }` | Registers user against internal consensus threshold. |
-
----
-
-<div align="center">
-  <sub>Engineered for Performance by Dev Varshney.</sub><br/>
-  <sub>Code Assessment Confidential © 2026</sub>
-</div>
+*Developed by Dev Varshney (6397003690) | Code Assessment Submission*
