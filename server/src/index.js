@@ -66,23 +66,16 @@ app.use(express.json());
 // ---------------------------------------------------------------------------
 // REST API routes
 // ---------------------------------------------------------------------------
+
+// Simple root endpoint for the backend server
+app.get('/', (req, res) => {
+  res.send('Dev game server running');
+});
+
 app.use('/api/rooms', roomRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', domain: 'skribbl.devvarshney.me', client: normalizedClientUrl });
-});
-
-// ---------------------------------------------------------------------------
-// Static Frontend Delivery (For all-in-one Render deployment)
-// ---------------------------------------------------------------------------
-const path = require('path');
-
-// Serve the compiled React application statically
-app.use(express.static(path.join(__dirname, '../../client/dist')));
-
-// Catch-all route to serve index.html for React Router compatibility
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
 });
 
 // ---------------------------------------------------------------------------
