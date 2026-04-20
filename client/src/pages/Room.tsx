@@ -86,7 +86,6 @@ const Room: React.FC = () => {
                   <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isPrivate ? 'bg-rose-500' : 'bg-brand-secondary'}`} />
                   <span className="text-[9px] font-black text-white/50 uppercase tracking-widest">{isPrivate ? 'Private Studio' : 'Public Discovery'}</span>
               </div>
-          </div>
 
           <div className="flex items-center gap-4 bg-black/40 px-4 py-2 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-md">
              <div className="flex flex-col items-end">
