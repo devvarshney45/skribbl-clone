@@ -170,7 +170,7 @@ const Room: React.FC = () => {
                       <div key={p.id} className={`glass-pro p-3.5 rounded-[1.5rem] flex items-center justify-between transition-all group ${p.id === playerId ? 'border-brand-primary shadow-lg shadow-brand-primary/10 bg-brand-primary/5' : 'hover:bg-white/5 border-white/5'}`}>
                           <div className="flex items-center gap-3">
                               <div className="w-10 h-10 panel rounded-xl flex items-center justify-center font-black text-brand-secondary text-lg border-white/10">
-                                  {p.name[0].toUpperCase()}
+                                  {p.avatar || p.name[0].toUpperCase()}
                               </div>
                                   <div className="flex flex-col">
                                       <div className="flex items-center gap-2">

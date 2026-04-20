@@ -15,12 +15,16 @@ class Player {
     this.isBot = isBot;          // is this player a bot?
     this.isOnline = true;        // is the player currently connected via socket?
     this.isConfirmedDisconnected = false; // NEW: True after 10s of being offline
-    this.avatar = this.getRandomAvatar(); // NEW
+    this.avatar = this.getAvatarById(this.id); // Persistent emoji across reconnects
   }
 
-  getRandomAvatar() {
+  getAvatarById(id) {
     const avatars = ['🦊', '🐱', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐙', '🦖', '🦄'];
-    return avatars[Math.floor(Math.random() * avatars.length)];
+    let sum = 0;
+    for (let i = 0; i < id.length; i++) {
+      sum += id.charCodeAt(i);
+    }
+    return avatars[sum % avatars.length];
   }
 
   // ---------------------------------------------------------------------------

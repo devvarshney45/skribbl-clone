@@ -34,7 +34,13 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
     strokes.current.forEach((stroke) => {
       ctx.beginPath();
       ctx.moveTo(stroke.x, stroke.y);
-      ctx.strokeStyle = stroke.color;
+      if (stroke.color === '#0a0b1e') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = stroke.color;
+      }
       ctx.lineWidth = stroke.size || stroke.brushSize || 5;
 
       if (stroke.points && stroke.points.length > 0) {
@@ -83,7 +89,13 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
 
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.strokeStyle = color;
+    if (color === '#0a0b1e') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = color;
+    }
     ctx.lineWidth = size;
 
     // Record locally
@@ -153,7 +165,13 @@ export default function useCanvas(canvasRef: React.RefObject<HTMLCanvasElement>)
       if (data.type === 'start') {
         ctx.beginPath();
         ctx.moveTo(data.x, data.y);
-        ctx.strokeStyle = data.color;
+        if (data.color === '#0a0b1e') {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.strokeStyle = 'rgba(0,0,0,1)';
+        } else {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = data.color;
+        }
         ctx.lineWidth = data.size;
 
         // Sync to local buffer

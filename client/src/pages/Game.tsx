@@ -13,7 +13,7 @@ import PhaseOverlay from '../components/PhaseOverlay';
 const Game: React.FC = () => {
   const {
     roomCode, phase, timeLeft, wordHints, round, totalRounds,
-    currentDrawerId, playerId, word, drawTime,
+    currentDrawerId, playerId, word, drawTime, wordMode
   } = useGame();
 
   const isDrawer = playerId === currentDrawerId;
@@ -42,6 +42,16 @@ const Game: React.FC = () => {
         </span>
       );
     }
+    
+    if (wordMode === 'hidden') {
+      return (
+        <div className="flex gap-2 items-center text-rose-500 bg-rose-500/10 px-4 py-1.5 rounded-full border border-rose-500/20">
+          <span className="text-sm shadow-sm">🔒</span>
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em]">Length Hidden</span>
+        </div>
+      );
+    }
+
     return (
       <div className="flex gap-1 flex-wrap justify-center max-w-[180px] sm:max-w-sm md:max-w-none">
         {wordHints.map((char, i) => (

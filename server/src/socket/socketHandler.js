@@ -605,13 +605,30 @@ function setupSocketHandler(io) {
         votes.add(voter.id);
 
         const onlineHumans = room.getPlayers().filter(p => !p.isBot && p.isOnline).length;
-        const required = Math.ceil(onlineHumans / 2); // > 50%
+        const required = Math.floor(onlineHumans / 2) + 1; // Strict > 50% majority
 
         if (votes.size >= required) {
           console.log(`[Socket] Votekick success: ${target.name} in room ${room.code}`);
           room.removePlayer(targetPlayerId);
           room.kickVotes.delete(targetPlayerId);
-          io.to(target.socketId).emit('kicked', { reason: 'You were kicked by a player vote.' });
+          
+          // Hard wipe from DB so they can't reconnect via session recovery
+          if (!target.isBot) {
+             pool.query('DELETE FROM players WHERE id = $1', [targetPlayerId])
+               .catch(e => console.error('[vote_kick] DB deletion error:', e));
+          }
+          
+          io.to(target.socketId).emit('kicked', { message: 'You were removed from the studio by a community vote.' });
+          io.to(room.id).emit('chat_message', {
+            type: 'system',
+            text: `${target.name} was votekicked from the studio.`
+          });
+          io.to(room.id).emit('player_left', { playerId: targetPlayerId, playerName: target.name });
+
+          if (target.isHost) {
+            room.ensureHumanHost(pool, io).catch(e => console.error('[vote_kick] host transfer error:', e));
+          }
+
           broadcastPlayerList(io, room);
         } else {
           // Notify the room of the progress
