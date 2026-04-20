@@ -155,22 +155,24 @@ const Home: React.FC = () => {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
+                        {/* PRIMARY: New Studio */}
+                        <button 
+                            onClick={() => { if (!name) return setError('Enter name first!'); setIsModalOpen(true); }}
+                            className={`group py-3 md:py-5 rounded-lg md:rounded-xl font-black text-[9px] md:text-xs tracking-[0.2em] transition-all flex flex-col items-center gap-1 shadow-tactile-heavy ${name ? 'bg-brand-primary text-white hover:scale-[1.02] active:scale-95 shadow-brand-primary/20' : 'bg-white/5 text-slate-700 pointer-events-none opacity-50'}`}
+                        >
+                            <span className="text-lg md:text-xl group-hover:-rotate-12 transition-transform">🛡️</span>
+                            NEW STUDIO
+                        </button>
+
+                        {/* SECONDARY: Quick Start (fallback) */}
                         <button 
                             onClick={handleQuickJoin}
                             disabled={loading && !error.includes('Searching')}
-                            className={`group relative overflow-hidden py-3 md:py-5 rounded-lg md:rounded-xl font-black text-[9px] md:text-xs tracking-[0.2em] transition-all flex flex-col items-center gap-1 shadow-tactile-heavy ${name ? 'bg-brand-primary text-white hover:scale-[1.02] active:scale-95' : 'bg-white/5 text-slate-700 pointer-events-none opacity-50'}`}
+                            className={`group relative overflow-hidden py-3 md:py-5 rounded-lg md:rounded-xl font-black text-[9px] md:text-xs tracking-[0.2em] transition-all flex flex-col items-center gap-1 shadow-tactile ${name ? 'bg-bg-card border border-white/10 text-white hover:bg-white/5 hover:scale-[1.02] active:scale-95' : 'bg-white/5 text-slate-700 pointer-events-none opacity-50'}`}
                         >
                             <span className="text-lg md:text-xl group-hover:rotate-12 transition-transform">🌍</span>
                             {loading && error.includes('Searching') ? '...' : 'QUICK START'}
                             {loading && error.includes('Searching') && <span className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none" />}
-                        </button>
-
-                        <button 
-                            onClick={() => { if (!name) return setError('Enter name first!'); setIsModalOpen(true); }}
-                            className={`group py-3 md:py-5 rounded-lg md:rounded-xl font-black text-[9px] md:text-xs tracking-[0.2em] transition-all flex flex-col items-center gap-1 shadow-tactile ${name ? 'bg-bg-card border border-white/10 text-white hover:bg-white/5 hover:scale-[1.02] active:scale-95' : 'bg-white/5 text-slate-700 pointer-events-none opacity-50'}`}
-                        >
-                            <span className="text-lg md:text-xl group-hover:-rotate-12 transition-transform">🛡️</span>
-                            NEW STUDIO
                         </button>
                     </div>
 

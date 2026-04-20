@@ -3,7 +3,7 @@
 // Each player has a name, score, and state for the current round.
 
 class Player {
-  constructor({ id, name, socketId, roomId }) {
+  constructor({ id, name, socketId, roomId, isBot = false }) {
     this.id = id;               // unique UUID for this player
     this.name = name;            // display name chosen by the player
     this.socketId = socketId;    // current Socket.IO connection ID
@@ -12,6 +12,7 @@ class Player {
     this.hasGuessedCorrectly = false; // did this player guess right this round?
     this.isReady = false;        // has the player clicked "Ready" in the lobby?
     this.isHost = false;         // is this player the room host?
+    this.isBot = isBot;          // is this player a bot?
   }
 
   // ---------------------------------------------------------------------------
@@ -44,6 +45,7 @@ class Player {
       hasGuessedCorrectly: this.hasGuessedCorrectly,
       isReady: this.isReady,
       isHost: this.isHost,
+      isBot: this.isBot,
     };
   }
 }

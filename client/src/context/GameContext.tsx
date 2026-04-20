@@ -15,6 +15,7 @@ export interface Player {
   hasGuessedCorrectly: boolean;
   isReady: boolean;
   isHost: boolean;
+  isBot: boolean;
 }
 
 export type GamePhase = 'waiting' | 'choosing' | 'drawing' | 'roundEnd' | 'gameOver';
@@ -64,6 +65,9 @@ interface GameContextType {
   updateSettings: (settings: { rounds?: number; drawTime?: number; isPrivate?: boolean }) => void;
   resetGame: () => void;
   kickPlayer: (targetPlayerId: string) => void;
+  claimHost: () => void;
+  addBot: () => void;
+  isDisconnected: boolean;
   socket: any;
 }
 
@@ -90,6 +94,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [drawTime, setDrawTime] = useState(80);
   const [isPrivate, setIsPrivate] = useState(false);
   const [winner, setWinner] = useState<Player | null>(null);
+  const [isDisconnected, setIsDisconnected] = useState(false);
   
   // Brush state
   const [color, setColor] = useState('#ffffff');
@@ -123,6 +128,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!socket) return;
     
     socket.on('connect', () => {
+      setIsDisconnected(false);
       const savedPlayerId = sessionStorage.getItem('skribbl_player_id');
       const savedRoomCode = sessionStorage.getItem('skribbl_room_code');
       const savedName = sessionStorage.getItem('skribbl_player_name');
@@ -133,8 +139,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     });
 
+    socket.on('disconnect', () => {
+      setIsDisconnected(true);
+    });
+
     return () => {
       socket.off('connect');
+      socket.off('disconnect');
     };
   }, [socket]);
 
@@ -368,6 +379,14 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     socket.emit('kick_player', { roomCode, targetPlayerId });
   };
 
+  const claimHost = () => {
+    socket.emit('claim_host', { roomCode });
+  };
+
+  const addBot = () => {
+    socket.emit('add_bot', { roomCode });
+  };
+
   const sendGuess = (text: string) => {
     socket.emit('guess', { roomCode, text });
   };
@@ -423,6 +442,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         winner,
         currentPlayerIsDrawer,
         kickPlayer,
+        claimHost,
+        addBot,
+        isDisconnected,
         joinRoom,
         createRoom,
         markReady,

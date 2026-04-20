@@ -121,24 +121,32 @@ class Game {
         drawerName: drawer.name,
       });
 
-      // Introduce a visual countdown timer for word selection (10 seconds)
-      this.choosingTimeLeft = 10;
-      this.io.to(this.roomId).emit('timer_update', { timeLeft: this.choosingTimeLeft });
-      
-      this.wordChoiceInterval = setInterval(() => {
-        this.choosingTimeLeft -= 1;
+      // If bot is drawing, they auto-select instantly
+      if (drawer.isBot) {
+        setTimeout(() => {
+          if (this.phase === 'choosing' && this.wordOptions.length > 0) {
+            this.chooseWord(this.wordOptions[0]);
+          }
+        }, 1500);
+      } else {
+        // Introduce a visual countdown timer for word selection (10 seconds)
+        this.choosingTimeLeft = 10;
         this.io.to(this.roomId).emit('timer_update', { timeLeft: this.choosingTimeLeft });
         
-        if (this.choosingTimeLeft <= 0) {
-          clearInterval(this.wordChoiceInterval);
-          this.wordChoiceInterval = null;
-          if (!this.currentWord) {
-            console.log(`[Game] Drawer ${drawer.name} did not pick — auto-selecting.`);
-            // Safely select the first option or a fallback
-            this.chooseWord(this.wordOptions && this.wordOptions.length > 0 ? this.wordOptions[0] : 'emergency');
+        this.wordChoiceInterval = setInterval(() => {
+          this.choosingTimeLeft -= 1;
+          this.io.to(this.roomId).emit('timer_update', { timeLeft: this.choosingTimeLeft });
+          
+          if (this.choosingTimeLeft <= 0) {
+            clearInterval(this.wordChoiceInterval);
+            this.wordChoiceInterval = null;
+            if (!this.currentWord) {
+              console.log(`[Game] Drawer ${drawer.name} did not pick — auto-selecting.`);
+              this.chooseWord(this.wordOptions && this.wordOptions.length > 0 ? this.wordOptions[0] : 'emergency');
+            }
           }
-        }
-      }, 1000);
+        }, 1000);
+      }
 
     } catch (error) {
       console.error('[Game Error] Failed to fetch words:', error);
@@ -194,6 +202,10 @@ class Game {
   startTimer() {
     // Safety: clear any existing timer
     if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.botDrawingInterval) clearInterval(this.botDrawingInterval);
+    if (this.botGuessingInterval) clearInterval(this.botGuessingInterval);
+
+    this.setupBotSimulators();
 
     this.timerInterval = setInterval(() => {
       this.timeLeft -= 1;
@@ -309,6 +321,14 @@ class Game {
     } else {
       return; // Already ended
     }
+    if (this.botDrawingInterval) {
+      clearInterval(this.botDrawingInterval);
+      this.botDrawingInterval = null;
+    }
+    if (this.botGuessingInterval) {
+      clearInterval(this.botGuessingInterval);
+      this.botGuessingInterval = null;
+    }
 
     this.phase = 'roundEnd';
 
@@ -375,6 +395,8 @@ class Game {
   // ---------------------------------------------------------------------------
   endGame() {
     if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.botDrawingInterval) clearInterval(this.botDrawingInterval);
+    if (this.botGuessingInterval) clearInterval(this.botGuessingInterval);
     this.phase = 'gameOver';
 
     const leaderboard = this.players
@@ -409,6 +431,97 @@ class Game {
     } finally {
       client.release();
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // setupBotSimulators()
+  // Handles bot drawing simulation and random guessing.
+  // ---------------------------------------------------------------------------
+  setupBotSimulators() {
+    const drawer = this.getCurrentDrawer();
+    
+    // 1. Bot Drawing Simulation
+    if (drawer && drawer.isBot) {
+      // Simulate drawing scribbles
+      this.botDrawingInterval = setInterval(() => {
+        // Randomly pick a color
+        const colors = ['#ffffff', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = Math.floor(Math.random() * 15) + 5;
+        
+        // Randomly generate an anchor point across an 800x600 canvas coordinate space
+        let currentX = Math.random() * 800; 
+        let currentY = Math.random() * 600;
+        
+        // Fire 'start' event
+        this.io.to(this.roomId).emit('draw_data', {
+          type: 'start', x: currentX, y: currentY, color, size, playerId: drawer.id
+        });
+        
+        const numPoints = Math.floor(Math.random() * 4) + 2;
+        
+        for (let i = 0; i < numPoints; i++) {
+          currentX = Math.max(0, Math.min(800, currentX + (Math.random() - 0.5) * 100)); // jump up to 50px
+          currentY = Math.max(0, Math.min(600, currentY + (Math.random() - 0.5) * 100));
+          // Fire 'move' event
+          this.io.to(this.roomId).emit('draw_data', {
+            type: 'move', x: currentX, y: currentY, playerId: drawer.id
+          });
+        }
+        
+        // Fire 'end' event
+        this.io.to(this.roomId).emit('draw_data', {
+            type: 'end', playerId: drawer.id
+        });
+      }, 500); // Draw every 500ms
+    }
+    
+    // 2. Bot Guessing Simulation
+    const dummyWords = ['apple', 'cat', 'house', 'tree', 'sun', 'moon', 'fish', 'bird', 'car', 'book', 'pizza', 'star'];
+    this.botGuessingInterval = setInterval(() => {
+      // Find bots that aren't the drawer and haven't guessed correctly yet
+      const guessingBots = this.players.filter(p => p.isBot && p.id !== drawer?.id && !p.hasGuessedCorrectly);
+      
+      guessingBots.forEach(bot => {
+        // 15% chance to do something each tick (2 seconds)
+        if (Math.random() > 0.15) return;
+        
+        // As time runs out, higher chance to guess correctly
+        const timeRatio = (this.settings.drawTime - this.timeLeft) / this.settings.drawTime; // 0.0 to 1.0
+        const correctChance = 0.05 + (timeRatio * 0.4); // Starts at 5%, goes up to 45%
+        
+        let guessWord = '';
+        if (Math.random() < correctChance && this.currentWord) {
+          guessWord = this.currentWord;
+        } else {
+          guessWord = dummyWords[Math.floor(Math.random() * dummyWords.length)];
+        }
+        
+        // Attempt to guess
+        const result = this.handleGuess(bot, guessWord);
+        
+        // Notify chat
+        if (result?.correct) {
+          this.io.to(this.roomId).emit('chat_message', {
+            type: 'correct',
+            playerName: bot.name,
+            text: 'guessed the word!',
+          });
+          
+          this.io.to(this.roomId).emit('player_guessed', {
+            playerId: bot.id,
+            points: result.points,
+            guessOrder: result.guessOrder,
+          });
+        } else {
+          this.io.to(this.roomId).emit('chat_message', {
+            type: 'chat',
+            playerName: bot.name,
+            text: guessWord,
+          });
+        }
+      });
+    }, 2000); // Check every 2 seconds
   }
 
   // ---------------------------------------------------------------------------

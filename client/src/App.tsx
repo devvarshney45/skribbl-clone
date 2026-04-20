@@ -10,7 +10,7 @@ import Room from './pages/Room';
 import Game from './pages/Game';
 
 const App: React.FC = () => {
-  const { phase, loading } = useGame();
+  const { phase, loading, isDisconnected } = useGame();
 
   if (loading) {
     return (
@@ -49,6 +49,15 @@ const App: React.FC = () => {
         {/* Catch-all redirect to Home */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+
+      {/* Global Disconnect Fallback UI */}
+      {isDisconnected && (
+        <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md">
+           <div className="w-16 h-16 border-4 border-rose-500/30 border-t-rose-500 rounded-full animate-spin mb-4" />
+           <h2 className="text-xl font-black text-rose-500 uppercase tracking-widest mb-2">Connection Lost</h2>
+           <p className="text-xs font-black text-white/50 uppercase tracking-[0.2em] animate-pulse">Attempting to reconnect...</p>
+        </div>
+      )}
     </Router>
   );
 };

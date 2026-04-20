@@ -49,6 +49,33 @@ class Room {
   }
 
   // ---------------------------------------------------------------------------
+  // addBot()
+  // Adds a bot player to the room.
+  // ---------------------------------------------------------------------------
+  addBot() {
+    const Player = require('./Player');
+    const { v4: uuidv4 } = require('uuid');
+    
+    // Generate a random bot name
+    const botNames = ['Bot Alpha', 'Bot Beta', 'Bot Gamma', 'Bot Delta', 'Bot Echo', 'Bot Zeta'];
+    const botName = botNames[Math.floor(Math.random() * botNames.length)];
+    
+    const bot = new Player({
+      id: uuidv4(),
+      name: botName,
+      socketId: `bot_${uuidv4()}`,
+      roomId: this.id,
+      isBot: true
+    });
+    
+    // Bots are always ready
+    bot.isReady = true;
+    this.addPlayer(bot);
+    
+    return bot;
+  }
+
+  // ---------------------------------------------------------------------------
   // removePlayer(playerId)
   // Removes a player from the room. Returns the removed Player (or undefined).
   // ---------------------------------------------------------------------------

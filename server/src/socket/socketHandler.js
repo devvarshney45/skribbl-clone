@@ -465,6 +465,31 @@ function setupSocketHandler(io) {
     });
 
     // -------------------------------------------------------------------------
+    // add_bot
+    // Host can add a bot to fill up the room.
+    // -------------------------------------------------------------------------
+    socket.on('add_bot', ({ roomCode }) => {
+      try {
+        const room = rooms.get(roomCode?.toUpperCase());
+        if (!room) return;
+
+        const player = room.getPlayerBySocketId(socket.id);
+        if (!player || !player.isHost) return;
+
+        if (room.isFull()) {
+          socket.emit('error', { message: 'Room is already full.' });
+          return;
+        }
+
+        const bot = room.addBot();
+        console.log(`[Socket] ${bot.name} added to room ${room.code}`);
+        broadcastPlayerList(io, room);
+      } catch (error) {
+        console.error('[Socket Error] add_bot:', error);
+      }
+    });
+
+    // -------------------------------------------------------------------------
     // reset_game
     // Only the host can trigger this. Resets room status and game instance.
     // -------------------------------------------------------------------------
@@ -749,6 +774,39 @@ function setupSocketHandler(io) {
         playerName: player.name,
         text,
       });
+    });
+
+    // -------------------------------------------------------------------------
+    // claim_host
+    // Allows a user to claim the host role if they believe the host is disconnected
+    // -------------------------------------------------------------------------
+    socket.on('claim_host', async ({ roomCode }) => {
+      const room = rooms.get(roomCode?.toUpperCase());
+      if (!room) return;
+      
+      const { playerId } = socket.data;
+      const player = room.getPlayer(playerId);
+      if (!player) return;
+
+      // Make the claiming player the new host
+      room.getPlayers().forEach(p => p.isHost = false); // remove host from others
+      player.isHost = true;
+      room.hostId = player.id;
+      
+      try {
+        await pool.query('UPDATE players SET is_host = FALSE WHERE room_id = $1', [room.id]);
+        await pool.query('UPDATE players SET is_host = TRUE WHERE id = $1', [player.id]);
+        await pool.query('UPDATE rooms SET host_id = $1 WHERE id = $2', [player.id, room.id]);
+
+        io.to(room.id).emit('chat_message', {
+          type: 'system',
+          text: `${player.name} claimed the host role.`,
+        });
+        
+        broadcastPlayerList(io, room);
+      } catch (error) {
+         console.error('[Socket Error] claim_host:', error);
+      }
     });
 
     // =========================================================================

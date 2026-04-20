@@ -14,6 +14,9 @@ const Room: React.FC = () => {
     markReady,
     isPrivate,
     kickPlayer,
+    claimHost,
+    addBot,
+    isDisconnected,
   } = useGame();
 
   const me = players.find((p) => p.id === playerId);
@@ -110,7 +113,17 @@ const Room: React.FC = () => {
           {/* B. Right Sidebar (Players Desk) */}
           <aside className="w-full lg:w-[400px] flex flex-col gap-4 animate-slide-up order-1 lg:order-2">
               <div className="flex items-center justify-between px-2 mb-2">
-                  <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Active Artists</h3>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Active Artists</h3>
+                    {isHost && players.length < 12 && (
+                      <button 
+                        onClick={() => addBot()}
+                        className="px-3 py-1 bg-brand-primary/10 border border-brand-primary/30 text-brand-primary rounded-lg text-[10px] md:text-xs font-black uppercase tracking-widest shadow-sm shadow-brand-primary/20 hover:bg-brand-primary/20 hover:scale-105 transition-all active:scale-95"
+                      >
+                        + Add Bot 🤖
+                      </button>
+                    )}
+                  </div>
                   <span className="text-[9px] font-black text-brand-secondary px-2 py-0.5 bg-brand-secondary/10 rounded-md border border-brand-secondary/20">{players.length} / 12</span>
               </div>
               
@@ -140,6 +153,16 @@ const Room: React.FC = () => {
                                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                                   </svg>
+                                </button>
+                              )}
+                              {/* Claim Host button if current host is offline */}
+                              {!isHost && p.isHost && isDisconnected && (
+                                <button
+                                  onClick={() => claimHost()}
+                                  title="Claim Host Role"
+                                  className="px-2 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 font-black text-[8px] uppercase tracking-widest hover:bg-yellow-500/20 transition-all active:scale-90"
+                                >
+                                  Claim
                                 </button>
                               )}
                           </div>
