@@ -116,6 +116,42 @@ const sketchRegistry = {
     { type: 'line', x1: 500, y1: 250, x2: 350, y2: 350, color: '#facc15' },
     { type: 'line', x1: 350, y1: 350, x2: 400, y2: 200, color: '#facc15' },
   ],
+  bird: [
+    { type: 'circle', x: 400, y: 350, r: 60, color: '#38bdf8' }, // body
+    { type: 'circle', x: 450, y: 310, r: 35, color: '#38bdf8' }, // head
+    { type: 'line', x1: 480, y1: 310, x2: 510, y2: 310, color: '#fbbf24' }, // beak
+    { type: 'line', x1: 380, y1: 410, x2: 380, y2: 450, color: '#000000' }, // leg1
+    { type: 'line', x1: 420, y1: 410, x2: 420, y2: 450, color: '#000000' }, // leg2
+  ],
+  fish: [
+    { type: 'circle', x: 400, y: 300, r: 80, color: '#f87171' }, // body
+    { type: 'line', x1: 320, y1: 300, x2: 280, y2: 260, color: '#f87171' }, // tail-top
+    { type: 'line', x1: 320, y1: 300, x2: 280, y2: 340, color: '#f87171' }, // tail-bottom
+    { type: 'circle', x: 450, y: 280, r: 10, color: '#ffffff' }, // eye
+  ],
+  rocket: [
+    { type: 'rect', x: 370, y: 250, w: 60, h: 150, color: '#cbd5e1' }, // body
+    { type: 'line', x1: 370, y1: 250, x2: 400, y2: 180, color: '#ef4444' }, // nose-left
+    { type: 'line', x1: 430, y1: 250, x2: 400, y2: 180, color: '#ef4444' }, // nose-right
+    { type: 'rect', x: 380, y: 400, w: 40, h: 30, color: '#f59e0b' }, // fire
+  ],
+  umbrella: [
+    { type: 'circle', x: 400, y: 250, r: 100, color: '#a855f7' }, // canopy (half circle in logic)
+    { type: 'line', x1: 400, y1: 250, x2: 400, y2: 450, color: '#475569' }, // shaft
+    { type: 'line', x1: 400, y1: 450, x2: 370, y2: 450, color: '#475569' }, // hook
+  ],
+  heart: [
+    { type: 'circle', x: 360, y: 300, r: 50, color: '#f43f5e' }, // left hump
+    { type: 'circle', x: 440, y: 300, r: 50, color: '#f43f5e' }, // right hump
+    { type: 'line', x1: 310, y1: 320, x2: 400, y2: 450, color: '#f43f5e' }, // left-point
+    { type: 'line', x1: 490, y1: 320, x2: 400, y2: 450, color: '#f43f5e' }, // right-point
+  ],
+  snake: [
+    { type: 'line', x1: 200, y1: 300, x2: 300, y2: 350, color: '#16a34a' },
+    { type: 'line', x1: 300, y1: 350, x2: 400, y2: 300, color: '#16a34a' },
+    { type: 'line', x1: 400, y1: 300, x2: 500, y2: 350, color: '#16a34a' },
+    { type: 'circle', x: 510, y: 340, r: 15, color: '#16a34a' }, // head
+  ],
 };
 
 class Game {
@@ -580,29 +616,32 @@ class Game {
           const t = stepIndex * 0.2;
           const size = instruction.size || 6;
 
+          // Helper for minor hand-drawn jitter
+          const jitter = () => (Math.random() - 0.5) * 2;
+
           // Re-draw instructions as smooth paths
           if (instruction.type === 'circle') {
-             x = instruction.x + Math.cos(t) * instruction.r;
-             y = instruction.y + Math.sin(t) * instruction.r;
+             x = instruction.x + Math.cos(t) * instruction.r + jitter();
+             y = instruction.y + Math.sin(t) * instruction.r + jitter();
           } else if (instruction.type === 'rect') {
              // Basic rect path tracing: 0.25 segments per side
              if (t < Math.PI/2) { // Top
-                x = instruction.x + (t/(Math.PI/2)) * instruction.w;
-                y = instruction.y;
+                x = instruction.x + (t/(Math.PI/2)) * instruction.w + jitter();
+                y = instruction.y + jitter();
              } else if (t < Math.PI) { // Right
-                x = instruction.x + instruction.w;
-                y = instruction.y + ((t-Math.PI/2)/(Math.PI/2)) * instruction.h;
+                x = instruction.x + instruction.w + jitter();
+                y = instruction.y + ((t-Math.PI/2)/(Math.PI/2)) * instruction.h + jitter();
              } else if (t < 1.5*Math.PI) { // Bottom
-                x = instruction.x + instruction.w - ((t-Math.PI)/(Math.PI/2)) * instruction.w;
-                y = instruction.y + instruction.h;
+                x = instruction.x + instruction.w - ((t-Math.PI)/(Math.PI/2)) * instruction.w + jitter();
+                y = instruction.y + instruction.h + jitter();
              } else { // Left
-                x = instruction.x;
-                y = instruction.y + instruction.h - ((t-1.5*Math.PI)/(Math.PI/2)) * instruction.h;
+                x = instruction.x + jitter();
+                y = instruction.y + instruction.h - ((t-1.5*Math.PI)/(Math.PI/2)) * instruction.h + jitter();
              }
           } else if (instruction.type === 'line') {
              const progress = Math.min(1, t / Math.PI);
-             x = instruction.x1 + (instruction.x2 - instruction.x1) * progress;
-             y = instruction.y1 + (instruction.y2 - instruction.y1) * progress;
+             x = instruction.x1 + (instruction.x2 - instruction.x1) * progress + jitter();
+             y = instruction.y1 + (instruction.y2 - instruction.y1) * progress + jitter();
           }
 
           if (stepIndex === 0) {
@@ -633,32 +672,42 @@ class Game {
         }, 55); // Slightly slower for more organic feel
 
       } else {
-        // Case B: Sophisticated "Canvas Blobs" (Improved Fallback)
+        // Case B: Professional "Blocking Out" (Simulates initial sketching phase)
         let patternStep = 0;
-        const colors = ['#f8fafc', '#e2e8f0', '#cbd5e1']; // Draft-style colors
-        const centerX = 400;
-        const centerY = 300;
+        const color = '#cbd5e1'; // Light gray guide color
+        const jitter = () => (Math.random() - 0.5) * 3;
 
         this.botDrawingInterval = setInterval(() => {
           if (patternStep > 40) {
               this.io.to(this.roomId).emit('draw_data', { type: 'end', playerId: drawer.id });
-              patternStep = 0;
+              clearInterval(this.botDrawingInterval);
               return;
           }
 
-          // Draw a rough central blob to simulate "roughing out" the shape
-          const r = 40 + Math.random() * 60;
-          const t = patternStep * 0.3;
-          const x = centerX + Math.cos(t) * r;
-          const y = centerY + Math.sin(t) * r;
-
-          if (patternStep === 0) {
-            this.io.to(this.roomId).emit('draw_data', { type: 'start', x, y, color: colors[0], size: 4, playerId: drawer.id });
-          } else {
-            this.io.to(this.roomId).emit('draw_data', { type: 'move', x, y, playerId: drawer.id });
+          let x, y;
+          // Sub-case: Drawing framing guides
+          if (patternStep < 10) { // Top Line
+             x = 250 + (patternStep/10) * 300 + jitter();
+             y = 200 + jitter();
+          } else if (patternStep < 20) { // Right Line
+             x = 550 + jitter();
+             y = 200 + ((patternStep-10)/10) * 200 + jitter();
+          } else if (patternStep < 30) { // Bottom Line
+             x = 550 - ((patternStep-20)/10) * 300 + jitter();
+             y = 400 + jitter();
+          } else { // Left Line
+             x = 250 + jitter();
+             y = 400 - ((patternStep-30)/10) * 200 + jitter();
           }
+
+          if (patternStep % 10 === 0) {
+             this.io.to(this.roomId).emit('draw_data', { type: 'start', x, y, color, size: 2, playerId: drawer.id });
+          } else {
+             this.io.to(this.roomId).emit('draw_data', { type: 'move', x, y, playerId: drawer.id });
+          }
+          
           patternStep++;
-        }, 80);
+        }, 65);
       }
     }
     
